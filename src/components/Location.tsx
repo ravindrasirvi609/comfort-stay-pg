@@ -99,7 +99,7 @@ const Location = () => {
             {/* Map */}
             <div className="card h-[400px] overflow-hidden">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.802900628579!2d73.7317519749631!3d18.58962648378436!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b9eee54886e3%3A0x828cd1e3c2649a57!2sPhase%201%2C%20Hinjawadi%20Rajiv%20Gandhi%20Infotech%20Park%2C%20Hinjawadi%2C%20Pimpri-Chinchwad%2C%20Maharashtra%20411057!5e0!3m2!1sen!2sin!4v1716290265018!5m2!1sen!2sin"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.523572720204!2d73.73011351145193!3d18.595506866806665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2bb000faf5f0b%3A0x545fd94002c5ec22!2sComfort%20Stay%20PG!5e0!3m2!1sen!2sin!4v1744439824159!5m2!1sen!2sin"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

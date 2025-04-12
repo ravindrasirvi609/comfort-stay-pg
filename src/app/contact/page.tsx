@@ -4,13 +4,13 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Contact Us - Comfort Stay PG | Best Girls PG in Hinjewadi Phase 1",
   description:
-    "Contact Comfort Stay PG in Hinjewadi Phase 1, Pune. New premium accommodation for women starting March 2025. Call us at 9922538989 to book your stay today.",
+    "Contact Comfort Stay PG in Hinjewadi Phase 1, Pune. New premium accommodation for women opened February 2025. Call us at 9922538989 to book your stay today.",
   keywords:
     "girls PG Hinjewadi, ladies PG Pune, Comfort Stay PG contact, Hinjewadi Phase 1 PG, working women accommodation Pune, affordable PG Hinjewadi, new PG Hinjewadi 2025",
   openGraph: {
     title: "Contact Comfort Stay PG - New Premium Girls PG in Hinjewadi",
     description:
-      "Brand new PG accommodation Opened March 2025 with 2 & 3 sharing options. Contact us at 9922538989 for pre-bookings and inquiries.",
+      "Brand new PG accommodation opened February 2025 with 2 & 3 sharing options. Contact us at 9922538989 for bookings and inquiries.",
     type: "website",
   },
 };
@@ -25,7 +25,7 @@ export default function ContactPage() {
           </h1>
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
             We&apos;re here to assist you with any queries about our brand new
-            accommodation opened in March 2025. Reach out to us for pre-bookings
+            accommodation opened in February 2025. Reach out to us for bookings
             and we&apos;ll get back to you promptly.
           </p>
         </div>
@@ -177,29 +177,16 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="h-96 md:h-[450px] bg-gray-200 dark:bg-gray-700 rounded-2xl overflow-hidden shadow-md">
-              <div className="w-full h-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16 text-pink-300 dark:text-pink-700"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </div>
+            <div className="h-96 md:h-[450px] rounded-2xl overflow-hidden shadow-md">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.523572720204!2d73.73011351145193!3d18.595506866806665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2bb000faf5f0b%3A0x545fd94002c5ec22!2sComfort%20Stay%20PG!5e0!3m2!1sen!2sin!4v1744439824159!5m2!1sen!2sin"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </div>
         </div>
@@ -305,11 +292,11 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-8 shadow-md border border-pink-100 dark:border-pink-900/20">
             <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-              Schedule a Visit or Pre-Book Your Stay
+              Schedule a Visit or Book Your Stay
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-300 mb-8">
-              Interested in our brand new PG opened in March 2025? Fill out the
-              form below to schedule a visit or pre-book your 2 or 3 sharing
+              Interested in our brand new PG opened in February 2025? Fill out
+              the form below to schedule a visit or book your 2 or 3 sharing
               accommodation.
             </p>
 
