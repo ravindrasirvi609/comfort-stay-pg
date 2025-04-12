@@ -177,6 +177,9 @@ export async function POST(request: NextRequest) {
 
     await newPendingUser.save();
 
+    // Send confirmation email to the user
+    // Note: Email will be sent only when admin approves the registration
+
     // TODO: Send notification to admin about new registration request
 
     return NextResponse.json({

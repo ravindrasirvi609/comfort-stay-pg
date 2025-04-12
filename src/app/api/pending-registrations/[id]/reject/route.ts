@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
+import { sendRejectionEmail } from "@/app/lib/email";
 import mongoose from "mongoose";
 
 export async function POST(
@@ -28,6 +29,10 @@ export async function POST(
       );
     }
 
+    // Get request body for rejection reason
+    const requestData = await request.json();
+    const { reason } = requestData;
+
     await connectToDatabase();
 
     // Get the PendingUser model
@@ -54,11 +59,16 @@ export async function POST(
     pendingRegistration.status = "Rejected";
     await pendingRegistration.save();
 
-    // Optional: Implement email notification to the applicant about rejection
+    // Send rejection email to the applicant
+    await sendRejectionEmail(
+      pendingRegistration.fullName,
+      pendingRegistration.emailAddress,
+      reason
+    );
 
     return NextResponse.json({
       success: true,
-      message: "Registration request rejected",
+      message: "Registration request rejected and applicant notified",
     });
   } catch (error) {
     console.error("Error rejecting registration:", error);
