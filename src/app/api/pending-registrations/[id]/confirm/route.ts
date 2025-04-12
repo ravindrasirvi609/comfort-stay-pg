@@ -8,8 +8,7 @@ import {
   hashPassword,
 } from "@/app/lib/auth";
 import { sendWelcomeEmail } from "@/app/lib/email";
-import mongoose from "mongoose";
-import User from "@/app/api/models/User";
+import { User, PendingUser, Room } from "@/app/api/models";
 
 export async function POST(
   request: NextRequest,
@@ -49,16 +48,6 @@ export async function POST(
 
     await connectToDatabase();
 
-    // Get the PendingUser model
-    const PendingUser = mongoose.models.PendingUser;
-
-    if (!PendingUser) {
-      return NextResponse.json(
-        { success: false, message: "PendingUser model not found" },
-        { status: 500 }
-      );
-    }
-
     // Find the pending registration by ID
     const pendingRegistration = await PendingUser.findById(params.id);
 
@@ -73,9 +62,31 @@ export async function POST(
     const existingUser = await User.findOne({
       email: pendingRegistration.emailAddress,
     });
+
     if (existingUser) {
       return NextResponse.json(
         { success: false, message: "A user with this email already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Find the room
+    const room = await Room.findOne({ roomNumber: allocatedRoomNo });
+
+    if (!room) {
+      return NextResponse.json(
+        { success: false, message: "Room not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if room has vacancy
+    if (room.currentOccupancy >= room.capacity) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Selected room is already at full capacity",
+        },
         { status: 400 }
       );
     }
@@ -89,7 +100,7 @@ export async function POST(
     // Hash the password
     const hashedPassword = await hashPassword(plainPassword);
 
-    // Create new user
+    // Create new user with all fields from PendingUser
     const newUser = new User({
       name: pendingRegistration.fullName,
       email: pendingRegistration.emailAddress,
@@ -97,15 +108,36 @@ export async function POST(
       role: "user",
       password: hashedPassword,
       pgId,
-      documents: [
-        pendingRegistration.validIdPhoto,
-        pendingRegistration.passportPhoto,
-      ],
+
+      // Copy additional fields from pendingRegistration
+      fathersName: pendingRegistration.fathersName,
+      permanentAddress: pendingRegistration.permanentAddress,
+      city: pendingRegistration.city,
+      state: pendingRegistration.state,
+      guardianMobileNumber: pendingRegistration.guardianMobileNumber,
+      validIdType: pendingRegistration.validIdType,
+      companyNameAndAddress: pendingRegistration.companyNameAndAddress,
+
+      // Document links
+      validIdPhoto: pendingRegistration.validIdPhoto,
+      passportPhoto: pendingRegistration.passportPhoto,
+
+      // Room assignment
+      roomId: room._id,
+
+      // Move-in date
       moveInDate: checkInDate || new Date(),
       isActive: true,
     });
 
     await newUser.save();
+
+    // Update room occupancy
+    room.currentOccupancy += 1;
+    if (room.currentOccupancy >= room.capacity) {
+      room.status = "occupied";
+    }
+    await room.save();
 
     // Update pending registration status
     pendingRegistration.status = "Confirmed";
@@ -130,6 +162,7 @@ export async function POST(
         name: newUser.name,
         email: newUser.email,
         pgId: newUser.pgId,
+        roomNumber: allocatedRoomNo,
       },
     });
   } catch (error) {

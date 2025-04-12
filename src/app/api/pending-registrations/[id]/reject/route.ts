@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { sendRejectionEmail } from "@/app/lib/email";
-import mongoose from "mongoose";
+import { PendingUser } from "@/app/api/models";
 
 export async function POST(
   request: NextRequest,
@@ -34,16 +34,6 @@ export async function POST(
     const { reason } = requestData;
 
     await connectToDatabase();
-
-    // Get the PendingUser model
-    const PendingUser = mongoose.models.PendingUser;
-
-    if (!PendingUser) {
-      return NextResponse.json(
-        { success: false, message: "PendingUser model not found" },
-        { status: 500 }
-      );
-    }
 
     // Find the pending registration by ID
     const pendingRegistration = await PendingUser.findById(params.id);
