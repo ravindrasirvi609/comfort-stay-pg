@@ -25,11 +25,13 @@ const UserSchema = new Schema(
     // Registration and authentication
     password: {
       type: String, // Required only after admin approval
+      required: false,
     },
     pgId: {
       type: String, // Generated on admin approval
       unique: true,
       sparse: true, // Allow null/undefined values to not conflict with uniqueness
+      required: false,
     },
     registrationStatus: {
       type: String,

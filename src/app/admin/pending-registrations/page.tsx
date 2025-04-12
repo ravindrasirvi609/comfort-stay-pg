@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 
 interface PendingRegistration {
   _id: string;
-  fullName: string;
-  emailAddress: string;
-  mobileNumber: string;
+  name: string;
+  email: string;
+  phone: string;
   city: string;
   state: string;
-  status: string;
+  registrationStatus: string;
   createdAt: string;
 }
 
@@ -35,10 +35,10 @@ export default function PendingRegistrationsPage() {
       try {
         setLoading(true);
         const response = await axios.get("/api/pending-registrations");
-
+        console.log(response.data.data);
         if (response.data.success) {
-          setPendingRegistrations(response.data.pendingRegistrations || []);
-          setFilteredRegistrations(response.data.pendingRegistrations || []);
+          setPendingRegistrations(response.data.data || []);
+          setFilteredRegistrations(response.data.data || []);
         } else {
           setError(
             response.data.message || "Failed to load pending registrations"
@@ -61,13 +61,9 @@ export default function PendingRegistrationsPage() {
     if (searchTerm) {
       const filtered = pendingRegistrations.filter(
         (registration) =>
-          registration.fullName
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          registration.emailAddress
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          registration.mobileNumber.includes(searchTerm)
+          registration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          registration.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          registration.phone.includes(searchTerm)
       );
       setFilteredRegistrations(filtered);
     } else {
@@ -232,17 +228,17 @@ export default function PendingRegistrationsPage() {
                         <div className="flex items-center">
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {registration.fullName}
+                              {registration.name}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {registration.emailAddress}
+                              {registration.email}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-white">
-                          {registration.mobileNumber}
+                          {registration.phone}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -253,14 +249,14 @@ export default function PendingRegistrationsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            registration.status === "Pending"
+                            registration.registrationStatus === "Pending"
                               ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : registration.status === "Confirmed"
+                              : registration.registrationStatus === "Confirmed"
                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                                 : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           }`}
                         >
-                          {registration.status}
+                          {registration.registrationStatus}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
