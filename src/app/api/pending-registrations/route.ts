@@ -3,6 +3,36 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import mongoose from "mongoose";
 
+// Define the same schema as in register-request
+const PendingUserSchema = new mongoose.Schema({
+  timestamp: { type: Date, default: Date.now },
+  fullName: { type: String, required: true },
+  emailAddress: { type: String, required: true, unique: true },
+  fathersName: { type: String, required: true },
+  permanentAddress: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  mobileNumber: { type: String, required: true },
+  guardianMobileNumber: { type: String, required: true },
+  validIdType: {
+    type: String,
+    required: true,
+    enum: ["Aadhar Card", "Passport", "Driving License", "Voter Card"],
+  },
+  validIdPhoto: { type: String, required: true },
+  companyNameAndAddress: { type: String, required: true },
+  passportPhoto: { type: String, required: true },
+  allocatedRoomNo: { type: String, default: "" },
+  checkInDate: { type: Date },
+  status: {
+    type: String,
+    enum: ["Pending", "Confirmed", "Rejected"],
+    default: "Pending",
+  },
+  password: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 export async function GET() {
   try {
     // Check if user is authenticated and is an admin
@@ -27,15 +57,10 @@ export async function GET() {
 
     await connectToDatabase();
 
-    // Get the PendingUser model
-    const PendingUser = mongoose.models.PendingUser;
-
-    if (!PendingUser) {
-      return NextResponse.json(
-        { success: false, message: "PendingUser model not found" },
-        { status: 500 }
-      );
-    }
+    // Get the PendingUser model using the same pattern as register-request route
+    const PendingUser =
+      mongoose.models.PendingUser ||
+      mongoose.model("PendingUser", PendingUserSchema);
 
     // Get all pending registrations
     const pendingRegistrations = await PendingUser.find({})
