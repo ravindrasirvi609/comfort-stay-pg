@@ -15,6 +15,7 @@ import {
   Contact,
   Sparkles,
   LogIn,
+  PhoneCall,
   UserPlus,
 } from "lucide-react";
 
@@ -121,6 +122,17 @@ export default function Navbar() {
                 <UserPlus className="w-4 h-4" />
                 Register
               </Link>
+              <Link
+                href="/contact"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  pathname === "/contact"
+                    ? "text-pink-600 dark:text-pink-400 font-semibold bg-pink-50/50 dark:bg-pink-900/20"
+                    : "text-gray-700 hover:text-pink-600 dark:text-gray-200 dark:hover:text-pink-400 hover:bg-pink-50/50 dark:hover:bg-pink-900/10"
+                }`}
+              >
+                <PhoneCall className="w-4 h-4 opacity-70" />
+                Contact
+              </Link>
             </div>
 
             <ModeToggle />
@@ -165,7 +177,7 @@ export default function Navbar() {
             ))}
 
             {/* Login and Registration in Mobile Menu */}
-            <div className="border-t dark:border-gray-800 pt-2 mt-2 grid grid-cols-2 gap-2">
+            <div className="border-t dark:border-gray-800 pt-2 mt-2 grid grid-cols-3 gap-2">
               <Link
                 href="/login"
                 className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
@@ -185,6 +197,18 @@ export default function Navbar() {
               >
                 <UserPlus className="w-4 h-4" />
                 Register
+              </Link>
+              <Link
+                href="/contact"
+                className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
+                  pathname === "/contact"
+                    ? "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-400 border border-gray-200 dark:border-gray-700"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <PhoneCall className="w-4 h-4 opacity-70" />
+                Contact
               </Link>
             </div>
           </div>

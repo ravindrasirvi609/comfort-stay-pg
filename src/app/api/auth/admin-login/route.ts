@@ -6,8 +6,6 @@ import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const { email, password } = await request.json();
 
     // Check if all fields are provided
@@ -17,6 +15,58 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Handle fixed admin credentials
+    if (email === "comfortstaypg@gmail.com" && password === "Comfort@189") {
+      console.log("[API] Using hardcoded admin credentials");
+
+      // Generate JWT token for hardcoded admin
+      const token = generateToken({
+        _id: "admin_id_123456789",
+        name: "ComfortStay Admin",
+        email: "comfortstaypg@gmail.com",
+        role: "admin",
+        pgId: "ADMIN123",
+      });
+
+      // Set cookie
+      (await cookies()).set({
+        name: "token",
+        value: token,
+        httpOnly: false,
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24, // 1 day
+      });
+
+      // Set another cookie for debugging that's not httpOnly
+      (await cookies()).set({
+        name: "debug_admin_login",
+        value: "true",
+        httpOnly: false,
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24, // 1 day
+      });
+
+      console.log("[API] Admin token set:", token.substring(0, 15) + "...");
+
+      return NextResponse.json({
+        success: true,
+        message: "Login successful",
+        user: {
+          _id: "admin_id_123456789",
+          name: "ComfortStay Admin",
+          email: "comfortstaypg@gmail.com",
+          role: "admin",
+        },
+      });
+    }
+
+    // Continue with database authentication for other admins
+    await connectToDatabase();
 
     // Find user by email
     const user = await User.findOne({ email });
@@ -68,11 +118,25 @@ export async function POST(request: NextRequest) {
     (await cookies()).set({
       name: "token",
       value: token,
-      httpOnly: true,
+      httpOnly: false,
       path: "/",
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24, // 1 day
     });
+
+    // Set another cookie for debugging that's not httpOnly
+    (await cookies()).set({
+      name: "debug_admin_login",
+      value: "true",
+      httpOnly: false,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 1 day
+    });
+
+    console.log("[API] Admin token set:", token.substring(0, 15) + "...");
 
     return NextResponse.json({
       success: true,

@@ -6,9 +6,13 @@ const RoomSchema = new Schema({
     required: true,
     unique: true,
   },
+  floor: {
+    type: Number,
+    required: true,
+  },
   type: {
     type: String,
-    enum: ["Single", "Double", "Triple"],
+    enum: ["2-sharing", "3-sharing"],
     required: true,
   },
   price: {
