@@ -1,110 +1,155 @@
-# Comfort PG Website
+# Comfort Stay PG Management System
 
-A modern, responsive website for Comfort PG, a premium Paying Guest accommodation in Hinjawadi, Pune.
+A comprehensive Paying Guest (PG) Management System for Comfort Stay PG, built with Next.js, MongoDB, and Tailwind CSS.
 
 ## Features
 
-- Modern UI with Glassmorphism design
-- Fully responsive layout
-- Dark/Light mode support
-- Interactive animations
-- SEO optimized
-- Contact form
-- Image gallery
-- Google Maps integration
+### Authentication & Authorization
+
+- Admin and User Login
+- Registration for Users
+- Email sending of ID and Password
+- Role-based access (admin, user)
+- Password reset option
+
+### Resident/User Management
+
+- New registration via form
+- Admin can disable a user when they leave
+- Move-in / move-out tracking
+- User profile management
+- Room allotment
+
+### Room & Bed Management
+
+- Add/Edit/Delete Rooms
+- Assign/Remove users from rooms
+- Check real-time room availability
+- Set room type, price, capacity, and status
+
+### Payment (Cash Mode Only)
+
+- Record cash payments manually
+- Maintain monthly rent records
+- Mark payment status
+- Generate receipts
+
+### Complaints & Maintenance
+
+- Users raise complaints via dashboard
+- Track complaint status
+- Admin assigns staff and resolves issues
+
+### Notice Board
+
+- Admin can create, update, and delete notices for users
+
+### Reports & Analytics
+
+- Occupancy rate
+- Rent collection summary
+- Complaint reports
+
+### Dashboards
+
+- Admin Dashboard
+- User Dashboard
 
 ## Tech Stack
 
-- Next.js 13+ (App Router)
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- Lucide Icons
-- Next Themes
+- Frontend: Next.js + Tailwind CSS
+- Backend: Next.js API Routes
+- Database: MongoDB Atlas
+- Email Service: Resend
+- Auth: JWT (role-based)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarn
+- Node.js (v14.x or later)
+- MongoDB Atlas account
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/comfort-pg.git
-cd comfort-pg
+git clone https://github.com/your-username/comfort-stay-pg.git
+cd comfort-stay-pg
 ```
 
-2. Install dependencies:
+2. Install dependencies
 
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Create a `.env.local` file in the root directory and add your environment variables:
+3. Set up environment variables
+   Create a `.env.local` file in the root directory and add:
 
-```env
-NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+RESEND_API_KEY=your_resend_api_key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-4. Run the development server:
+4. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Open http://localhost:3000 in your browser
 
-## Project Structure
+## API Endpoints
 
-```
-src/
-├── app/              # Next.js app router pages
-├── components/       # React components
-│   ├── Navbar.tsx
-│   ├── Hero.tsx
-│   ├── About.tsx
-│   ├── Amenities.tsx
-│   ├── Rooms.tsx
-│   ├── Gallery.tsx
-│   ├── Location.tsx
-│   ├── Testimonials.tsx
-│   ├── Contact.tsx
-│   └── Footer.tsx
-├── public/          # Static assets
-└── styles/          # Global styles
-```
+### Auth API
 
-## Deployment
+- POST /api/auth/admin-login
+- POST /api/auth/user-login
+- POST /api/auth/register
+- POST /api/auth/reset-password
+- POST /api/auth/logout
+- GET /api/auth/me
 
-The website can be deployed on Vercel:
+### User API
 
-1. Push your code to a GitHub repository
-2. Import the project on Vercel
-3. Add your environment variables
-4. Deploy!
+- GET /api/users
+- GET /api/users/:id
+- PUT /api/users/:id
+- DELETE /api/users/:id
 
-## Contributing
+### Room API
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- GET /api/rooms
+- GET /api/rooms/:id
+- POST /api/rooms
+- PUT /api/rooms/:id
+- DELETE /api/rooms/:id
+
+### Payment API
+
+- GET /api/payments
+- GET /api/payments/:id
+- POST /api/payments
+- PUT /api/payments/:id
+
+### Complaint API
+
+- GET /api/complaints
+- GET /api/complaints/:id
+- POST /api/complaints
+- PUT /api/complaints/:id
+
+### Notice API
+
+- GET /api/notices
+- GET /api/notices/:id
+- POST /api/notices
+- DELETE /api/notices/:id
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-For any queries, please contact:
-
-- Email: info@comfortpg.com
-- Phone: +91 98765 43210
+[MIT](https://choosealicense.com/licenses/mit/)
