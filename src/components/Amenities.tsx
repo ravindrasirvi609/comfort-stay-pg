@@ -10,7 +10,6 @@ import {
   ParkingSquare,
   Shirt,
   Shield,
-  Fan,
   Coffee,
   Clock,
   Book,
@@ -56,11 +55,6 @@ const amenities = [
     icon: <Shirt size={24} />,
     title: "Laundry Service",
     description: "Regular laundry and ironing services included",
-  },
-  {
-    icon: <Fan size={24} />,
-    title: "AC Rooms",
-    description: "Air-conditioned rooms with temperature control",
   },
   {
     icon: <Clock size={24} />,

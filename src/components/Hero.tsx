@@ -52,7 +52,17 @@ const Hero = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="comfort-subheading text-xl md:text-2xl mb-6 text-gray-600 dark:text-pink-200/90"
             >
-              Exclusive Living for Girls in Hinjewadi
+              New Girls PG in Hinjewadi • Opened March 2025
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.35 }}
+              className="text-lg mb-6 text-gray-700 dark:text-gray-300"
+            >
+              Pre-bookings open for our brand new facility with comfortable
+              2-sharing and 3-sharing rooms.
             </motion.p>
 
             <motion.div
@@ -127,10 +137,10 @@ const Hero = () => {
                   />
                 </div>
                 <h3 className="font-semibold text-gray-800 dark:text-white text-lg mb-2">
-                  Home-like Comfort
+                  Brand New Building
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Clean, spacious rooms with modern amenities
+                  Modern facilities Opened March 2025
                 </p>
               </motion.div>
 

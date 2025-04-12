@@ -10,7 +10,7 @@ const testimonials = [
     company: "TCS",
     rating: 5,
     comment:
-      "Comfort Stay PG has been my home for the past year, and I couldn't be happier. As a woman working in IT, safety was my priority, and this place exceeds expectations with its security measures. The rooms are clean, spacious, and the staff is incredibly supportive.",
+      "I'm excited about Comfort Stay PG opening in 2025. As a woman working in IT, safety is my priority, and this place promises excellent security measures. Looking forward to the clean, spacious rooms and supportive staff they're planning.",
   },
   {
     name: "Neha Gupta",
@@ -18,7 +18,7 @@ const testimonials = [
     company: "Infosys",
     rating: 5,
     comment:
-      "Moving to Pune for work was challenging until I found Comfort Stay PG. The homely atmosphere, delicious food, and the community of like-minded women made the transition smooth. The location is perfect for quick commutes to Hinjewadi IT Park.",
+      "Moving to Pune for work will be easier with Comfort Stay PG. I'm looking forward to the homely atmosphere, wholesome food, and community of like-minded women. The location seems perfect for quick commutes to Hinjewadi IT Park.",
   },
   {
     name: "Priya Desai",
@@ -26,7 +26,7 @@ const testimonials = [
     company: "Symbiosis Institute",
     rating: 5,
     comment:
-      "As a student, I appreciate the quiet study spaces and high-speed WiFi. The flexible timings are perfect for my schedule, and I never worry about my safety even when returning late. The community events help us connect with other residents.",
+      "As a student, I'm eager to use the quiet study spaces and high-speed WiFi they're planning. The flexible timings will be perfect for my schedule, and I won't have to worry about safety when returning late. Can't wait for the community events!",
   },
   {
     name: "Sanjana Patel",
@@ -34,7 +34,7 @@ const testimonials = [
     company: "Wipro",
     rating: 4,
     comment:
-      "The amenities at Comfort Stay PG are thoughtfully designed for working women. I love the beauty corner and the lounge area where I can relax after work. The twin-sharing room is spacious and gives enough privacy.",
+      "The amenities at Comfort Stay PG seem thoughtfully designed for working women. I'm excited about the beauty corner and lounge area where I'll be able to relax after work. The twin-sharing room layouts look spacious with good privacy.",
   },
   {
     name: "Riya Mehta",
@@ -42,7 +42,7 @@ const testimonials = [
     company: "Tech Mahindra",
     rating: 5,
     comment:
-      "After trying several PGs in Pune, I can confidently say Comfort Stay is the best. The cleanliness, nutritious meals, and the warm staff make it feel like home. The management is responsive to feedback and constantly improving.",
+      "After researching several PGs in Pune, Comfort Stay's plans look the most promising. Their focus on cleanliness, nutritious meals, and attentive staff makes it seem like a real home. I'm impressed by their responsiveness to queries about the new facility.",
   },
 ];
 
@@ -58,8 +58,15 @@ const Testimonials = () => {
           className="glass-effect p-8 md:p-12 rounded-lg"
         >
           <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
-            What Our Residents Say
+            What Our Future Residents Can Expect
           </h2>
+
+          <div className="text-center mb-8 text-gray-700 dark:text-gray-300">
+            <p>
+              See what residents are looking forward to at our new PG opening in
+              March 2025. Pre-book now to experience these benefits!
+            </p>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
@@ -86,7 +93,7 @@ const Testimonials = () => {
                       {testimonial.role}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {testimonial.company}
+                      Prospective Resident
                     </p>
                   </div>
                 </div>

@@ -50,9 +50,18 @@ const About = () => {
           transition={{ duration: 0.8 }}
           className="glass-effect p-8 md:p-12 rounded-lg"
         >
-          <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
-            About Comfort Stay PG
-          </h2>
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Welcome to Comfort Stay PG
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              Your premier accommodation choice in Hinjewadi Phase 1, Pune.
+              Opened in March 2025, our brand new facility is designed
+              specifically for female professionals and students, offering
+              comfortable 2-sharing and 3-sharing rooms to suit your needs and
+              budget.
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <p className="text-lg mb-6">
@@ -60,16 +69,18 @@ const About = () => {
                 <span className="font-semibold text-pink-600 dark:text-pink-400">
                   Comfort Stay PG
                 </span>
-                , an exclusive girls&apos; paying guest accommodation in the
-                heart of Hinjewadi, Pune. We offer a perfect blend of comfort,
-                security, and modern amenities designed specifically for working
-                women and female students.
+                , an exclusive girls&apos; paying guest accommodation opening in
+                March 2025 in the heart of Hinjewadi, Pune. Our brand new
+                building offers a perfect blend of comfort, security, and modern
+                amenities designed specifically for working women and female
+                students.
               </p>
               <p className="text-lg mb-6">
                 Strategically located near Hinjewadi IT Park and major
                 educational institutions, our PG provides convenient and safe
                 accommodation with easy access to workplaces, shopping centers,
-                and entertainment venues.
+                and entertainment venues. We offer comfortable 2-sharing and
+                3-sharing rooms to suit your needs and budget.
               </p>
               <p className="text-lg">
                 Experience a nurturing, homelike environment with our dedicated

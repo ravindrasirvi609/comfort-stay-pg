@@ -1,14 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Snowflake, Star, Bed } from "lucide-react";
+import { Users, Bed } from "lucide-react";
 
 const rooms = [
   {
-    type: "Shared Room",
-    capacity: "2-3 Girls",
+    type: "Triple Sharing",
+    capacity: "3 Girls",
     price: "₹9,500/month",
     features: [
+      "Brand new room (March 2025)",
       "Spacious living area",
       "Personal cupboard",
       "Study table with chair",
@@ -23,6 +24,7 @@ const rooms = [
     capacity: "2 Girls",
     price: "₹12,000/month",
     features: [
+      "Brand new room (March 2025)",
       "Premium twin beds",
       "Larger cupboards",
       "Dedicated study area",
@@ -31,34 +33,6 @@ const rooms = [
     ],
     color: "bg-pink-200 dark:bg-pink-900/40",
     icon: <Bed size={24} />,
-  },
-  {
-    type: "AC Twin Sharing",
-    capacity: "2 Girls",
-    price: "₹14,000/month",
-    features: [
-      "Air conditioned room",
-      "Premium twin beds",
-      "Larger cupboards",
-      "Dedicated study area",
-      "Attached bathroom",
-    ],
-    color: "bg-pink-300 dark:bg-pink-900/60",
-    icon: <Snowflake size={24} />,
-  },
-  {
-    type: "Private Room",
-    capacity: "1 Girl",
-    price: "₹18,000/month",
-    features: [
-      "Complete privacy",
-      "Queen sized bed",
-      "Large wardrobe",
-      "Dedicated work space",
-      "Private bathroom",
-    ],
-    color: "bg-pink-400 dark:bg-pink-900/80",
-    icon: <Star size={24} />,
   },
 ];
 
@@ -76,7 +50,11 @@ const Rooms = () => {
           <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
             Room Types & Pricing
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <p className="text-center mb-8 text-gray-700 dark:text-gray-300">
+            Our brand new building opens in March 2025 with two room options to
+            choose from:
+          </p>
+          <div className="grid md:grid-cols-2 gap-6">
             {rooms.map((room, index) => (
               <motion.div
                 key={index}
@@ -128,6 +106,11 @@ const Rooms = () => {
             housekeeping services.
             <br />
             Security deposit: Refundable amount equal to one month&apos;s rent.
+            <br />
+            <span className="font-semibold">
+              Pre-bookings now open for our brand new building opened in March
+              2025!
+            </span>
           </p>
         </motion.div>
       </div>
