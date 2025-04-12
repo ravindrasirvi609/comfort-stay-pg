@@ -9,7 +9,7 @@ const rooms = [
     capacity: "3 Girls",
     price: "₹9,500/month",
     features: [
-      "Brand new room (March 2025)",
+      "Brand new room (Opened Feb 2025)",
       "Spacious living area",
       "Personal cupboard",
       "Study table with chair",
@@ -24,7 +24,7 @@ const rooms = [
     capacity: "2 Girls",
     price: "₹12,000/month",
     features: [
-      "Brand new room (March 2025)",
+      "Brand new room (Opened Feb 2025)",
       "Premium twin beds",
       "Larger cupboards",
       "Dedicated study area",
@@ -51,8 +51,8 @@ const Rooms = () => {
             Room Types & Pricing
           </h2>
           <p className="text-center mb-8 text-gray-700 dark:text-gray-300">
-            Our brand new building opens in March 2025 with two room options to
-            choose from:
+            Our brand new building opened in February 2025 with two room
+            options:
           </p>
           <div className="grid md:grid-cols-2 gap-6">
             {rooms.map((room, index) => (
@@ -108,8 +108,8 @@ const Rooms = () => {
             Security deposit: Refundable amount equal to one month&apos;s rent.
             <br />
             <span className="font-semibold">
-              Pre-bookings now open for our brand new building opened in March
-              2025!
+              Limited rooms still available in our brand new building that
+              opened in February 2025!
             </span>
           </p>
         </motion.div>

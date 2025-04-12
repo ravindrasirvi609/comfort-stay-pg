@@ -52,7 +52,7 @@ const Hero = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="comfort-subheading text-xl md:text-2xl mb-6 text-gray-600 dark:text-pink-200/90"
             >
-              New Girls PG in Hinjewadi • Opened March 2025
+              New Girls PG in Hinjewadi • Opened February 2025
             </motion.p>
 
             <motion.p
@@ -61,8 +61,8 @@ const Hero = () => {
               transition={{ duration: 0.5, delay: 0.35 }}
               className="text-lg mb-6 text-gray-700 dark:text-gray-300"
             >
-              Pre-bookings open for our brand new facility with comfortable
-              2-sharing and 3-sharing rooms.
+              Brand new facility now open with comfortable 2-sharing and
+              3-sharing rooms.
             </motion.p>
 
             <motion.div
@@ -140,7 +140,7 @@ const Hero = () => {
                   Brand New Building
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Modern facilities Opened March 2025
+                  Modern facilities opened February 2025
                 </p>
               </motion.div>
 

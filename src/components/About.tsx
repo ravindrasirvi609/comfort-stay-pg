@@ -56,7 +56,7 @@ const About = () => {
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Your premier accommodation choice in Hinjewadi Phase 1, Pune.
-              Opened in March 2025, our brand new facility is designed
+              Opened in February 2025, our brand new facility is designed
               specifically for female professionals and students, offering
               comfortable 2-sharing and 3-sharing rooms to suit your needs and
               budget.
@@ -69,11 +69,11 @@ const About = () => {
                 <span className="font-semibold text-pink-600 dark:text-pink-400">
                   Comfort Stay PG
                 </span>
-                , an exclusive girls&apos; paying guest accommodation opening in
-                March 2025 in the heart of Hinjewadi, Pune. Our brand new
-                building offers a perfect blend of comfort, security, and modern
-                amenities designed specifically for working women and female
-                students.
+                , an exclusive girls&apos; paying guest accommodation that
+                opened in February 2025 in the heart of Hinjewadi, Pune. Our
+                brand new building offers a perfect blend of comfort, security,
+                and modern amenities designed specifically for working women and
+                female students.
               </p>
               <p className="text-lg mb-6">
                 Strategically located near Hinjewadi IT Park and major

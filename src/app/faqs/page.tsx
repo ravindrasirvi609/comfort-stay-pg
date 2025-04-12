@@ -1,9 +1,10 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FAQs - Comfort Stay PG | New Girls PG in Hinjewadi Opened March 2025",
+  title:
+    "FAQs - Comfort Stay PG | New Girls PG in Hinjewadi Opened February 2025",
   description:
-    "Find answers to frequently asked questions about Comfort Stay PG in Hinjewadi, Pune. Learn about our brand new facility opened in March 2025 with 2 & 3 sharing rooms.",
+    "Find answers to frequently asked questions about Comfort Stay PG in Hinjewadi, Pune. Learn about our brand new facility opened in February 2025 with 2 & 3 sharing rooms.",
 };
 
 export default function FAQsPage() {
@@ -41,11 +42,12 @@ export default function FAQsPage() {
                 What types of rooms do you offer?
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Our brand new building opened in March 2025 offers comfortable
-                double sharing (2 girls) and triple sharing (3 girls) rooms. All
-                rooms are fully furnished with quality beds, personal storage
-                spaces, and dedicated study areas. Each room is designed to
-                provide the perfect balance of privacy and community living.
+                Our brand new building opened in February 2025 offers
+                comfortable double sharing (2 girls) and triple sharing (3
+                girls) rooms. All rooms are fully furnished with quality beds,
+                personal storage spaces, and dedicated study areas. Each room is
+                designed to provide the perfect balance of privacy and community
+                living.
               </p>
             </div>
 

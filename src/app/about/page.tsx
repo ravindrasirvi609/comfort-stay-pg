@@ -4,13 +4,13 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Us - Comfort Stay PG | New Girls PG in Hinjewadi Phase 1",
   description:
-    "Learn about Comfort Stay PG, a brand new girls accommodation in Hinjewadi Phase 1, Pune, Opened March 2025. Offering comfortable 2 & 3 sharing rooms for working women and students.",
+    "Learn about Comfort Stay PG, a brand new girls accommodation in Hinjewadi Phase 1, Pune, opened February 2025. Offering comfortable 2 & 3 sharing rooms for working women and students.",
   keywords:
     "new girls PG Hinjewadi 2025, ladies accommodation Pune, affordable PG Hinjewadi, 2 sharing rooms, 3 sharing PG, working women PG, student accommodation Hinjewadi",
   openGraph: {
     title: "About Comfort Stay PG - New Girls Accommodation in Hinjewadi",
     description:
-      "Brand new PG Opened March 2025 with premium 2 & 3 sharing rooms in Hinjewadi Phase 1, Pune. Designed specifically for working women and students.",
+      "Brand new PG opened February 2025 with premium 2 & 3 sharing rooms in Hinjewadi Phase 1, Pune. Designed specifically for working women and students.",
     type: "website",
   },
 };
@@ -25,7 +25,7 @@ export default function AboutPage() {
           </h1>
           <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
             A brand new girls PG accommodation in Hinjewadi Phase 1, Pune,
-            Opened March 2025. Offering comfortable 2 & 3 sharing rooms for
+            opened February 2025. Offering comfortable 2 & 3 sharing rooms for
             working women and students.
           </p>
         </div>
@@ -308,7 +308,7 @@ export default function AboutPage() {
               </h3>
               <p className="text-gray-700 dark:text-gray-300">
                 Our PG is housed in a newly constructed building opening in
-                March 2025, featuring modern design, fresh interiors, and the
+                February 2025, featuring modern design, fresh interiors, and the
                 latest amenities. Be among the first residents to enjoy our
                 pristine facilities.
               </p>
@@ -337,7 +337,8 @@ export default function AboutPage() {
               <p className="text-gray-700 dark:text-gray-300">
                 We exclusively offer comfortable 2-sharing and 3-sharing rooms,
                 each thoughtfully designed with quality furnishings and personal
-                space. Pre-bookings available now for our March 2025 opening.
+                space. Limited rooms still available in our facility that opened
+                in February 2025.
               </p>
             </div>
           </div>
