@@ -4,6 +4,30 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  FaBed,
+  FaUser,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaIdCard,
+} from "react-icons/fa";
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  pgId: string;
+  phone: string;
+  allocatedRoomNo: string;
+  bedNumber: number;
+  moveInDate: string;
+}
+
+interface Bed {
+  bedNumber: number;
+  isOccupied: boolean;
+  resident: User | null;
+}
 
 interface Room {
   _id: string;
@@ -17,6 +41,7 @@ interface Room {
   amenities: string[];
   isActive: boolean;
   createdAt: string;
+  beds: Bed[];
 }
 
 interface PageParams {
@@ -92,6 +117,16 @@ export default function RoomDetailPage({
     );
   }
 
+  // Function to format date with proper handling of null/undefined values
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex justify-between items-center">
@@ -140,7 +175,7 @@ export default function RoomDetailPage({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                 Room Details
@@ -193,41 +228,122 @@ export default function RoomDetailPage({
                     ))}
                   </div>
                 </div>
+
+                <div className="mt-6 backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-xl p-4 border border-white/20 dark:border-gray-700/30">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    Room Created
+                  </h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {formatDate(room.createdAt)}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-                Actions
+                Bed Allocation
               </h2>
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {room.beds &&
+                  room.beds.map((bed) => (
+                    <div
+                      key={`bed-${bed.bedNumber}`}
+                      className={`backdrop-blur-sm p-4 rounded-xl border ${
+                        bed.isOccupied
+                          ? "bg-blue-50/60 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40"
+                          : "bg-green-50/60 dark:bg-green-900/20 border-green-200 dark:border-green-800/40"
+                      }`}
+                    >
+                      <div className="flex items-center mb-3">
+                        <FaBed
+                          className={`h-5 w-5 ${bed.isOccupied ? "text-blue-500" : "text-green-500"} mr-2`}
+                        />
+                        <h3 className="text-lg font-medium">
+                          Bed #{bed.bedNumber} -
+                          <span
+                            className={`ml-1 ${bed.isOccupied ? "text-blue-600 dark:text-blue-400" : "text-green-600 dark:text-green-400"}`}
+                          >
+                            {bed.isOccupied ? "Occupied" : "Available"}
+                          </span>
+                        </h3>
+                      </div>
+
+                      {bed.isOccupied && bed.resident && (
+                        <div className="pl-7">
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <FaUser className="h-4 w-4 text-gray-500 mr-2" />
+                              <p className="text-gray-800 dark:text-gray-200 font-medium">
+                                {bed.resident.name}
+                              </p>
+                            </div>
+                            <div className="flex items-center">
+                              <FaIdCard className="h-4 w-4 text-gray-500 mr-2" />
+                              <p className="text-gray-600 dark:text-gray-400">
+                                {bed.resident.pgId}
+                              </p>
+                            </div>
+                            <div className="flex items-center">
+                              <FaPhoneAlt className="h-4 w-4 text-gray-500 mr-2" />
+                              <p className="text-gray-600 dark:text-gray-400">
+                                {bed.resident.phone}
+                              </p>
+                            </div>
+                            <div className="flex items-center">
+                              <FaEnvelope className="h-4 w-4 text-gray-500 mr-2" />
+                              <p className="text-gray-600 dark:text-gray-400 text-sm truncate">
+                                {bed.resident.email}
+                              </p>
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              Move-in date:{" "}
+                              {formatDate(bed.resident.moveInDate)}
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <Link
+                              href={`/admin/residents/${bed.resident._id}`}
+                              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              View resident details →
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+
+                      {!bed.isOccupied && (
+                        <div className="pl-7 py-2">
+                          <p className="text-gray-500 dark:text-gray-400">
+                            No resident assigned
+                          </p>
+                          <Link
+                            href={`/admin/residents/assign?roomId=${room._id}&bedNumber=${bed.bedNumber}`}
+                            className="inline-block mt-2 text-sm text-green-600 dark:text-green-400 hover:underline"
+                          >
+                            Assign resident →
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+
+              <div className="flex gap-4 mt-8">
                 <Link
                   href={`/admin/rooms/edit/${room._id}`}
-                  className="block w-full text-center py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition duration-300 shadow-md"
+                  className="inline-flex items-center py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition duration-300 shadow-md"
                 >
                   Edit Room Details
                 </Link>
 
                 <Link
                   href={`/admin/residents?roomId=${room._id}`}
-                  className="block w-full text-center py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition duration-300 shadow-md"
+                  className="inline-flex items-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition duration-300 shadow-md"
                 >
                   Manage Residents
                 </Link>
-              </div>
-
-              <div className="mt-6 backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-xl p-4 border border-white/20 dark:border-gray-700/30">
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                  Room Created
-                </h3>
-                <p className="text-gray-700 dark:text-gray-300">
-                  {new Date(room.createdAt).toLocaleDateString("en-IN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
               </div>
             </div>
           </div>

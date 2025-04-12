@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Room from "@/app/api/models/Room";
+import { User } from "@/app/api/models";
 
 // Get a single room
 export async function GET(
@@ -21,8 +22,11 @@ export async function GET(
 
     await connectToDatabase();
 
-    // Find room by ID
-    const room = await Room.findById(params.id);
+    // Find room by ID and populate residents
+    const room = await Room.findById(params.id).populate({
+      path: "residents",
+      select: "_id name email pgId phone allocatedRoomNo",
+    });
 
     if (!room) {
       return NextResponse.json(
@@ -31,9 +35,30 @@ export async function GET(
       );
     }
 
+    // Get additional user details grouped by bed number
+    // Find all users assigned to this room
+    const roomResidents = await User.find({
+      roomId: params.id,
+      isActive: true,
+    }).select("_id name email pgId phone allocatedRoomNo bedNumber moveInDate");
+
+    // Group users by bed number
+    const beds = [];
+    for (let i = 1; i <= room.capacity; i++) {
+      const resident = roomResidents.find((r) => r.bedNumber === i) || null;
+      beds.push({
+        bedNumber: i,
+        isOccupied: !!resident,
+        resident: resident,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      room,
+      room: {
+        ...room.toObject(),
+        beds,
+      },
     });
   } catch (error) {
     console.error("Get room error:", error);

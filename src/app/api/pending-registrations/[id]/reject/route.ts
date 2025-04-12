@@ -35,39 +35,38 @@ export async function POST(
 
     await connectToDatabase();
 
-    // Find the pending registration by ID
-    const pendingUser = await User.findById(params.id);
+    // Ensure params is not a Promise before using it
+    const id = await params.id;
 
-    if (!pendingUser) {
+    // Find the pending registration
+    const pendingRegistration = await User.findOne({
+      _id: id,
+      registrationStatus: "Pending",
+    });
+
+    if (!pendingRegistration) {
       return NextResponse.json(
         { success: false, message: "Pending registration not found" },
         { status: 404 }
       );
     }
 
-    // Check if user is already rejected or approved
-    if (pendingUser.registrationStatus !== "Pending") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `This registration has already been ${pendingUser.registrationStatus.toLowerCase()}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Update pending registration status
-    pendingUser.registrationStatus = "Rejected";
-    pendingUser.rejectionReason = reason;
-    pendingUser.rejectionDate = new Date();
-    await pendingUser.save();
+    // Update registration status to rejected
+    pendingRegistration.registrationStatus = "Rejected";
+    pendingRegistration.rejectionReason = reason;
+    pendingRegistration.rejectionDate = new Date();
+    await pendingRegistration.save();
 
     // Send rejection email to the applicant
-    await sendRejectionEmail(pendingUser.name, pendingUser.email, reason);
+    await sendRejectionEmail(
+      pendingRegistration.name,
+      pendingRegistration.email,
+      reason
+    );
 
     return NextResponse.json({
       success: true,
-      message: "Registration request rejected and applicant notified",
+      message: "Registration rejected successfully",
     });
   } catch (error) {
     console.error("Error rejecting registration:", error);

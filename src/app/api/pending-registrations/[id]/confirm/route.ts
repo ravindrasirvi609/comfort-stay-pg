@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import { isAuthenticated, isAdmin, hashPassword } from "@/app/lib/auth";
-import { sendWelcomeEmail } from "@/app/lib/email";
-import { User, Room } from "@/app/api/models";
+import { isAuthenticated, isAdmin } from "@/app/lib/auth";
+import { User, Payment } from "@/app/api/models";
+import { sendEmail } from "@/app/lib/email";
+import bcrypt from "bcryptjs";
+import { generateRandomPassword } from "@/app/lib/utils";
 
 export async function POST(
   request: NextRequest,
@@ -29,9 +31,9 @@ export async function POST(
       );
     }
 
-    // Get request body
-    const requestData = await request.json();
-    const { allocatedRoomNo, checkInDate } = requestData;
+    // Get data from the request body
+    const data = await request.json();
+    const { allocatedRoomNo, checkInDate, paymentDetails } = data;
 
     if (!allocatedRoomNo) {
       return NextResponse.json(
@@ -42,95 +44,101 @@ export async function POST(
 
     await connectToDatabase();
 
-    // Find the pending registration by ID
-    const pendingUser = await User.findById(params.id);
+    // Ensure params is not a Promise before using it
+    const id = await params.id;
 
-    if (!pendingUser) {
+    // Find the pending registration
+    const pendingRegistration = await User.findOne({
+      _id: id,
+      registrationStatus: "Pending",
+    });
+
+    if (!pendingRegistration) {
       return NextResponse.json(
         { success: false, message: "Pending registration not found" },
         { status: 404 }
       );
     }
 
-    // Check if user is already approved
-    if (pendingUser.registrationStatus !== "Pending") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `This registration has already been ${pendingUser.registrationStatus.toLowerCase()}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Find the room
-    const room = await Room.findOne({ roomNumber: allocatedRoomNo });
-
-    if (!room) {
-      return NextResponse.json(
-        { success: false, message: "Room not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check if room has vacancy
-    if (room.currentOccupancy >= room.capacity) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Selected room is already at full capacity",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Generate PG ID from email
-    const pgId = pendingUser.email.split("@")[0].toUpperCase();
-
-    // Generate password based on mobile number
-    const lastFourDigits = pendingUser.phone.slice(-4);
-    const plainPassword = `Comfort@${lastFourDigits}`;
-
+    // Generate a random password
+    const plainPassword = generateRandomPassword();
     // Hash the password
-    const hashedPassword = await hashPassword(plainPassword);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
-    // Update the pending user to approved user
-    pendingUser.registrationStatus = "Approved";
-    pendingUser.password = hashedPassword;
-    pendingUser.pgId = pgId;
-    pendingUser.roomId = room._id;
-    pendingUser.allocatedRoomNo = allocatedRoomNo;
-    pendingUser.moveInDate = checkInDate || new Date();
-    pendingUser.approvalDate = new Date();
+    // Update the registration status to confirmed and set allocated room
+    pendingRegistration.registrationStatus = "Confirmed";
+    pendingRegistration.allocatedRoomNo = allocatedRoomNo;
+    pendingRegistration.checkInDate = checkInDate;
+    pendingRegistration.password = hashedPassword; // Set the password
 
-    await pendingUser.save();
+    await pendingRegistration.save();
 
-    // Update room occupancy
-    room.currentOccupancy += 1;
-    if (room.currentOccupancy >= room.capacity) {
-      room.status = "occupied";
+    // Create a payment record if payment details are provided
+    if (paymentDetails && paymentDetails.amount) {
+      // Generate receipt number (format: PG-YYYYMMDD-XXXX)
+      const date = new Date();
+      const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const receiptNumber = `PG-${dateStr}-${randomNum}`;
+
+      // Create new payment record
+      const newPayment = new Payment({
+        userId: pendingRegistration._id,
+        amount: Number(paymentDetails.amount),
+        month: paymentDetails.month,
+        paymentDate: new Date(),
+        status: paymentDetails.paymentStatus || "Paid",
+        paymentMethod: paymentDetails.paymentMethod || "Cash",
+        receiptNumber: receiptNumber,
+        remarks: "Initial payment during registration confirmation",
+      });
+
+      await newPayment.save();
     }
-    await room.save();
 
-    // Send welcome email with credentials
-    await sendWelcomeEmail(
-      pendingUser.name,
-      pendingUser.email,
-      pgId,
-      plainPassword
-    );
+    // Send email with login credentials
+    try {
+      await sendEmail({
+        to: pendingRegistration.email,
+        subject: "Your Registration is Confirmed - Comfort Stay PG",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #d53f8c;">Registration Confirmed - Comfort Stay PG</h2>
+            <p>Dear ${pendingRegistration.name},</p>
+            <p>Your registration has been confirmed. You can now login to your account using the following credentials:</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>PG ID:</strong> ${pendingRegistration.pgId}</p>
+              <p><strong>Password:</strong> ${plainPassword}</p>
+            </div>
+            <p style="font-weight: bold;">Room Details:</p>
+            <p>You have been allocated Room Number: ${allocatedRoomNo}</p>
+            <p>Check-in Date: ${new Date(checkInDate).toLocaleDateString()}</p>
+            ${
+              paymentDetails
+                ? `
+            <p style="font-weight: bold;">Payment Information:</p>
+            <p>Amount: ₹${paymentDetails.amount}</p>
+            <p>Month: ${paymentDetails.month}</p>
+            <p>Status: ${paymentDetails.paymentStatus || "Paid"}</p>
+            `
+                : ""
+            }
+            <p>Please make sure to change your password after your first login for security reasons.</p>
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+            <p>Welcome to Comfort Stay PG!</p>
+            <p>Best regards,<br>Comfort Stay PG Team</p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Error sending confirmation email:", emailError);
+      // Continue with the process even if email fails
+    }
 
     return NextResponse.json({
       success: true,
-      message:
-        "Registration confirmed successfully. Login credentials sent to email.",
-      user: {
-        _id: pendingUser._id,
-        name: pendingUser.name,
-        email: pendingUser.email,
-        pgId: pendingUser.pgId,
-        roomNumber: allocatedRoomNo,
-      },
+      message: "Registration confirmed successfully",
     });
   } catch (error) {
     console.error("Error confirming registration:", error);

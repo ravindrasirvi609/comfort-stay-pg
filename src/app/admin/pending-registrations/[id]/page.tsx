@@ -8,10 +8,10 @@ import Link from "next/link";
 
 interface PendingRegistration {
   _id: string;
-  fullName: string;
-  emailAddress: string;
+  name: string;
+  email: string;
   fathersName: string;
-  mobileNumber: string;
+  phone: string;
   guardianMobileNumber: string;
   permanentAddress: string;
   city: string;
@@ -20,7 +20,7 @@ interface PendingRegistration {
   validIdType: string;
   validIdPhoto: string;
   passportPhoto: string;
-  status: string;
+  registrationStatus: string;
   createdAt: string;
   allocatedRoomNo?: string;
   checkInDate?: string;
@@ -37,12 +37,22 @@ export default function PendingRegistrationDetailsPage() {
   const [error, setError] = useState("");
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
-  const [room, setRoom] = useState("");
-  const [checkInDate, setCheckInDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
   const [confirmSuccess, setConfirmSuccess] = useState(false);
   const [rejectSuccess, setRejectSuccess] = useState(false);
+
+  // Confirmation dialog state
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    room: "",
+    amount: "",
+    month: new Date().toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    }),
+    paymentMethod: "Cash",
+    paymentStatus: "Paid",
+    checkInDate: new Date().toISOString().split("T")[0],
+  });
 
   useEffect(() => {
     const fetchRegistrationDetails = async () => {
@@ -71,8 +81,28 @@ export default function PendingRegistrationDetailsPage() {
     }
   }, [id]);
 
-  const handleConfirm = async () => {
-    if (!room) {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const openConfirmDialog = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const closeConfirmDialog = () => {
+    setShowConfirmDialog(false);
+  };
+
+  const handleConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.room) {
       setError("Please enter a room number");
       return;
     }
@@ -84,21 +114,28 @@ export default function PendingRegistrationDetailsPage() {
       const response = await axios.post(
         `/api/pending-registrations/${id}/confirm`,
         {
-          allocatedRoomNo: room,
-          checkInDate: new Date(checkInDate).toISOString(),
+          allocatedRoomNo: formData.room,
+          checkInDate: new Date(formData.checkInDate).toISOString(),
+          paymentDetails: {
+            amount: Number(formData.amount),
+            month: formData.month,
+            paymentMethod: formData.paymentMethod,
+            paymentStatus: formData.paymentStatus,
+          },
         }
       );
 
       if (response.data.success) {
         setConfirmSuccess(true);
-        // Refresh registration data to show updated status
+        setShowConfirmDialog(false);
+        // Refresh registration data to show updated registrationStatus
         setRegistration((prev) =>
           prev
             ? {
                 ...prev,
-                status: "Confirmed",
-                allocatedRoomNo: room,
-                checkInDate,
+                registrationStatus: "Confirmed",
+                allocatedRoomNo: formData.room,
+                checkInDate: formData.checkInDate,
               }
             : null
         );
@@ -130,9 +167,9 @@ export default function PendingRegistrationDetailsPage() {
 
       if (response.data.success) {
         setRejectSuccess(true);
-        // Refresh registration data to show updated status
+        // Refresh registration data to show updated registrationStatus
         setRegistration((prev) =>
-          prev ? { ...prev, status: "Rejected" } : null
+          prev ? { ...prev, registrationStatus: "Rejected" } : null
         );
       } else {
         setError(response.data.message || "Failed to reject registration");
@@ -297,7 +334,7 @@ export default function PendingRegistrationDetailsPage() {
 
         {/* Registration Details Card */}
         <div className="backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl overflow-hidden">
-          {/* Header with status */}
+          {/* Header with registrationStatus */}
           <div className="bg-white/50 dark:bg-gray-900/50 p-6 border-b border-gray-200/50 dark:border-gray-700/50">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
@@ -311,14 +348,14 @@ export default function PendingRegistrationDetailsPage() {
               </div>
               <span
                 className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${
-                  registration.status === "Pending"
+                  registration.registrationStatus === "Pending"
                     ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                    : registration.status === "Confirmed"
+                    : registration.registrationStatus === "Confirmed"
                       ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                       : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                 }`}
               >
-                {registration.status}
+                {registration.registrationStatus}
               </span>
             </div>
           </div>
@@ -337,7 +374,7 @@ export default function PendingRegistrationDetailsPage() {
                     Full Name
                   </p>
                   <p className="text-gray-800 dark:text-white">
-                    {registration.fullName}
+                    {registration.name}
                   </p>
                 </div>
 
@@ -355,7 +392,7 @@ export default function PendingRegistrationDetailsPage() {
                     Email Address
                   </p>
                   <p className="text-gray-800 dark:text-white">
-                    {registration.emailAddress}
+                    {registration.email}
                   </p>
                 </div>
 
@@ -364,7 +401,7 @@ export default function PendingRegistrationDetailsPage() {
                     Mobile Number
                   </p>
                   <p className="text-gray-800 dark:text-white">
-                    {registration.mobileNumber}
+                    {registration.phone}
                   </p>
                 </div>
 
@@ -503,87 +540,24 @@ export default function PendingRegistrationDetailsPage() {
             </div>
 
             {/* Confirmation Details (if Pending) */}
-            {registration.status === "Pending" && (
+            {registration.registrationStatus === "Pending" && (
               <div className="mt-8 space-y-4">
                 <h3 className="text-lg font-medium text-gray-800 dark:text-white border-b border-gray-200/50 dark:border-gray-700/50 pb-2">
                   Confirmation Details
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="roomNumber"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Room Number *
-                    </label>
-                    <input
-                      type="text"
-                      id="roomNumber"
-                      value={room}
-                      onChange={(e) => setRoom(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                      placeholder="Enter room number"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="checkInDate"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Check-in Date
-                    </label>
-                    <input
-                      type="date"
-                      id="checkInDate"
-                      value={checkInDate}
-                      onChange={(e) => setCheckInDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-4 mt-6">
+                <div className="flex flex-col gap-4">
                   <button
-                    onClick={handleConfirm}
-                    disabled={confirmLoading || !room}
-                    className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={openConfirmDialog}
+                    className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {confirmLoading ? (
-                      <>
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Processing...
-                      </>
-                    ) : (
-                      "Confirm Registration"
-                    )}
+                    Confirm Registration
                   </button>
 
                   <button
                     onClick={handleReject}
                     disabled={rejectLoading}
-                    className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {rejectLoading ? (
                       <>
@@ -617,8 +591,187 @@ export default function PendingRegistrationDetailsPage() {
               </div>
             )}
 
+            {/* Confirmation Dialog */}
+            {showConfirmDialog && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                    Confirm Registration
+                  </h3>
+
+                  <form onSubmit={handleConfirm} className="space-y-4">
+                    {/* Room field */}
+                    <div>
+                      <label
+                        htmlFor="room"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Room Number *
+                      </label>
+                      <input
+                        type="text"
+                        id="room"
+                        name="room"
+                        value={formData.room}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        placeholder="Enter room number"
+                      />
+                    </div>
+
+                    {/* Amount field */}
+                    <div>
+                      <label
+                        htmlFor="amount"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Amount (₹) *
+                      </label>
+                      <input
+                        type="number"
+                        id="amount"
+                        name="amount"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        placeholder="Enter payment amount"
+                      />
+                    </div>
+
+                    {/* Month field */}
+                    <div>
+                      <label
+                        htmlFor="month"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Month *
+                      </label>
+                      <input
+                        type="text"
+                        id="month"
+                        name="month"
+                        value={formData.month}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        placeholder="e.g. April 2025"
+                      />
+                    </div>
+
+                    {/* Payment Method field */}
+                    <div>
+                      <label
+                        htmlFor="paymentMethod"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Payment Method
+                      </label>
+                      <select
+                        id="paymentMethod"
+                        name="paymentMethod"
+                        value={formData.paymentMethod}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                      </select>
+                    </div>
+
+                    {/* Payment Status field */}
+                    <div>
+                      <label
+                        htmlFor="paymentStatus"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Payment Status
+                      </label>
+                      <select
+                        id="paymentStatus"
+                        name="paymentStatus"
+                        value={formData.paymentStatus}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                    </div>
+
+                    {/* Check-in Date field */}
+                    <div>
+                      <label
+                        htmlFor="checkInDate"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Check-in Date
+                      </label>
+                      <input
+                        type="date"
+                        id="checkInDate"
+                        name="checkInDate"
+                        value={formData.checkInDate}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        type="button"
+                        onClick={closeConfirmDialog}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={
+                          confirmLoading || !formData.room || !formData.amount
+                        }
+                        className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {confirmLoading ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Processing...
+                          </>
+                        ) : (
+                          "Confirm Registration"
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
             {/* Approved Details (if Confirmed) */}
-            {registration.status === "Confirmed" && (
+            {registration.registrationStatus === "Confirmed" && (
               <div className="mt-8 p-4 border border-green-200 dark:border-green-800 rounded-md bg-green-50 dark:bg-green-900/20">
                 <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
                   Confirmation Details
@@ -654,7 +807,7 @@ export default function PendingRegistrationDetailsPage() {
             )}
 
             {/* Rejected Details (if Rejected) */}
-            {registration.status === "Rejected" && (
+            {registration.registrationStatus === "Rejected" && (
               <div className="mt-8 p-4 border border-red-200 dark:border-red-800 rounded-md bg-red-50 dark:bg-red-900/20">
                 <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
                   Application Rejected

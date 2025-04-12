@@ -90,6 +90,10 @@ const UserSchema = new Schema(
       type: String,
       default: "",
     },
+    bedNumber: {
+      type: Number,
+      default: null,
+    },
 
     // Rejection details
     rejectionReason: {

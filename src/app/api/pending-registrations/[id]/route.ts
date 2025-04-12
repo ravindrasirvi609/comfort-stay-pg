@@ -30,9 +30,12 @@ export async function GET(
 
     await connectToDatabase();
 
+    // Ensure params is not a Promise before using it
+    const id = await params.id;
+
     // Find the pending registration by ID
     const pendingRegistration = await User.findOne({
-      _id: params.id,
+      _id: id,
       registrationStatus: "Pending",
     }).select("-password"); // Exclude password field
 

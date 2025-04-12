@@ -262,9 +262,9 @@ export default function PendingRegistrationsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {new Date(registration.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-2">
                         <button
-                          className="text-pink-600 hover:text-pink-900 dark:text-pink-400 dark:hover:text-pink-300 mr-3"
+                          className="text-pink-600 hover:text-pink-900 dark:text-pink-400 dark:hover:text-pink-300"
                           onClick={() => handleViewDetails(registration._id)}
                         >
                           View Details

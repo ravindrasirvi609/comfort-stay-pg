@@ -212,7 +212,7 @@ export default function UserDashboard() {
                   Monthly Rent:
                 </span>
                 <span className="text-gray-900 dark:text-white font-medium">
-                  ₹{user.roomId.price.toLocaleString()}
+                  ₹{user.roomId.price?.toLocaleString() || "0"}
                 </span>
               </div>
 
