@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 2;
 
   // Valid ID type options
   const validIdTypes = [
@@ -35,8 +35,6 @@ export default function RegisterPage() {
     validIdPhoto: "",
     companyNameAndAddress: "",
     passportPhoto: "",
-    password: "",
-    confirmPassword: "",
   });
 
   useEffect(() => {
@@ -80,16 +78,6 @@ export default function RegisterPage() {
         setError("Please fill all required fields in personal information");
         return;
       }
-    } else if (currentStep === 2) {
-      // Validate identity information
-      if (
-        !formData.validIdType ||
-        !formData.validIdPhoto ||
-        !formData.passportPhoto
-      ) {
-        setError("Please upload all required documents");
-        return;
-      }
     }
 
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
@@ -106,13 +94,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
 
     if (!formData.validIdPhoto) {
       setError("Please upload your ID document");
@@ -141,7 +122,6 @@ export default function RegisterPage() {
         validIdPhoto: formData.validIdPhoto,
         companyNameAndAddress: formData.companyNameAndAddress,
         passportPhoto: formData.passportPhoto,
-        password: formData.password,
       });
 
       if (response.data.success) {
@@ -161,8 +141,6 @@ export default function RegisterPage() {
           validIdPhoto: "",
           companyNameAndAddress: "",
           passportPhoto: "",
-          password: "",
-          confirmPassword: "",
         });
       } else {
         setError(response.data.message || "Registration request failed");
@@ -303,11 +281,7 @@ export default function RegisterPage() {
                       )}
                     </div>
                     <span className="text-xs font-medium">
-                      {index === 0
-                        ? "Personal Info"
-                        : index === 1
-                          ? "Identity"
-                          : "Account"}
+                      {index === 0 ? "Personal Info" : "Identity Verification"}
                     </span>
                   </div>
                 ))}
@@ -649,78 +623,31 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Step 3: Account Creation */}
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
-                    <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                        <label
-                          htmlFor="password"
-                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                        >
-                          Password *
-                        </label>
-                        <input
-                          id="password"
-                          name="password"
-                          type="password"
-                          required
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Create a secure password"
-                          value={formData.password}
-                          onChange={handleChange}
+              {/* Add information notice for step 2 */}
+              {currentStep === 2 && (
+                <div className="bg-blue-100/70 dark:bg-blue-900/30 backdrop-blur-sm border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 p-4 rounded-xl mt-6 max-w-md mx-auto">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
                         />
-                      </div>
+                      </svg>
                     </div>
-
-                    <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                        <label
-                          htmlFor="confirmPassword"
-                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                        >
-                          Confirm Password *
-                        </label>
-                        <input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type="password"
-                          required
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Confirm your password"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-100/70 dark:bg-blue-900/30 backdrop-blur-sm border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 p-4 rounded-xl mt-6 max-w-md mx-auto">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm">
-                          Your registration will be reviewed by the admin before
-                          approval. Once approved, you&apos;ll receive a
-                          confirmation email.
-                        </p>
-                      </div>
+                    <div className="ml-3">
+                      <p className="text-sm">
+                        Your registration will be reviewed by the admin before
+                        approval. Once approved, you&apos;ll receive your login
+                        credentials via email with the password automatically
+                        generated.
+                      </p>
                     </div>
                   </div>
                 </div>

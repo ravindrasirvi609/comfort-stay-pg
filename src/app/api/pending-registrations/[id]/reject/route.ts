@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { sendRejectionEmail } from "@/app/lib/email";
-import { PendingUser } from "@/app/api/models";
+import { User } from "@/app/api/models";
 
 export async function POST(
   request: NextRequest,
@@ -36,25 +36,34 @@ export async function POST(
     await connectToDatabase();
 
     // Find the pending registration by ID
-    const pendingRegistration = await PendingUser.findById(params.id);
+    const pendingUser = await User.findById(params.id);
 
-    if (!pendingRegistration) {
+    if (!pendingUser) {
       return NextResponse.json(
         { success: false, message: "Pending registration not found" },
         { status: 404 }
       );
     }
 
+    // Check if user is already rejected or approved
+    if (pendingUser.registrationStatus !== "Pending") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `This registration has already been ${pendingUser.registrationStatus.toLowerCase()}`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Update pending registration status
-    pendingRegistration.status = "Rejected";
-    await pendingRegistration.save();
+    pendingUser.registrationStatus = "Rejected";
+    pendingUser.rejectionReason = reason;
+    pendingUser.rejectionDate = new Date();
+    await pendingUser.save();
 
     // Send rejection email to the applicant
-    await sendRejectionEmail(
-      pendingRegistration.fullName,
-      pendingRegistration.emailAddress,
-      reason
-    );
+    await sendRejectionEmail(pendingUser.name, pendingUser.email, reason);
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
-import mongoose from "mongoose";
+import { User } from "@/app/api/models";
 
 export async function GET(
   request: NextRequest,
@@ -30,20 +30,11 @@ export async function GET(
 
     await connectToDatabase();
 
-    // Get the PendingUser model
-    const PendingUser = mongoose.models.PendingUser;
-
-    if (!PendingUser) {
-      return NextResponse.json(
-        { success: false, message: "PendingUser model not found" },
-        { status: 500 }
-      );
-    }
-
     // Find the pending registration by ID
-    const pendingRegistration = await PendingUser.findById(params.id).select(
-      "-password"
-    ); // Exclude password field
+    const pendingRegistration = await User.findOne({
+      _id: params.id,
+      registrationStatus: "Pending",
+    }).select("-password"); // Exclude password field
 
     if (!pendingRegistration) {
       return NextResponse.json(

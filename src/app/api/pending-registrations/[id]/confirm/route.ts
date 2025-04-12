@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import {
-  isAuthenticated,
-  isAdmin,
-  generatePgId,
-  generatePassword,
-  hashPassword,
-} from "@/app/lib/auth";
+import { isAuthenticated, isAdmin, hashPassword } from "@/app/lib/auth";
 import { sendWelcomeEmail } from "@/app/lib/email";
-import { User, PendingUser, Room } from "@/app/api/models";
+import { User, Room } from "@/app/api/models";
 
 export async function POST(
   request: NextRequest,
@@ -49,23 +43,22 @@ export async function POST(
     await connectToDatabase();
 
     // Find the pending registration by ID
-    const pendingRegistration = await PendingUser.findById(params.id);
+    const pendingUser = await User.findById(params.id);
 
-    if (!pendingRegistration) {
+    if (!pendingUser) {
       return NextResponse.json(
         { success: false, message: "Pending registration not found" },
         { status: 404 }
       );
     }
 
-    // Check if email already exists in User collection
-    const existingUser = await User.findOne({
-      email: pendingRegistration.emailAddress,
-    });
-
-    if (existingUser) {
+    // Check if user is already approved
+    if (pendingUser.registrationStatus !== "Pending") {
       return NextResponse.json(
-        { success: false, message: "A user with this email already exists" },
+        {
+          success: false,
+          message: `This registration has already been ${pendingUser.registrationStatus.toLowerCase()}`,
+        },
         { status: 400 }
       );
     }
@@ -91,46 +84,26 @@ export async function POST(
       );
     }
 
-    // Generate PG ID
-    const pgId = generatePgId();
+    // Generate PG ID from email
+    const pgId = pendingUser.email.split("@")[0].toUpperCase();
 
-    // Generate a password (either use the one from the request or generate a new one)
-    const plainPassword = generatePassword();
+    // Generate password based on mobile number
+    const lastFourDigits = pendingUser.phone.slice(-4);
+    const plainPassword = `Comfort@${lastFourDigits}`;
 
     // Hash the password
     const hashedPassword = await hashPassword(plainPassword);
 
-    // Create new user with all fields from PendingUser
-    const newUser = new User({
-      name: pendingRegistration.fullName,
-      email: pendingRegistration.emailAddress,
-      phone: pendingRegistration.mobileNumber,
-      role: "user",
-      password: hashedPassword,
-      pgId,
+    // Update the pending user to approved user
+    pendingUser.registrationStatus = "Approved";
+    pendingUser.password = hashedPassword;
+    pendingUser.pgId = pgId;
+    pendingUser.roomId = room._id;
+    pendingUser.allocatedRoomNo = allocatedRoomNo;
+    pendingUser.moveInDate = checkInDate || new Date();
+    pendingUser.approvalDate = new Date();
 
-      // Copy additional fields from pendingRegistration
-      fathersName: pendingRegistration.fathersName,
-      permanentAddress: pendingRegistration.permanentAddress,
-      city: pendingRegistration.city,
-      state: pendingRegistration.state,
-      guardianMobileNumber: pendingRegistration.guardianMobileNumber,
-      validIdType: pendingRegistration.validIdType,
-      companyNameAndAddress: pendingRegistration.companyNameAndAddress,
-
-      // Document links
-      validIdPhoto: pendingRegistration.validIdPhoto,
-      passportPhoto: pendingRegistration.passportPhoto,
-
-      // Room assignment
-      roomId: room._id,
-
-      // Move-in date
-      moveInDate: checkInDate || new Date(),
-      isActive: true,
-    });
-
-    await newUser.save();
+    await pendingUser.save();
 
     // Update room occupancy
     room.currentOccupancy += 1;
@@ -139,16 +112,10 @@ export async function POST(
     }
     await room.save();
 
-    // Update pending registration status
-    pendingRegistration.status = "Confirmed";
-    pendingRegistration.allocatedRoomNo = allocatedRoomNo;
-    pendingRegistration.checkInDate = checkInDate || new Date();
-    await pendingRegistration.save();
-
     // Send welcome email with credentials
     await sendWelcomeEmail(
-      pendingRegistration.fullName,
-      pendingRegistration.emailAddress,
+      pendingUser.name,
+      pendingUser.email,
       pgId,
       plainPassword
     );
@@ -158,10 +125,10 @@ export async function POST(
       message:
         "Registration confirmed successfully. Login credentials sent to email.",
       user: {
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        pgId: newUser.pgId,
+        _id: pendingUser._id,
+        name: pendingUser.name,
+        email: pendingUser.email,
+        pgId: pendingUser.pgId,
         roomNumber: allocatedRoomNo,
       },
     });
