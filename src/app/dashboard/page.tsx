@@ -28,13 +28,15 @@ interface User {
   email: string;
   pgId: string;
   phone: string;
-  roomId: {
-    _id: string;
-    roomNumber: string;
-    type: string;
-    price: number;
-    bedNumber?: number;
-  } | null;
+  roomId:
+    | {
+        _id: string;
+        roomNumber: string;
+        type: string;
+        price: number;
+      }
+    | string
+    | null;
   moveInDate: string;
   bedNumber?: number;
   gender?: string;
@@ -108,18 +110,15 @@ export default function UserProfilePage() {
           setUser(userData);
 
           // Fetch room details if roomId exists
-          if (userData.roomId) {
+          if (userData.roomId && typeof userData.roomId === "object") {
+            setRoomDetails(userData.roomId);
+          } else if (userData.roomId) {
             try {
               const roomResponse = await axios.get(
                 `/api/rooms/${userData.roomId}`
               );
               if (roomResponse.data.success) {
-                setRoomDetails({
-                  _id: roomResponse.data.room._id,
-                  roomNumber: roomResponse.data.room.roomNumber,
-                  type: roomResponse.data.room.type,
-                  price: roomResponse.data.room.price,
-                });
+                setRoomDetails(roomResponse.data.room);
               }
             } catch (err) {
               console.error("Error fetching room details:", err);
@@ -316,9 +315,9 @@ export default function UserProfilePage() {
                 <FaDoorOpen className="mr-2" />
                 <span>
                   Room{" "}
-                  {user?.roomId?.roomNumber ||
-                    user?.allocatedRoomNo ||
-                    "Not Assigned"}
+                  {typeof user?.roomId === "object" && user?.roomId
+                    ? user.roomId.roomNumber
+                    : user?.allocatedRoomNo || "Not Assigned"}
                 </span>
               </div>
               {user?.bedNumber && (
@@ -412,7 +411,7 @@ export default function UserProfilePage() {
                   ? `Paid on ${new Date(currentMonthPayment.paymentDate).toLocaleDateString()}`
                   : roomDetails?.price
                     ? `₹${roomDetails.price} due`
-                    : user?.roomId?.price
+                    : typeof user?.roomId === "object" && user?.roomId
                       ? `₹${user.roomId.price} due`
                       : ""}
               </p>
@@ -614,9 +613,7 @@ export default function UserProfilePage() {
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-4 mb-4">
                     <p className="flex items-center text-yellow-800 dark:text-yellow-200">
                       <FaExclamationCircle className="mr-2" />
-                      {user?.allocatedRoomNo
-                        ? "Room details not available. Please contact admin."
-                        : "No room assigned yet. Please contact the admin."}
+                      No room assigned yet. Please contact the admin.
                     </p>
                   </div>
 
@@ -625,7 +622,7 @@ export default function UserProfilePage() {
                       Room
                     </h3>
                     <p className="text-gray-900 dark:text-white">
-                      {user?.allocatedRoomNo || "Not assigned"}
+                      Not assigned
                     </p>
                   </div>
 

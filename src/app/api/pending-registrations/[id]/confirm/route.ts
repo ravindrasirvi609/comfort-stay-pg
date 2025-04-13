@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
-import { User, Payment } from "@/app/api/models";
+import { User, Payment, Room } from "@/app/api/models";
 import { sendEmail } from "@/app/lib/email";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 export async function POST(
   request: NextRequest,
@@ -43,6 +44,50 @@ export async function POST(
     }
 
     await connectToDatabase();
+
+    // Find the room by room number
+    const room = await Room.findOne({ roomNumber: allocatedRoomNo });
+
+    if (!room) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Room not found with the given room number",
+        },
+        { status: 404 }
+      );
+    }
+
+    // Check if room has available space
+    if (room.currentOccupancy >= room.capacity) {
+      return NextResponse.json(
+        { success: false, message: "Room is already fully occupied" },
+        { status: 400 }
+      );
+    }
+
+    // Find an available bed number
+    const usersInRoom = await User.find({
+      roomId: room._id,
+      isActive: true,
+    }).select("bedNumber");
+
+    const occupiedBedNumbers = usersInRoom.map((u) => u.bedNumber);
+    let selectedBedNumber = null;
+
+    for (let i = 1; i <= room.capacity; i++) {
+      if (!occupiedBedNumbers.includes(i)) {
+        selectedBedNumber = i;
+        break;
+      }
+    }
+
+    if (selectedBedNumber === null) {
+      return NextResponse.json(
+        { success: false, message: "No available beds in this room" },
+        { status: 400 }
+      );
+    }
 
     // Ensure params is not a Promise before using it
     const id = typeof params.id === "string" ? params.id : await params.id;
@@ -96,38 +141,49 @@ export async function POST(
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
-    // Update the registration status to Approved (matches enum in User model) and set allocated room
-    pendingRegistration.registrationStatus = "Approved";
-    pendingRegistration.allocatedRoomNo = allocatedRoomNo;
-    pendingRegistration.moveInDate = checkInDate; // Use moveInDate instead of checkInDate
-    pendingRegistration.password = hashedPassword; // Set the password
-    pendingRegistration.approvalDate = new Date(); // Set the approval date
-    pendingRegistration.pgId = pgId; // Set the PG ID
+    // Start a MongoDB session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    await pendingRegistration.save();
+    try {
+      // Update the registration status to Approved and set room details
+      pendingRegistration.registrationStatus = "Approved";
+      pendingRegistration.roomId = room._id;
+      pendingRegistration.bedNumber = selectedBedNumber;
+      pendingRegistration.moveInDate = checkInDate;
+      pendingRegistration.password = hashedPassword;
+      pendingRegistration.approvalDate = new Date();
+      pendingRegistration.pgId = pgId;
 
-    // Create a payment record if payment details are provided
-    if (paymentDetails && paymentDetails.amount) {
-      // Generate receipt number (format: PG-YYYYMMDD-XXXX)
-      const date = new Date();
-      const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const receiptNumber = `PG-${dateStr}-${randomNum}`;
+      await pendingRegistration.save({ session });
 
-      // Create new payment record
-      const newPayment = new Payment({
-        userId: pendingRegistration._id,
-        amount: Number(paymentDetails.amount),
-        month: paymentDetails.month,
-        paymentDate: new Date(),
-        dueDate: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Set due date to next month
-        status: paymentDetails.paymentStatus || "Paid",
-        paymentMethod: paymentDetails.paymentMethod || "Cash",
-        receiptNumber: receiptNumber,
-        remarks: "Initial payment during registration confirmation",
-      });
+      // Increment room occupancy
+      room.currentOccupancy += 1;
+      await room.save({ session });
 
-      await newPayment.save();
+      // If payment details are provided, create a payment record
+      if (paymentDetails && paymentDetails.amount) {
+        const newPayment = new Payment({
+          userId: pendingRegistration._id,
+          amount: paymentDetails.amount,
+          month: paymentDetails.month,
+          paymentMethod: paymentDetails.paymentMethod || "Cash",
+          paymentStatus: paymentDetails.paymentStatus || "Paid",
+          paymentDate: new Date(),
+        });
+
+        await newPayment.save({ session });
+      }
+
+      // Commit the transaction
+      await session.commitTransaction();
+    } catch (error) {
+      // Abort transaction on error
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      // End session
+      session.endSession();
     }
 
     // Send email with login credentials
@@ -146,6 +202,7 @@ export async function POST(
             </div>
             <p style="font-weight: bold;">Room Details:</p>
             <p>You have been allocated Room Number: ${allocatedRoomNo}</p>
+            <p>Bed Number: ${selectedBedNumber}</p>
             <p>Check-in Date: ${new Date(checkInDate).toLocaleDateString()}</p>
             ${
               paymentDetails

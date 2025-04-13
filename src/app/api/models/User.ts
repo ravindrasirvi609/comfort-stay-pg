@@ -1,6 +1,7 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
+import { IUser } from "../interfaces/models";
 
-const UserSchema = new Schema(
+const UserSchema = new Schema<IUser>(
   {
     // Basic Info
     name: {
@@ -81,14 +82,10 @@ const UserSchema = new Schema(
     },
     documents: [String], // Additional documents
 
-    // Room relationship
+    // Room relationship - only keep the reference to the Room model
     roomId: {
       type: Schema.Types.ObjectId,
       ref: "Room",
-    },
-    allocatedRoomNo: {
-      type: String,
-      default: "",
     },
     bedNumber: {
       type: Number,
@@ -145,6 +142,18 @@ const UserSchema = new Schema(
   }
 );
 
+// Virtual field to get the user's room number through the roomId reference
+UserSchema.virtual("allocatedRoomNo").get(function (this: Document & IUser) {
+  if (
+    this.roomId &&
+    typeof this.roomId === "object" &&
+    "roomNumber" in this.roomId
+  ) {
+    return this.roomId.roomNumber;
+  }
+  return "";
+});
+
 // Virtual fields for relationship navigation
 UserSchema.virtual("payments", {
   ref: "Payment",
@@ -159,6 +168,6 @@ UserSchema.virtual("complaints", {
 });
 
 // Create model
-const User = mongoose.models.User || mongoose.model("User", UserSchema);
+const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;

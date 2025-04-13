@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
+import { IRoom } from "../interfaces/models";
 
-const RoomSchema = new Schema(
+const RoomSchema = new Schema<IRoom>(
   {
     roomNumber: {
       type: String,
@@ -71,7 +72,22 @@ RoomSchema.virtual("vacancyCount").get(function () {
   return this.capacity - this.currentOccupancy;
 });
 
+// Update room status based on occupancy
+RoomSchema.pre("save", function (next) {
+  if (this.isModified("currentOccupancy")) {
+    // If room is full, mark as occupied
+    if (this.currentOccupancy >= this.capacity) {
+      this.status = "occupied";
+    }
+    // If room has space and is not in maintenance, mark as available
+    else if (this.status !== "maintenance") {
+      this.status = "available";
+    }
+  }
+  next();
+});
+
 // Create model
-const Room = mongoose.models.Room || mongoose.model("Room", RoomSchema);
+const Room = mongoose.models.Room || mongoose.model<IRoom>("Room", RoomSchema);
 
 export default Room;

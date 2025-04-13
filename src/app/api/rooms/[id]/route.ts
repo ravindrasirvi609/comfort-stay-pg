@@ -2,10 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Room from "@/app/api/models/Room";
-import { User } from "@/app/api/models";
+
+// Define a minimal type for the resident
+interface Resident {
+  _id: string;
+  name: string;
+  email: string;
+  pgId: string;
+  phone: string;
+  bedNumber: number;
+  moveInDate?: string;
+}
 
 // Get a single room
-export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated
@@ -20,10 +33,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 
     await connectToDatabase();
 
-    // Find room by ID and populate residents
+    // Find room by ID and populate residents virtual
     const room = await Room.findById(params.id).populate({
       path: "residents",
-      select: "_id name email pgId phone allocatedRoomNo",
+      select: "_id name email pgId phone bedNumber moveInDate",
     });
 
     if (!room) {
@@ -33,15 +46,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       );
     }
 
-    // Get additional user details grouped by bed number
-    // Find all users assigned to this room
-    const roomResidents = await User.find({
-      roomId: params.id,
-      isActive: true,
-    }).select("_id name email pgId phone allocatedRoomNo bedNumber moveInDate");
-
     // Group users by bed number
+    const roomResidents = (room.residents || []) as Resident[];
     const beds = [];
+
     for (let i = 1; i <= room.capacity; i++) {
       const resident = roomResidents.find((r) => r.bedNumber === i) || null;
       beds.push({
@@ -68,7 +76,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // Update a room (admin only)
-export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
@@ -95,6 +106,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
 
     const {
       roomNumber,
+      floor,
       type,
       price,
       capacity,
@@ -128,11 +140,35 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     // Update fields if provided
+    if (floor) roomToUpdate.floor = floor;
     if (type) roomToUpdate.type = type;
     if (price) roomToUpdate.price = price;
-    if (capacity) roomToUpdate.capacity = capacity;
-    if (currentOccupancy !== undefined)
+    if (capacity !== undefined) {
+      // Check if the new capacity is less than current occupancy
+      if (capacity < roomToUpdate.currentOccupancy) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Cannot reduce capacity below current occupancy",
+          },
+          { status: 400 }
+        );
+      }
+      roomToUpdate.capacity = capacity;
+    }
+    if (currentOccupancy !== undefined) {
+      // Ensure occupancy doesn't exceed capacity
+      if (currentOccupancy > roomToUpdate.capacity) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Occupancy cannot exceed room capacity",
+          },
+          { status: 400 }
+        );
+      }
       roomToUpdate.currentOccupancy = currentOccupancy;
+    }
     if (amenities) roomToUpdate.amenities = amenities;
     if (status) roomToUpdate.status = status;
 
@@ -157,7 +193,10 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // Delete a room (admin only)
-export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
