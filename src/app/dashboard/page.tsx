@@ -18,6 +18,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import { BiSolidMessageSquareDetail } from "react-icons/bi";
+import Image from "next/image";
 
 interface User {
   _id: string;
@@ -39,6 +40,7 @@ interface User {
   address?: string;
   idProof?: string;
   profilePhoto?: string;
+  allocatedRoomNo?: string;
 }
 
 interface Payment {
@@ -77,6 +79,12 @@ export default function UserProfilePage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [roomDetails, setRoomDetails] = useState<{
+    _id: string;
+    roomNumber: string;
+    type: string;
+    price: number;
+  } | null>(null);
 
   useEffect(() => {
     // Fetch dashboard data
@@ -87,7 +95,27 @@ export default function UserProfilePage() {
         // Fetch current user
         const userResponse = await axios.get("/api/auth/me");
         if (userResponse.data.success) {
-          setUser(userResponse.data.user);
+          const userData = userResponse.data.user;
+          setUser(userData);
+
+          // Fetch room details if roomId exists
+          if (userData.roomId) {
+            try {
+              const roomResponse = await axios.get(
+                `/api/rooms/${userData.roomId}`
+              );
+              if (roomResponse.data.success) {
+                setRoomDetails({
+                  _id: roomResponse.data.room._id,
+                  roomNumber: roomResponse.data.room.roomNumber,
+                  type: roomResponse.data.room.type,
+                  price: roomResponse.data.room.price,
+                });
+              }
+            } catch (err) {
+              console.error("Error fetching room details:", err);
+            }
+          }
         }
 
         // Fetch payments
@@ -174,10 +202,12 @@ export default function UserProfilePage() {
           <div className="mb-4 md:mb-0 md:mr-8">
             <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white dark:border-gray-800">
               {user?.profilePhoto ? (
-                <img
+                <Image
                   src={user.profilePhoto}
                   alt={user?.name}
                   className="w-full h-full object-cover"
+                  width={100}
+                  height={100}
                 />
               ) : (
                 <FaUser className="text-white text-4xl md:text-5xl" />
@@ -197,7 +227,12 @@ export default function UserProfilePage() {
               </div>
               <div className="flex items-center text-gray-700 dark:text-gray-300">
                 <FaDoorOpen className="mr-2" />
-                <span>Room {user?.roomId?.roomNumber || "Not Assigned"}</span>
+                <span>
+                  Room{" "}
+                  {user?.roomId?.roomNumber ||
+                    user?.allocatedRoomNo ||
+                    "Not Assigned"}
+                </span>
               </div>
               {user?.bedNumber && (
                 <div className="flex items-center text-gray-700 dark:text-gray-300">
@@ -226,9 +261,11 @@ export default function UserProfilePage() {
               <p className="text-sm mt-1">
                 {currentMonthPayment
                   ? `Paid on ${new Date(currentMonthPayment.paymentDate).toLocaleDateString()}`
-                  : user?.roomId?.price
-                    ? `₹${user.roomId.price} due`
-                    : ""}
+                  : roomDetails?.price
+                    ? `₹${roomDetails.price} due`
+                    : user?.roomId?.price
+                      ? `₹${user.roomId.price} due`
+                      : ""}
               </p>
             </div>
           </div>
@@ -364,17 +401,17 @@ export default function UserProfilePage() {
                 Room Information
               </h2>
 
-              {user?.roomId ? (
+              {roomDetails ? (
                 <div className="space-y-5">
                   <div className="bg-gradient-to-r from-pink-500/10 to-purple-600/10 dark:from-pink-500/5 dark:to-purple-600/5 rounded-lg p-4 border border-pink-200 dark:border-pink-900/30 mb-6">
                     <h3 className="font-bold text-2xl text-gray-900 dark:text-white mb-1">
-                      Room {user.roomId.roomNumber}
+                      Room {roomDetails.roomNumber || "Not assigned"}
                     </h3>
                     <p className="text-gray-700 dark:text-gray-300">
-                      {user.roomId.type
-                        ? `${user.roomId.type.charAt(0).toUpperCase() + user.roomId.type.slice(1)} Room`
+                      {roomDetails.type
+                        ? `${roomDetails.type.charAt(0).toUpperCase() + roomDetails.type.slice(1)} Room`
                         : "Room"}
-                      {user.bedNumber && ` • Bed #${user.bedNumber}`}
+                      {user?.bedNumber ? ` • Bed #${user.bedNumber}` : ""}
                     </p>
                   </div>
 
@@ -383,7 +420,7 @@ export default function UserProfilePage() {
                       Room Type
                     </h3>
                     <p className="text-gray-900 dark:text-white capitalize">
-                      {user.roomId.type || "Not specified"}
+                      {roomDetails.type || "Not specified"}
                     </p>
                   </div>
 
@@ -395,7 +432,9 @@ export default function UserProfilePage() {
                       </div>
                     </h3>
                     <p className="text-gray-900 dark:text-white font-medium">
-                      ₹{user.roomId.price?.toLocaleString("en-IN")}
+                      {roomDetails.price
+                        ? `₹${roomDetails.price.toLocaleString("en-IN")}`
+                        : "₹"}
                     </p>
                   </div>
 
@@ -407,13 +446,13 @@ export default function UserProfilePage() {
                       </div>
                     </h3>
                     <p className="text-gray-900 dark:text-white">
-                      {user.bedNumber || "Not assigned"}
+                      {user?.bedNumber || "Not assigned"}
                     </p>
                   </div>
 
                   <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                     <Link
-                      href={`/dashboard/room/${user.roomId._id}`}
+                      href={`/dashboard/room/${roomDetails._id}`}
                       className="text-pink-600 hover:text-pink-700 dark:text-pink-500 dark:hover:text-pink-400 flex items-center"
                     >
                       View Room Details
@@ -422,11 +461,57 @@ export default function UserProfilePage() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-4 text-yellow-800 dark:text-yellow-200">
-                  <p className="flex items-center">
-                    <FaExclamationCircle className="mr-2" />
-                    No room assigned yet. Please contact the admin.
-                  </p>
+                <div className="space-y-5">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-4 mb-4">
+                    <p className="flex items-center text-yellow-800 dark:text-yellow-200">
+                      <FaExclamationCircle className="mr-2" />
+                      {user?.allocatedRoomNo
+                        ? "Room details not available. Please contact admin."
+                        : "No room assigned yet. Please contact the admin."}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Room
+                    </h3>
+                    <p className="text-gray-900 dark:text-white">
+                      {user?.allocatedRoomNo || "Not assigned"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Room Type
+                    </h3>
+                    <p className="text-gray-900 dark:text-white">
+                      Not specified
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      <div className="flex items-center">
+                        <FaRupeeSign className="mr-2 text-gray-400" />
+                        Monthly Rent
+                      </div>
+                    </h3>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      ₹
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      <div className="flex items-center">
+                        <FaBed className="mr-2 text-gray-400" />
+                        Bed Number
+                      </div>
+                    </h3>
+                    <p className="text-gray-900 dark:text-white">
+                      {user?.bedNumber || "Not assigned"}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
