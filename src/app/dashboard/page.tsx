@@ -16,6 +16,8 @@ import {
   FaExclamationCircle,
   FaFileInvoiceDollar,
   FaChevronRight,
+  FaCalendarTimes,
+  FaSignOutAlt,
 } from "react-icons/fa";
 import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import Image from "next/image";
@@ -39,8 +41,10 @@ interface User {
   emergencyContact?: string;
   address?: string;
   idProof?: string;
-  profilePhoto?: string;
+  validIdPhoto?: string;
   allocatedRoomNo?: string;
+  isOnNoticePeriod?: boolean;
+  lastStayingDate?: string;
 }
 
 interface Payment {
@@ -85,6 +89,10 @@ export default function UserProfilePage() {
     type: string;
     price: number;
   } | null>(null);
+  const [isNoticePeriodDialogOpen, setIsNoticePeriodDialogOpen] =
+    useState(false);
+  const [lastStayingDate, setLastStayingDate] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Fetch dashboard data
@@ -147,6 +155,84 @@ export default function UserProfilePage() {
     fetchProfileData();
   }, []);
 
+  const handleNoticePeriodSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!lastStayingDate) {
+      alert("Please select your last staying date");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await axios.post("/api/users/notice-period", {
+        lastStayingDate: lastStayingDate,
+      });
+
+      if (response.data.success) {
+        setUser({
+          ...user!,
+          isOnNoticePeriod: true,
+          lastStayingDate: lastStayingDate,
+        });
+        setIsNoticePeriodDialogOpen(false);
+        alert("Your notice period has been submitted successfully");
+      } else {
+        alert(response.data.message || "Failed to submit notice period");
+      }
+    } catch (error: unknown) {
+      console.error("Error submitting notice period:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(error.response.data?.message || "Failed to submit notice period");
+      } else {
+        alert("Failed to submit notice period");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleWithdrawNoticePeriod = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to withdraw your notice period? This will cancel your move-out process."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await axios.post("/api/users/notice-period", {
+        isWithdrawal: true,
+      });
+
+      if (response.data.success) {
+        setUser({
+          ...user!,
+          isOnNoticePeriod: false,
+          lastStayingDate: undefined,
+        });
+        alert("Your notice period has been withdrawn successfully");
+      } else {
+        alert(response.data.message || "Failed to withdraw notice period");
+      }
+    } catch (error: unknown) {
+      console.error("Error withdrawing notice period:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(
+          error.response.data?.message || "Failed to withdraw notice period"
+        );
+      } else {
+        alert("Failed to withdraw notice period");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center">
@@ -201,9 +287,9 @@ export default function UserProfilePage() {
           {/* Profile Image */}
           <div className="mb-4 md:mb-0 md:mr-8">
             <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white dark:border-gray-800">
-              {user?.profilePhoto ? (
+              {user?.validIdPhoto ? (
                 <Image
-                  src={user.profilePhoto}
+                  src={user.validIdPhoto}
                   alt={user?.name}
                   className="w-full h-full object-cover"
                   width={100}
@@ -240,9 +326,71 @@ export default function UserProfilePage() {
                   <span>Bed #{user.bedNumber}</span>
                 </div>
               )}
+              {user?.isOnNoticePeriod && user?.lastStayingDate && (
+                <div className="flex items-center text-red-600 dark:text-red-400">
+                  <FaCalendarTimes className="mr-2" />
+                  <span>
+                    Leaving on{" "}
+                    {new Date(user.lastStayingDate).toLocaleDateString("en-IN")}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
+            <div className="mt-4 flex space-x-3">
+              {user?.isOnNoticePeriod ? (
+                <>
+                  <button
+                    onClick={() => setIsNoticePeriodDialogOpen(true)}
+                    className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-800/40"
+                    disabled={isSubmitting}
+                  >
+                    <FaCalendarTimes className="mr-2" />
+                    Update Last Date
+                  </button>
+                  <button
+                    onClick={handleWithdrawNoticePeriod}
+                    className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-800/40"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 mr-2 border-2 border-green-700 border-t-transparent rounded-full"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 11l3 3L22 4"
+                          ></path>
+                        </svg>
+                        Stay Longer
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsNoticePeriodDialogOpen(true)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-800/40"
+                  disabled={isSubmitting}
+                >
+                  <FaSignOutAlt className="mr-2" />
+                  Submit Notice Period
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Payment Status Card */}
@@ -545,9 +693,9 @@ export default function UserProfilePage() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Payment Date
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Receipt
-                        </th>
+                        </th> */}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/30 dark:bg-gray-800/30">
@@ -585,7 +733,7 @@ export default function UserProfilePage() {
                               }
                             )}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          {/* <td className="px-4 py-3 whitespace-nowrap text-sm">
                             <Link
                               href={`/dashboard/payments/${payment._id}`}
                               className="text-pink-600 hover:text-pink-700 dark:text-pink-500 dark:hover:text-pink-400 flex items-center"
@@ -593,7 +741,7 @@ export default function UserProfilePage() {
                               View
                               <FaChevronRight className="ml-1 text-xs" />
                             </Link>
-                          </td>
+                          </td> */}
                         </tr>
                       ))}
                     </tbody>
@@ -781,7 +929,116 @@ export default function UserProfilePage() {
         )}
       </div>
 
-      {/* Rest of the component */}
+      {/* Notice Period Dialog */}
+      {isNoticePeriodDialogOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black opacity-50"
+              onClick={() => setIsNoticePeriodDialogOpen(false)}
+            ></div>
+
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full p-6 overflow-hidden">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {user?.isOnNoticePeriod
+                    ? "Update Notice Period"
+                    : "Submit Notice Period"}
+                </h3>
+                <button
+                  onClick={() => setIsNoticePeriodDialogOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {user?.isOnNoticePeriod
+                    ? "You can update your last staying date. Your notice period will be adjusted accordingly."
+                    : "Please confirm your last staying date. Once submitted, your notice period will be activated."}
+                </p>
+                <p className="text-amber-600 dark:text-amber-400 text-sm mb-6">
+                  Note: According to the PG policy, you need to provide
+                  {user?.isOnNoticePeriod
+                    ? " at least 5 days notice to change your last staying date."
+                    : " at least 30 days notice before leaving."}
+                </p>
+
+                <form onSubmit={handleNoticePeriodSubmit}>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="lastStayingDate"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Last Staying Date
+                    </label>
+                    <input
+                      type="date"
+                      id="lastStayingDate"
+                      value={lastStayingDate}
+                      onChange={(e) => setLastStayingDate(e.target.value)}
+                      min={
+                        new Date(
+                          Date.now() +
+                            (user?.isOnNoticePeriod ? 2 : 10) *
+                              24 *
+                              60 *
+                              60 *
+                              1000
+                        )
+                          .toISOString()
+                          .split("T")[0]
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Minimum {user?.isOnNoticePeriod ? "10" : "30"} days from
+                      today
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setIsNoticePeriodDialogOpen(false)}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting
+                        ? "Submitting..."
+                        : user?.isOnNoticePeriod
+                          ? "Update Notice"
+                          : "Submit Notice"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
