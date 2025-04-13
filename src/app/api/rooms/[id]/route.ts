@@ -5,10 +5,8 @@ import Room from "@/app/api/models/Room";
 import { User } from "@/app/api/models";
 
 // Get a single room
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
@@ -70,10 +68,8 @@ export async function GET(
 }
 
 // Update a room (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();
@@ -161,10 +157,8 @@ export async function PUT(
 }
 
 // Delete a room (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();

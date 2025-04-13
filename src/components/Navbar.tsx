@@ -222,10 +222,12 @@ export default function Navbar() {
                   >
                     <div className="h-6 w-6 rounded-full bg-pink-100 dark:bg-pink-800/30 flex items-center justify-center overflow-hidden">
                       {user?.profileImage ? (
-                        <img
+                        <Image
                           src={user.profileImage}
                           alt={user.name}
                           className="h-full w-full object-cover"
+                          width={24}
+                          height={24}
                         />
                       ) : (
                         <User className="h-3 w-3 text-pink-600 dark:text-pink-400" />

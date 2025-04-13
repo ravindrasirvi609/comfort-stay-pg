@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Loader from "@/components/Loader";
 import NotFound from "@/components/NotFound";
@@ -48,8 +48,9 @@ interface ErrorResponse {
   message: string;
 }
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
-  const id = params.id;
+export default function EditUserPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const { toast } = useToast();
   const [userData, setUserData] = useState<UserData>({

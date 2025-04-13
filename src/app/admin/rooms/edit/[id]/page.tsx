@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 // Interface for Room data structure - used for documentation purposes
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -20,8 +20,10 @@ interface RoomData {
   createdAt: string;
 }
 
-export default function EditRoomPage({ params }: { params: { id: string } }) {
+export default function EditRoomPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -42,7 +44,7 @@ export default function EditRoomPage({ params }: { params: { id: string } }) {
     const fetchRoomDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/rooms/${params.id}`);
+        const response = await axios.get(`/api/rooms/${id}`);
 
         if (response.data.success && response.data.room) {
           const room = response.data.room;
@@ -68,10 +70,10 @@ export default function EditRoomPage({ params }: { params: { id: string } }) {
       }
     };
 
-    if (params.id) {
+    if (id) {
       fetchRoomDetails();
     }
-  }, [params.id]);
+  }, [id]);
 
   // Handle form input changes
   const handleChange = (
@@ -116,11 +118,11 @@ export default function EditRoomPage({ params }: { params: { id: string } }) {
         capacity: Number(formData.capacity),
       };
 
-      const response = await axios.put(`/api/rooms/${params.id}`, roomData);
+      const response = await axios.put(`/api/rooms/${id}`, roomData);
 
       if (response.data.success) {
         alert("Room updated successfully!");
-        router.push(`/admin/rooms/${params.id}`);
+        router.push(`/admin/rooms/${id}`);
       } else {
         setError(response.data.message || "Failed to update room");
         alert("Failed to update room");

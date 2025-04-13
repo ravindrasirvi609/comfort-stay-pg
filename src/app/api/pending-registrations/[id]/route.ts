@@ -3,10 +3,8 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { User } from "@/app/api/models";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();

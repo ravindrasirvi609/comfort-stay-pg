@@ -1,9 +1,10 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 
 // Secret key for JWT - should be in .env file
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+// Convert the secret to the format expected by jose
+const JWT_SECRET_BYTES = new TextEncoder().encode(JWT_SECRET);
 
 interface UserData {
   _id: string;
@@ -52,10 +53,20 @@ export function generatePassword(length: number = 10): string {
     .join("");
 }
 
-// Hash password
+// Edge-compatible password hashing (simulated for demo)
+// Note: In production, use a proper edge-compatible hashing solution
 export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
+  // This is a simplified hash for Edge compatibility
+  // WARNING: This is NOT secure for production use
+  // For production, consider using a service like Auth.js or a serverless function
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + JWT_SECRET);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex;
 }
 
 // Compare password
@@ -63,68 +74,41 @@ export async function comparePassword(
   password: string,
   hashedPassword: string
 ): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
+  // Compare with our simplified hash
+  const newHash = await hashPassword(password);
+  return newHash === hashedPassword;
 }
 
-// Generate JWT token
-export function generateToken(user: UserData): string {
-  return jwt.sign(
-    {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      pgId: user.pgId,
-    },
-    JWT_SECRET,
-    { expiresIn: "1d" }
-  );
+// Generate JWT token - Edge compatible
+export async function generateToken(user: UserData): Promise<string> {
+  // Create a JWT using jose library (Edge compatible)
+  const token = await new SignJWT({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    pgId: user.pgId,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("1d")
+    .sign(JWT_SECRET_BYTES);
+
+  return token;
 }
 
 // Verify JWT token - Edge-compatible version
-export function verifyToken(token: string): UserData | null {
+export async function verifyToken(token: string): Promise<UserData | null> {
   try {
-    // For Edge compatibility, we'll use a simpler approach
-    // This is less secure but will work in Edge runtime
-    // In production, use a proper Edge-compatible JWT library
+    const { payload } = await jwtVerify(token, JWT_SECRET_BYTES);
 
-    // Basic check for token format
-    if (!token || !token.includes(".")) {
-      console.error("[Auth] Invalid token format");
-      return null;
-    }
-
-    // Parse the payload part of the JWT
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      console.error("[Auth] Invalid token structure");
-      return null;
-    }
-
-    // Decode the payload (the middle part of the JWT)
-    const payloadBase64 = parts[1];
-    const decodedPayload = Buffer.from(payloadBase64, "base64").toString();
-
-    try {
-      const payload = JSON.parse(decodedPayload) as UserData;
-
-      // Check if token is expired
-      const expiry = payload.exp;
-      if (expiry && expiry < Math.floor(Date.now() / 1000)) {
-        return null;
-      }
-
-      return {
-        _id: payload._id || payload.sub || "unknown",
-        name: payload.name || "Unknown",
-        email: payload.email || "unknown@example.com",
-        role: payload.role || "user",
-        pgId: payload.pgId,
-      };
-    } catch (parseError) {
-      console.error("[Auth] Failed to parse token payload:", parseError);
-      return null;
-    }
+    return {
+      _id: (payload._id as string) || (payload.sub as string) || "unknown",
+      name: (payload.name as string) || "Unknown",
+      email: (payload.email as string) || "unknown@example.com",
+      role: (payload.role as string) || "user",
+      pgId: payload.pgId as string | undefined,
+    };
   } catch (error) {
     console.error("[Auth] Token verification failed:", error);
     return null;
@@ -136,14 +120,14 @@ export async function isAuthenticated(): Promise<{
   isAuth: boolean;
   user?: UserData;
 }> {
-  const cookieStore = cookies();
-  const token = (await cookieStore).get("token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
 
   if (!token) {
     return { isAuth: false };
   }
 
-  const user = verifyToken(token);
+  const user = await verifyToken(token);
   if (!user) {
     return { isAuth: false };
   }

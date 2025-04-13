@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       console.log("[API] Using hardcoded admin credentials");
 
       // Generate JWT token for hardcoded admin
-      const token = generateToken({
+      const token = await generateToken({
         _id: "admin_id_123456789",
         name: "ComfortStay Admin",
         email: "comfortstaypg@gmail.com",
@@ -30,9 +30,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Set cookie
-      (await cookies()).set({
-        name: "token",
-        value: token,
+      const cookieStore = await cookies();
+      cookieStore.set("token", token, {
         httpOnly: false,
         path: "/",
         secure: process.env.NODE_ENV === "production",
@@ -41,9 +40,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Set another cookie for debugging that's not httpOnly
-      (await cookies()).set({
-        name: "debug_admin_login",
-        value: "true",
+      cookieStore.set("debug_admin_login", "true", {
         httpOnly: false,
         path: "/",
         secure: process.env.NODE_ENV === "production",
@@ -106,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
-    const token = generateToken({
+    const token = await generateToken({
       _id: user._id.toString(),
       name: user.name,
       email: user.email,
@@ -115,9 +112,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Set cookie
-    (await cookies()).set({
-      name: "token",
-      value: token,
+    const cookieStore = await cookies();
+    cookieStore.set("token", token, {
       httpOnly: false,
       path: "/",
       secure: process.env.NODE_ENV === "production",
@@ -126,9 +122,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Set another cookie for debugging that's not httpOnly
-    (await cookies()).set({
-      name: "debug_admin_login",
-      value: "true",
+    cookieStore.set("debug_admin_login", "true", {
       httpOnly: false,
       path: "/",
       secure: process.env.NODE_ENV === "production",

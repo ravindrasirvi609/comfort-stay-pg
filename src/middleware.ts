@@ -20,7 +20,7 @@ const publicPaths = [
 // Admin only paths
 const adminPaths = ["/admin"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow access to public paths
@@ -53,7 +53,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Verify token and get user data
-  const user = verifyToken(token);
+  const user = await verifyToken(token);
   console.log("[Middleware] User from token:", user);
 
   // If token is invalid, redirect to login

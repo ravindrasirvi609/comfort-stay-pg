@@ -4,10 +4,8 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Notice from "@/app/api/models/Notice";
 
 // Get a single notice
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
@@ -48,10 +46,8 @@ export async function GET(
 }
 
 // Delete a notice (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();

@@ -4,9 +4,8 @@ import { cookies } from "next/headers";
 export async function POST() {
   try {
     // Clear the token cookie by setting it to empty with maxAge 0
-    (await cookies()).set({
-      name: "token",
-      value: "",
+    const cookieStore = await cookies();
+    cookieStore.set("token", "", {
       httpOnly: true,
       path: "/",
       secure: process.env.NODE_ENV === "production",

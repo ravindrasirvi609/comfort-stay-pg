@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { Upload, XCircle, Image as ImageIcon } from "lucide-react";
 import { uploadToCloudinary, validateImageFile } from "../lib/cloudinary";
+import Image from "next/image";
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void;
@@ -122,10 +123,13 @@ export default function ImageUpload({
 
       {previewUrl ? (
         <div className="relative rounded-md overflow-hidden">
-          <img
+          <Image
             src={previewUrl}
             alt="Profile preview"
             className="w-full h-48 object-cover rounded-md"
+            width={300}
+            height={192}
+            style={{ width: "100%", height: "12rem" }}
           />
           <button
             type="button"

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import { formatDate } from "@/utils/formatDate";
 import Loader from "@/components/Loader";
@@ -67,16 +67,9 @@ interface ErrorResponse {
   message: string;
 }
 
-function useParams<T extends Record<string, unknown>>(
-  params: T | Promise<T>
-): T {
-  return typeof params === "object" && params !== null
-    ? (React.use(params as Promise<T>) as T)
-    : (params as T);
-}
-
-export default function UserDetailPage({ params }: { params: { id: string } }) {
-  const id = useParams(params).id;
+export default function UserDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const { toast } = useToast();
   const [user, setUser] = useState<UserData | null>(null);

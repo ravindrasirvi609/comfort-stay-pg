@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
-    const token = generateToken({
+    const token = await generateToken({
       _id: user._id.toString(),
       name: user.name,
       email: user.email,
@@ -57,9 +57,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Set cookie
-    (await cookies()).set({
-      name: "token",
-      value: token,
+    const cookieStore = await cookies();
+    cookieStore.set("token", token, {
       httpOnly: true,
       path: "/",
       secure: process.env.NODE_ENV === "production",

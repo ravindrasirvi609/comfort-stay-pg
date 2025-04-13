@@ -7,9 +7,11 @@ import User from "@/app/api/models/User";
 // Get a single complaint
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
 
@@ -26,7 +28,7 @@ export async function GET(
     await User.findOne({});
 
     // Find complaint by ID
-    const complaint = await Complaint.findById(params.id).populate(
+    const complaint = await Complaint.findById(id).populate(
       "userId",
       "name email pgId"
     );
@@ -62,9 +64,11 @@ export async function GET(
 // Update a complaint status (admin only for certain fields)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
 
@@ -81,7 +85,7 @@ export async function PUT(
     await User.findOne({});
 
     // Find the complaint
-    const complaintToUpdate = await Complaint.findById(params.id);
+    const complaintToUpdate = await Complaint.findById(id);
 
     if (!complaintToUpdate) {
       return NextResponse.json(
@@ -153,9 +157,11 @@ export async function PUT(
 // Delete a complaint (admin or owner)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
 
@@ -172,7 +178,7 @@ export async function DELETE(
     await User.findOne({});
 
     // Find the complaint
-    const complaintToDelete = await Complaint.findById(params.id);
+    const complaintToDelete = await Complaint.findById(id);
 
     if (!complaintToDelete) {
       return NextResponse.json(

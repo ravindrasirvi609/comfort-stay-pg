@@ -4,10 +4,8 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { sendRejectionEmail } from "@/app/lib/email";
 import { User } from "@/app/api/models";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();

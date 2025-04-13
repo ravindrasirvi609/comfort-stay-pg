@@ -7,8 +7,9 @@ import bcrypt from "bcryptjs";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string | Promise<string> } }
+  props: { params: Promise<{ id: string | Promise<string> }> }
 ) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();

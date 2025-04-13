@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import {
   FaBed,
@@ -11,6 +11,7 @@ import {
   FaEnvelope,
   FaIdCard,
 } from "react-icons/fa";
+import Link from "next/link";
 
 interface User {
   _id: string;
@@ -44,26 +45,10 @@ interface Room {
   beds: Bed[];
 }
 
-interface PageParams extends Record<string, unknown> {
-  id: string;
-}
-
-// Create a wrapper function to handle the params type issue
-function useParams<T extends Record<string, unknown>>(
-  params: T | Promise<T>
-): T {
-  return typeof params === "object" && params !== null
-    ? (React.use(params as Promise<T>) as T)
-    : (params as T);
-}
-
-export default function RoomDetailPage({
-  params,
-}: {
-  params: PageParams | Promise<PageParams>;
-}) {
+export default function RoomDetailPage() {
   const router = useRouter();
-  const id = useParams(params).id;
+  const params = useParams();
+  const id = params.id as string;
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
