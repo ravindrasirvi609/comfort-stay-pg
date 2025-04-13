@@ -10,8 +10,7 @@ interface User {
   email: string;
   pgId: string;
   phone?: string;
-  roomNumber?: string;
-  role: string;
+  allocatedRoomNo?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -22,7 +21,6 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
@@ -59,10 +57,6 @@ export default function UsersPage() {
       );
     }
 
-    if (filterRole !== "all") {
-      result = result.filter((user) => user.role === filterRole);
-    }
-
     if (filterStatus !== "all") {
       const isActive = filterStatus === "active";
       result = result.filter((user) => user.isActive === isActive);
@@ -70,31 +64,13 @@ export default function UsersPage() {
 
     setFilteredUsers(result);
     setCurrentPage(1); // Reset to first page on filter change
-  }, [searchTerm, filterRole, filterStatus, users]);
+  }, [searchTerm, filterStatus, users]);
 
   // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-
-  const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
-    try {
-      await axios.patch(`/api/users/${userId}`, {
-        isActive: !currentStatus,
-      });
-
-      // Update local state
-      setUsers(
-        users.map((user) =>
-          user._id === userId ? { ...user, isActive: !currentStatus } : user
-        )
-      );
-    } catch (err) {
-      console.error("Error updating user status:", err);
-      setError("Failed to update user status");
-    }
-  };
 
   if (loading) {
     return (
@@ -196,22 +172,6 @@ export default function UsersPage() {
               </div>
             </div>
 
-            {/* Role filter */}
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
-              <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg">
-                <select
-                  className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white focus:outline-none focus:ring-0 sm:text-sm"
-                  value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
-                >
-                  <option value="all">All Roles</option>
-                  <option value="user">Users</option>
-                  <option value="admin">Admins</option>
-                </select>
-              </div>
-            </div>
-
             {/* Status filter */}
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
@@ -254,12 +214,7 @@ export default function UsersPage() {
                   >
                     Room
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                  >
-                    Role
-                  </th>
+
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -313,20 +268,10 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {user.roomNumber || "-"}
+                        {user.allocatedRoomNo || "-"}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.role === "admin"
-                            ? "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200"
-                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -356,44 +301,6 @@ export default function UsersPage() {
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                           </svg>
                         </Link>
-                        <button
-                          onClick={() =>
-                            handleToggleStatus(user._id, user.isActive)
-                          }
-                          className={`${
-                            user.isActive
-                              ? "text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                              : "text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                          }`}
-                        >
-                          {user.isActive ? (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          )}
-                        </button>
                       </div>
                     </td>
                   </tr>

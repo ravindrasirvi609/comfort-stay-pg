@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 interface Resident {
   _id: string;
@@ -321,10 +322,12 @@ export default function ResidentsPage() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     {resident.profilePic ? (
-                      <img
+                      <Image
                         className="h-10 w-10 rounded-full object-cover"
                         src={resident.profilePic}
                         alt=""
+                        width={40}
+                        height={40}
                       />
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white">

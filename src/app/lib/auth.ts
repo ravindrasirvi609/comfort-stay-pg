@@ -84,8 +84,6 @@ export function generateToken(user: UserData): string {
 // Verify JWT token - Edge-compatible version
 export function verifyToken(token: string): UserData | null {
   try {
-    console.log("[Auth] Verifying token:", token.substring(0, 15) + "...");
-
     // For Edge compatibility, we'll use a simpler approach
     // This is less secure but will work in Edge runtime
     // In production, use a proper Edge-compatible JWT library
@@ -109,12 +107,10 @@ export function verifyToken(token: string): UserData | null {
 
     try {
       const payload = JSON.parse(decodedPayload) as UserData;
-      console.log("[Auth] Token decoded successfully:", payload);
 
       // Check if token is expired
       const expiry = payload.exp;
       if (expiry && expiry < Math.floor(Date.now() / 1000)) {
-        console.error("[Auth] Token expired");
         return null;
       }
 

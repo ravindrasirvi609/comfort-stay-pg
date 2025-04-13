@@ -20,7 +20,6 @@ import {
   FiHome,
   FiAlertCircle,
   FiDollarSign,
-  FiTrendingUp,
   FiCalendar,
 } from "react-icons/fi";
 
@@ -432,39 +431,6 @@ export default function AdminDashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="backdrop-blur-xl bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/admin/users/register">
-              <div className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-medium py-3 px-4 rounded-lg text-center transition-all duration-300 shadow-lg hover:shadow-pink-200/40 dark:hover:shadow-pink-900/40">
-                <FiUsers className="h-5 w-5 mx-auto mb-1" />
-                Register User
-              </div>
-            </Link>
-            <Link href="/admin/rooms/create">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-3 px-4 rounded-lg text-center transition-all duration-300 shadow-lg hover:shadow-blue-200/40 dark:hover:shadow-blue-900/40">
-                <FiHome className="h-5 w-5 mx-auto mb-1" />
-                Add Room
-              </div>
-            </Link>
-            <Link href="/admin/payments/create">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-3 px-4 rounded-lg text-center transition-all duration-300 shadow-lg hover:shadow-green-200/40 dark:hover:shadow-green-900/40">
-                <FiDollarSign className="h-5 w-5 mx-auto mb-1" />
-                Record Payment
-              </div>
-            </Link>
-            <Link href="/admin/notices/create">
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-lg text-center transition-all duration-300 shadow-lg hover:shadow-purple-200/40 dark:hover:shadow-purple-900/40">
-                <FiTrendingUp className="h-5 w-5 mx-auto mb-1" />
-                Create Notice
-              </div>
-            </Link>
           </div>
         </div>
 

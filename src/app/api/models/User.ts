@@ -113,6 +113,22 @@ const UserSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    // New fields for PG management
+    depositFees: {
+      type: Number,
+      default: 0,
+    },
+    isOnNoticePeriod: {
+      type: Boolean,
+      default: false,
+    },
+    lastStayingDate: {
+      type: Date,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

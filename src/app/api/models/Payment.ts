@@ -24,7 +24,6 @@ const PaymentSchema = new Schema(
     },
     dueDate: {
       type: Date,
-      required: true,
     },
 
     // Status and receipt
@@ -35,7 +34,6 @@ const PaymentSchema = new Schema(
     },
     receiptNumber: {
       type: String,
-      required: true,
     },
     paymentMethod: {
       type: String,

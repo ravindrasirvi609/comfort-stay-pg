@@ -44,16 +44,17 @@ interface Room {
   beds: Bed[];
 }
 
-interface PageParams {
+interface PageParams extends Record<string, unknown> {
   id: string;
 }
 
 // Create a wrapper function to handle the params type issue
-function useParams<T>(params: T | Promise<T>): T {
-  if (params instanceof Promise) {
-    return React.use(params);
-  }
-  return params;
+function useParams<T extends Record<string, unknown>>(
+  params: T | Promise<T>
+): T {
+  return typeof params === "object" && params !== null
+    ? (React.use(params as Promise<T>) as T)
+    : (params as T);
 }
 
 export default function RoomDetailPage({
@@ -62,8 +63,7 @@ export default function RoomDetailPage({
   params: PageParams | Promise<PageParams>;
 }) {
   const router = useRouter();
-  const unwrappedParams = useParams(params);
-  const id = unwrappedParams.id;
+  const id = useParams(params).id;
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

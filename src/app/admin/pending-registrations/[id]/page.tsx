@@ -24,6 +24,7 @@ interface PendingRegistration {
   createdAt: string;
   allocatedRoomNo?: string;
   checkInDate?: string;
+  pgId?: string;
 }
 
 export default function PendingRegistrationDetailsPage() {
@@ -133,9 +134,10 @@ export default function PendingRegistrationDetailsPage() {
           prev
             ? {
                 ...prev,
-                registrationStatus: "Confirmed",
+                registrationStatus: "Approved",
                 allocatedRoomNo: formData.room,
                 checkInDate: formData.checkInDate,
+                pgId: response.data.pgId,
               }
             : null
         );
@@ -303,8 +305,11 @@ export default function PendingRegistrationDetailsPage() {
               />
             </svg>
             <span className="block sm:inline text-sm">
-              Registration confirmed successfully! Login credentials have been
+              Registration approved successfully! Login credentials have been
               sent to the applicant&apos;s email.
+              {registration.pgId && (
+                <span className="font-medium"> PG ID: {registration.pgId}</span>
+              )}
             </span>
           </div>
         )}
@@ -350,7 +355,7 @@ export default function PendingRegistrationDetailsPage() {
                 className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${
                   registration.registrationStatus === "Pending"
                     ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                    : registration.registrationStatus === "Confirmed"
+                    : registration.registrationStatus === "Approved"
                       ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                       : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                 }`}
@@ -591,192 +596,22 @@ export default function PendingRegistrationDetailsPage() {
               </div>
             )}
 
-            {/* Confirmation Dialog */}
-            {showConfirmDialog && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Confirm Registration
-                  </h3>
-
-                  <form onSubmit={handleConfirm} className="space-y-4">
-                    {/* Room field */}
-                    <div>
-                      <label
-                        htmlFor="room"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Room Number *
-                      </label>
-                      <input
-                        type="text"
-                        id="room"
-                        name="room"
-                        value={formData.room}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                        placeholder="Enter room number"
-                      />
-                    </div>
-
-                    {/* Amount field */}
-                    <div>
-                      <label
-                        htmlFor="amount"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Amount (₹) *
-                      </label>
-                      <input
-                        type="number"
-                        id="amount"
-                        name="amount"
-                        value={formData.amount}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                        placeholder="Enter payment amount"
-                      />
-                    </div>
-
-                    {/* Month field */}
-                    <div>
-                      <label
-                        htmlFor="month"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Month *
-                      </label>
-                      <input
-                        type="text"
-                        id="month"
-                        name="month"
-                        value={formData.month}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                        placeholder="e.g. April 2025"
-                      />
-                    </div>
-
-                    {/* Payment Method field */}
-                    <div>
-                      <label
-                        htmlFor="paymentMethod"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Payment Method
-                      </label>
-                      <select
-                        id="paymentMethod"
-                        name="paymentMethod"
-                        value={formData.paymentMethod}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                      >
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="Debit Card">Debit Card</option>
-                      </select>
-                    </div>
-
-                    {/* Payment Status field */}
-                    <div>
-                      <label
-                        htmlFor="paymentStatus"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Payment Status
-                      </label>
-                      <select
-                        id="paymentStatus"
-                        name="paymentStatus"
-                        value={formData.paymentStatus}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                      >
-                        <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
-                      </select>
-                    </div>
-
-                    {/* Check-in Date field */}
-                    <div>
-                      <label
-                        htmlFor="checkInDate"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Check-in Date
-                      </label>
-                      <input
-                        type="date"
-                        id="checkInDate"
-                        name="checkInDate"
-                        value={formData.checkInDate}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                      />
-                    </div>
-
-                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        type="button"
-                        onClick={closeConfirmDialog}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={
-                          confirmLoading || !formData.room || !formData.amount
-                        }
-                        className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {confirmLoading ? (
-                          <>
-                            <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            Processing...
-                          </>
-                        ) : (
-                          "Confirm Registration"
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {/* Approved Details (if Confirmed) */}
-            {registration.registrationStatus === "Confirmed" && (
+            {/* Approved Details (if Approved) */}
+            {registration.registrationStatus === "Approved" && (
               <div className="mt-8 p-4 border border-green-200 dark:border-green-800 rounded-md bg-green-50 dark:bg-green-900/20">
                 <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
                   Confirmation Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      PG ID
+                    </p>
+                    <p className="text-green-800 dark:text-green-200 font-medium">
+                      {registration.pgId || "Not assigned"}
+                    </p>
+                  </div>
+
                   <div>
                     <p className="text-sm text-green-600 dark:text-green-400">
                       Room Number
@@ -820,6 +655,185 @@ export default function PendingRegistrationDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Confirm Registration
+            </h3>
+
+            <form onSubmit={handleConfirm} className="space-y-4">
+              {/* Room field */}
+              <div>
+                <label
+                  htmlFor="room"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Room Number *
+                </label>
+                <input
+                  type="text"
+                  id="room"
+                  name="room"
+                  value={formData.room}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                  placeholder="Enter room number"
+                />
+              </div>
+
+              {/* Amount field */}
+              <div>
+                <label
+                  htmlFor="amount"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Amount (₹) *
+                </label>
+                <input
+                  type="number"
+                  id="amount"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                  placeholder="Enter payment amount"
+                />
+              </div>
+
+              {/* Month field */}
+              <div>
+                <label
+                  htmlFor="month"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Month *
+                </label>
+                <input
+                  type="text"
+                  id="month"
+                  name="month"
+                  value={formData.month}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                  placeholder="e.g. April 2025"
+                />
+              </div>
+
+              {/* Payment Method field */}
+              <div>
+                <label
+                  htmlFor="paymentMethod"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Payment Method
+                </label>
+                <select
+                  id="paymentMethod"
+                  name="paymentMethod"
+                  value={formData.paymentMethod}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Debit Card">Debit Card</option>
+                </select>
+              </div>
+
+              {/* Payment Status field */}
+              <div>
+                <label
+                  htmlFor="paymentStatus"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Payment Status
+                </label>
+                <select
+                  id="paymentStatus"
+                  name="paymentStatus"
+                  value={formData.paymentStatus}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+
+              {/* Check-in Date field */}
+              <div>
+                <label
+                  htmlFor="checkInDate"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Check-in Date
+                </label>
+                <input
+                  type="date"
+                  id="checkInDate"
+                  name="checkInDate"
+                  value={formData.checkInDate}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={closeConfirmDialog}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    confirmLoading || !formData.room || !formData.amount
+                  }
+                  className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {confirmLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    "Confirm Registration"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

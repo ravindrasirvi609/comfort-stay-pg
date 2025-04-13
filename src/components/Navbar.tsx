@@ -122,20 +122,7 @@ export default function Navbar() {
                 <UserPlus className="w-4 h-4" />
                 Register
               </Link>
-              <Link
-                href="/contact"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  pathname === "/contact"
-                    ? "text-pink-600 dark:text-pink-400 font-semibold bg-pink-50/50 dark:bg-pink-900/20"
-                    : "text-gray-700 hover:text-pink-600 dark:text-gray-200 dark:hover:text-pink-400 hover:bg-pink-50/50 dark:hover:bg-pink-900/10"
-                }`}
-              >
-                <PhoneCall className="w-4 h-4 opacity-70" />
-                Contact
-              </Link>
             </div>
-
-            <ModeToggle />
           </nav>
 
           {/* Mobile Navigation Button */}

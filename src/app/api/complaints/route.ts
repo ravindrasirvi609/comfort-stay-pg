@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Complaint from "@/app/api/models/Complaint";
+import User from "@/app/api/models/User";
 
 // Get all complaints
 export async function GET() {
@@ -17,6 +18,9 @@ export async function GET() {
     }
 
     await connectToDatabase();
+
+    // This is just to ensure User model is registered
+    await User.findOne({});
 
     let complaints;
 
@@ -60,6 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     await connectToDatabase();
+
+    // Ensure User model is registered
+    await User.findOne({});
 
     const { title, description } = await request.json();
 

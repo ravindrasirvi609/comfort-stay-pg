@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Complaint from "@/app/api/models/Complaint";
+import User from "@/app/api/models/User";
 
 // Get a single complaint
 export async function GET(
@@ -20,6 +21,9 @@ export async function GET(
     }
 
     await connectToDatabase();
+
+    // Ensure User model is registered
+    await User.findOne({});
 
     // Find complaint by ID
     const complaint = await Complaint.findById(params.id).populate(
@@ -72,6 +76,9 @@ export async function PUT(
     }
 
     await connectToDatabase();
+
+    // Ensure User model is registered
+    await User.findOne({});
 
     // Find the complaint
     const complaintToUpdate = await Complaint.findById(params.id);
@@ -160,6 +167,9 @@ export async function DELETE(
     }
 
     await connectToDatabase();
+
+    // Ensure User model is registered
+    await User.findOne({});
 
     // Find the complaint
     const complaintToDelete = await Complaint.findById(params.id);

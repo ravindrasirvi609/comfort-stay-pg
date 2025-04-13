@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 interface User {
   _id: string;
@@ -57,18 +57,43 @@ export default function ComplaintsPage() {
     status: "Open" | "In Progress" | "Resolved" | "Closed"
   ) => {
     try {
-      await axios.patch(`/api/complaints/${id}`, { status });
-      setComplaints(
-        complaints.map((complaint) =>
-          complaint._id === id ? { ...complaint, status } : complaint
-        )
-      );
-      if (selectedComplaint && selectedComplaint._id === id) {
-        setSelectedComplaint({ ...selectedComplaint, status });
+      const response = await axios.put(`/api/complaints/${id}`, { status });
+      if (response.data.success) {
+        setComplaints(
+          complaints.map((complaint) =>
+            complaint._id === id ? { ...complaint, status } : complaint
+          )
+        );
+        if (selectedComplaint && selectedComplaint._id === id) {
+          setSelectedComplaint({ ...selectedComplaint, status });
+        }
+      } else {
+        setError(response.data.message || "Failed to update complaint status");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error updating complaint status:", err);
-      setError("Failed to update complaint status");
+      if (axios.isAxiosError(err)) {
+        const axiosError = err as AxiosError<{ message?: string }>;
+        if (axiosError.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          setError(
+            axiosError.response.data?.message ||
+              `Error: ${axiosError.response.status} - ${axiosError.response.statusText}`
+          );
+        } else if (axiosError.request) {
+          // The request was made but no response was received
+          setError("No response received from server. Please try again.");
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          setError(
+            axiosError.message ||
+              "An error occurred while updating the complaint"
+          );
+        }
+      } else {
+        setError("An unexpected error occurred");
+      }
     }
   };
 

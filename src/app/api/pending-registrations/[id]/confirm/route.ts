@@ -4,11 +4,10 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { User, Payment } from "@/app/api/models";
 import { sendEmail } from "@/app/lib/email";
 import bcrypt from "bcryptjs";
-import { generateRandomPassword } from "@/app/lib/utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string | Promise<string> } }
 ) {
   try {
     // Check if user is authenticated and is an admin
@@ -45,7 +44,7 @@ export async function POST(
     await connectToDatabase();
 
     // Ensure params is not a Promise before using it
-    const id = await params.id;
+    const id = typeof params.id === "string" ? params.id : await params.id;
 
     // Find the pending registration
     const pendingRegistration = await User.findOne({
@@ -60,17 +59,49 @@ export async function POST(
       );
     }
 
-    // Generate a random password
-    const plainPassword = generateRandomPassword();
+    // Generate PG ID from the user's email address
+    // Example: for john.doe@example.com, create PG-JD1234
+    const email = pendingRegistration.email;
+    let pgIdPrefix = "";
+
+    // Extract initials from email (before the @ symbol)
+    const emailUsername = email.split("@")[0];
+    // Get the first part of the email (before dots or special characters)
+    const nameParts = emailUsername.split(/[^a-zA-Z]/).filter(Boolean);
+
+    if (nameParts.length >= 2) {
+      // If there are multiple parts, take first letter of each part
+      pgIdPrefix = nameParts
+        .map((part: string) => part[0].toUpperCase())
+        .join("");
+    } else if (nameParts.length === 1) {
+      // If there's only one part, take first 2 letters
+      pgIdPrefix = nameParts[0].substring(0, 2).toUpperCase();
+    } else {
+      // Fallback to first 2 chars of email
+      pgIdPrefix = emailUsername.substring(0, 2).toUpperCase();
+    }
+
+    // Add random numbers to make it unique
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const pgId = `PG-${pgIdPrefix}${randomNum}`;
+
+    // Create standard password based on mobile number's last 4 digits
+    const phone = pendingRegistration.phone;
+    const lastFourDigits = phone.slice(-4);
+    const plainPassword = `Comfort@${lastFourDigits}`;
+
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
-    // Update the registration status to confirmed and set allocated room
-    pendingRegistration.registrationStatus = "Confirmed";
+    // Update the registration status to Approved (matches enum in User model) and set allocated room
+    pendingRegistration.registrationStatus = "Approved";
     pendingRegistration.allocatedRoomNo = allocatedRoomNo;
-    pendingRegistration.checkInDate = checkInDate;
+    pendingRegistration.moveInDate = checkInDate; // Use moveInDate instead of checkInDate
     pendingRegistration.password = hashedPassword; // Set the password
+    pendingRegistration.approvalDate = new Date(); // Set the approval date
+    pendingRegistration.pgId = pgId; // Set the PG ID
 
     await pendingRegistration.save();
 
@@ -88,6 +119,7 @@ export async function POST(
         amount: Number(paymentDetails.amount),
         month: paymentDetails.month,
         paymentDate: new Date(),
+        dueDate: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Set due date to next month
         status: paymentDetails.paymentStatus || "Paid",
         paymentMethod: paymentDetails.paymentMethod || "Cash",
         receiptNumber: receiptNumber,
@@ -101,14 +133,14 @@ export async function POST(
     try {
       await sendEmail({
         to: pendingRegistration.email,
-        subject: "Your Registration is Confirmed - Comfort Stay PG",
+        subject: "Your Registration is Approved - Comfort Stay PG",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #d53f8c;">Registration Confirmed - Comfort Stay PG</h2>
+            <h2 style="color: #d53f8c;">Registration Approved - Comfort Stay PG</h2>
             <p>Dear ${pendingRegistration.name},</p>
-            <p>Your registration has been confirmed. You can now login to your account using the following credentials:</p>
+            <p>Your registration has been approved. You can now login to your account using the following credentials:</p>
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p><strong>PG ID:</strong> ${pendingRegistration.pgId}</p>
+              <p><strong>PG ID:</strong> ${pgId}</p>
               <p><strong>Password:</strong> ${plainPassword}</p>
             </div>
             <p style="font-weight: bold;">Room Details:</p>
@@ -138,7 +170,8 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Registration confirmed successfully",
+      message: "Registration approved successfully",
+      pgId: pgId, // Return the pgId to client
     });
   } catch (error) {
     console.error("Error confirming registration:", error);

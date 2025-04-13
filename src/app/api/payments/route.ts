@@ -83,11 +83,20 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase();
 
-    const { userId, amount, month, paymentDate, status, remarks } =
-      await request.json();
+    const {
+      userId,
+      amount,
+      month,
+      paymentDate,
+      dueDate,
+      status,
+      remarks,
+      paymentMethod,
+      transactionId,
+    } = await request.json();
 
     // Validate required fields
-    if (!userId || !amount || !month) {
+    if (!userId || !amount || !month || !dueDate) {
       return NextResponse.json(
         { success: false, message: "Please provide all required fields" },
         { status: 400 }
@@ -115,8 +124,11 @@ export async function POST(request: NextRequest) {
       amount,
       month,
       paymentDate: paymentDate || new Date(),
+      dueDate,
       status: status || "Paid",
       receiptNumber,
+      paymentMethod,
+      transactionId,
       remarks,
     });
 
