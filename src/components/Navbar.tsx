@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ModeToggle from "./ModeToggle";
+import useAuth from "../hooks/useAuth";
 import {
   MenuIcon,
   XIcon,
@@ -17,7 +18,10 @@ import {
   LogIn,
   PhoneCall,
   UserPlus,
+  LogOut,
+  User,
 } from "lucide-react";
+import Image from "next/image";
 
 const navLinks = [
   { href: "/", label: "Home", icon: <Home className="w-4 h-4" /> },
@@ -45,6 +49,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,6 +63,11 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await logout();
+  };
 
   return (
     <header
@@ -102,26 +112,64 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Login and Registration Buttons */}
+            {/* Authentication Buttons */}
             <div className="ml-2 flex space-x-1">
-              <Link
-                href="/login"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  pathname === "/login"
-                    ? "text-pink-600 dark:text-pink-400 font-semibold bg-pink-50/50 dark:bg-pink-900/20"
-                    : "text-gray-700 hover:text-pink-600 dark:text-gray-200 dark:hover:text-pink-400 hover:bg-pink-50/50 dark:hover:bg-pink-900/10"
-                }`}
-              >
-                <LogIn className="w-4 h-4 opacity-70" />
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-1.5"
-              >
-                <UserPlus className="w-4 h-4" />
-                Register
-              </Link>
+              {isAuthenticated ? (
+                <div className="flex items-center gap-1">
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    <div className="relative">
+                      <div className="h-8 w-8 rounded-full bg-pink-100 dark:bg-pink-800/30 flex items-center justify-center overflow-hidden border-2 border-pink-200 dark:border-pink-700">
+                        {user?.profileImage ? (
+                          <Image
+                            src={user.profileImage}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                            width={32}
+                            height={32}
+                          />
+                        ) : (
+                          <User className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+                        )}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-gray-900"></div>
+                    </div>
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {user?.name || "User"}
+                    </span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-2 py-2 text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 rounded-md"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                      pathname === "/login"
+                        ? "text-pink-600 dark:text-pink-400 font-semibold bg-pink-50/50 dark:bg-pink-900/20"
+                        : "text-gray-700 hover:text-pink-600 dark:text-gray-200 dark:hover:text-pink-400 hover:bg-pink-50/50 dark:hover:bg-pink-900/10"
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4 opacity-70" />
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-1.5"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
 
@@ -165,38 +213,72 @@ export default function Navbar() {
 
             {/* Login and Registration in Mobile Menu */}
             <div className="border-t dark:border-gray-800 pt-2 mt-2 grid grid-cols-3 gap-2">
-              <Link
-                href="/login"
-                className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
-                  pathname === "/login"
-                    ? "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
-                    : "text-gray-700 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-400 border border-gray-200 dark:border-gray-700"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <LogIn className="w-4 h-4 opacity-70" />
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <UserPlus className="w-4 h-4" />
-                Register
-              </Link>
-              <Link
-                href="/contact"
-                className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
-                  pathname === "/contact"
-                    ? "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
-                    : "text-gray-700 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-400 border border-gray-200 dark:border-gray-700"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <PhoneCall className="w-4 h-4 opacity-70" />
-                Contact
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="col-span-2 px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center gap-2 text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <div className="h-6 w-6 rounded-full bg-pink-100 dark:bg-pink-800/30 flex items-center justify-center overflow-hidden">
+                      {user?.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={user.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-3 w-3 text-pink-600 dark:text-pink-400" />
+                      )}
+                    </div>
+                    {user?.name || "Dashboard"}
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      handleLogout(e);
+                      setIsMenuOpen(false);
+                    }}
+                    className="px-3 py-2 rounded-md text-base font-medium border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+                  >
+                    <LogOut className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
+                      pathname === "/login"
+                        ? "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
+                        : "text-gray-700 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-400 border border-gray-200 dark:border-gray-700"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <LogIn className="w-4 h-4 opacity-70" />
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Register
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
+                      pathname === "/contact"
+                        ? "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
+                        : "text-gray-700 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-400 border border-gray-200 dark:border-gray-700"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <PhoneCall className="w-4 h-4 opacity-70" />
+                    Contact
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

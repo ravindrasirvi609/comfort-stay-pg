@@ -3,11 +3,8 @@ import { cookies } from "next/headers";
 
 export async function POST() {
   try {
-    // Clear the token cookie
-    (
-      await // Clear the token cookie
-      cookies()
-    ).set({
+    // Clear the token cookie by setting it to empty with maxAge 0
+    (await cookies()).set({
       name: "token",
       value: "",
       httpOnly: true,
@@ -23,7 +20,10 @@ export async function POST() {
   } catch (error) {
     console.error("Logout error:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      {
+        success: false,
+        message: "Failed to logout",
+      },
       { status: 500 }
     );
   }

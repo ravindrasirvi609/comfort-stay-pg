@@ -3,9 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import ImageUpload from "../components/ImageUpload";
+import useAuth from "../../hooks/useAuth";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -40,6 +44,13 @@ export default function RegisterPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (mounted && !authLoading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [mounted, authLoading, isAuthenticated, router]);
 
   // Handle form input changes
   const handleChange = (
@@ -167,7 +178,13 @@ export default function RegisterPage() {
     }
   };
 
-  if (!mounted) {
+  // If still loading auth state or component not mounted yet, show loading or nothing
+  if (!mounted || authLoading) {
+    return null;
+  }
+
+  // If user is already authenticated, we'll redirect in the useEffect
+  if (isAuthenticated) {
     return null;
   }
 

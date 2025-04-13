@@ -4,11 +4,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
+import useAuth from "../../hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("user");
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
 
@@ -28,6 +30,13 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (mounted && !loading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [mounted, loading, isAuthenticated, router]);
+
   // Handle user form input change
   const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,7 +54,7 @@ export default function LoginPage() {
   // Handle user login
   const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError("");
 
     try {
@@ -65,14 +74,14 @@ export default function LoginPage() {
         setError("An unexpected error occurred");
       }
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   // Handle admin login
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError("");
 
     try {
@@ -95,11 +104,17 @@ export default function LoginPage() {
         setError("An unexpected error occurred");
       }
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
-  if (!mounted) {
+  // If still loading auth state or component not mounted yet, show loading or nothing
+  if (!mounted || loading) {
+    return null;
+  }
+
+  // If user is already authenticated, we'll redirect in the useEffect
+  if (isAuthenticated) {
     return null;
   }
 
@@ -256,10 +271,10 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={formLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {formLoading ? (
                   <>
                     <svg
                       className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -381,10 +396,10 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={formLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {formLoading ? (
                   <>
                     <svg
                       className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
