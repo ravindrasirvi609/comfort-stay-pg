@@ -75,7 +75,7 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
-    passportPhoto: {
+    profileImage: {
       type: String,
       required: true,
     },

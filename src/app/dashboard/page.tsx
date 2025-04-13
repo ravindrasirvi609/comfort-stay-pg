@@ -42,6 +42,7 @@ interface User {
   address?: string;
   idProof?: string;
   validIdPhoto?: string;
+  profileImage?: string;
   allocatedRoomNo?: string;
   isOnNoticePeriod?: boolean;
   lastStayingDate?: string;
@@ -287,9 +288,9 @@ export default function UserProfilePage() {
           {/* Profile Image */}
           <div className="mb-4 md:mb-0 md:mr-8">
             <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white dark:border-gray-800">
-              {user?.validIdPhoto ? (
+              {user?.profileImage ? (
                 <Image
-                  src={user.validIdPhoto}
+                  src={user.profileImage}
                   alt={user?.name}
                   className="w-full h-full object-cover"
                   width={100}

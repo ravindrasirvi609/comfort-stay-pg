@@ -19,7 +19,7 @@ interface PendingRegistration {
   companyNameAndAddress: string;
   validIdType: string;
   validIdPhoto: string;
-  passportPhoto: string;
+  profileImage: string;
   registrationStatus: string;
   createdAt: string;
   allocatedRoomNo?: string;
@@ -528,12 +528,12 @@ export default function PendingRegistrationDetailsPage() {
                   </p>
                   <div className="relative h-60 w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
                     <a
-                      href={registration.passportPhoto}
+                      href={registration.profileImage}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Image
-                        src={registration.passportPhoto}
+                        src={registration.profileImage}
                         alt="Passport Photo"
                         fill
                         className="object-contain"

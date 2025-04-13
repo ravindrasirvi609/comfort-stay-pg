@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       validIdType,
       validIdPhoto,
       companyNameAndAddress,
-      passportPhoto,
+      profileImage,
     } = requestData;
 
     if (
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       !validIdType ||
       !validIdPhoto ||
       !companyNameAndAddress ||
-      !passportPhoto
+      !profileImage
     ) {
       return NextResponse.json(
         { success: false, message: "All fields are required" },
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       validIdType,
       validIdPhoto,
       companyNameAndAddress,
-      passportPhoto,
+      profileImage,
     });
 
     await newUser.save();

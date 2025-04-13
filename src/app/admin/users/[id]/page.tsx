@@ -51,7 +51,7 @@ interface UserData {
   validIdType?: string;
   companyNameAndAddress?: string;
   validIdPhoto?: string;
-  passportPhoto?: string;
+  profileImage?: string;
   documents?: string[];
   allocatedRoomNo?: string;
   bedNumber?: string | null;
@@ -224,10 +224,10 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
             <div className="flex flex-col md:flex-row">
               {/* User Avatar and Basic Info */}
               <div className="md:w-1/4 flex flex-col items-center mb-6 md:mb-0">
-                {user.passportPhoto ? (
+                {user.profileImage ? (
                   <div className="w-32 h-32 rounded-full overflow-hidden mb-3 border-4 border-pink-200 dark:border-pink-900">
                     <Image
-                      src={user.passportPhoto}
+                      src={user.profileImage}
                       alt={user.name}
                       width={128}
                       height={128}
@@ -527,7 +527,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
             )}
 
             {/* Passport Photo */}
-            {user.passportPhoto && (
+            {user.profileImage && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -537,7 +537,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                 <div className="p-4">
                   <div className="aspect-w-16 aspect-h-9 rounded-md overflow-hidden">
                     <Image
-                      src={user.passportPhoto}
+                      src={user.profileImage}
                       alt="Passport Photo"
                       width={600}
                       height={400}
@@ -546,7 +546,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                   </div>
                   <div className="mt-3 flex justify-end">
                     <a
-                      href={user.passportPhoto}
+                      href={user.profileImage}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"

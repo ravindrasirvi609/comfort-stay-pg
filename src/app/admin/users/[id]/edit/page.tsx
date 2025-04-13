@@ -32,7 +32,7 @@ interface UserData {
   validIdType?: string;
   companyNameAndAddress?: string;
   validIdPhoto?: string;
-  passportPhoto?: string;
+  profileImage?: string;
   documents?: string[];
   allocatedRoomNo?: string;
   bedNumber?: string | null;
@@ -67,7 +67,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     validIdType: "",
     companyNameAndAddress: "",
     validIdPhoto: "",
-    passportPhoto: "",
+    profileImage: "",
     documents: [],
     allocatedRoomNo: "",
     bedNumber: null,
@@ -102,7 +102,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
             validIdType: user.validIdType || "",
             companyNameAndAddress: user.companyNameAndAddress || "",
             validIdPhoto: user.validIdPhoto || "",
-            passportPhoto: user.passportPhoto || "",
+            profileImage: user.profileImage || "",
             documents: user.documents || [],
             allocatedRoomNo: user.allocatedRoomNo || "",
             bedNumber: user.bedNumber,
@@ -543,10 +543,10 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">
                 Passport Photo
               </h3>
-              {userData.passportPhoto && (
+              {userData.profileImage && (
                 <div className="mt-2">
                   <a
-                    href={userData.passportPhoto}
+                    href={userData.profileImage}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline"

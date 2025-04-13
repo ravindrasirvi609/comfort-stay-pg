@@ -38,7 +38,7 @@ export default function RegisterPage() {
     validIdType: validIdTypes[0],
     validIdPhoto: "",
     companyNameAndAddress: "",
-    passportPhoto: "",
+    profileImage: "",
   });
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function RegisterPage() {
 
   // Handle cloudinary image upload
   const handleImageUploaded = (
-    type: "validIdPhoto" | "passportPhoto",
+    type: "validIdPhoto" | "profileImage",
     url: string
   ) => {
     setFormData((prev) => ({
@@ -112,7 +112,7 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!formData.passportPhoto) {
+    if (!formData.profileImage) {
       setError("Please upload your passport size photo");
       setLoading(false);
       return;
@@ -132,7 +132,7 @@ export default function RegisterPage() {
         validIdType: formData.validIdType,
         validIdPhoto: formData.validIdPhoto,
         companyNameAndAddress: formData.companyNameAndAddress,
-        passportPhoto: formData.passportPhoto,
+        profileImage: formData.profileImage,
       });
 
       if (response.data.success) {
@@ -151,7 +151,7 @@ export default function RegisterPage() {
           validIdType: validIdTypes[0],
           validIdPhoto: "",
           companyNameAndAddress: "",
-          passportPhoto: "",
+          profileImage: "",
         });
       } else {
         setError(response.data.message || "Registration request failed");
@@ -609,13 +609,13 @@ export default function RegisterPage() {
                       <div className="bg-white/30 dark:bg-gray-800/30 rounded-xl p-4 backdrop-blur-sm">
                         <ImageUpload
                           onImageUploaded={(url) =>
-                            handleImageUploaded("passportPhoto", url)
+                            handleImageUploaded("profileImage", url)
                           }
                           folder="applicants/profile"
                           maxSizeMB={2}
-                          className={`${formData.passportPhoto ? "border-green-500" : ""}`}
+                          className={`${formData.profileImage ? "border-green-500" : ""}`}
                         />
-                        {formData.passportPhoto && (
+                        {formData.profileImage && (
                           <p className="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
