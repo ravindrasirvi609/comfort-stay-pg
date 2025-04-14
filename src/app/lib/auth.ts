@@ -76,7 +76,20 @@ export async function comparePassword(
 ): Promise<boolean> {
   // Compare with our simplified hash
   const newHash = await hashPassword(password);
-  return newHash === hashedPassword;
+  const result = newHash === hashedPassword;
+
+  // Add detailed logging for debugging
+  console.log("[Auth] Password comparison details:", {
+    passwordLength: password.length,
+    hashedInputLength: newHash.length,
+    storedHashLength: hashedPassword.length,
+    match: result,
+    // Show first and last few characters of hashes to help diagnose without revealing full values
+    inputHashPreview: `${newHash.substring(0, 8)}...${newHash.substring(newHash.length - 8)}`,
+    storedHashPreview: `${hashedPassword.substring(0, 8)}...${hashedPassword.substring(hashedPassword.length - 8)}`,
+  });
+
+  return result;
 }
 
 // Generate JWT token - Edge compatible

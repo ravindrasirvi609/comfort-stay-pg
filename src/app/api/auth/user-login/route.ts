@@ -10,6 +10,8 @@ export async function POST(request: NextRequest) {
 
     const { pgId, password } = await request.json();
 
+    console.log("[Login] Attempting login with PG ID:", pgId);
+
     // Check if all fields are provided
     if (!pgId || !password) {
       return NextResponse.json(
@@ -18,8 +20,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by pgId
-    const user = await User.findOne({ pgId });
+    // Find user by pgId with case-insensitive search
+    const user = await User.findOne({
+      pgId: { $regex: new RegExp(`^${pgId}$`, "i") },
+    });
+
+    console.log("[Login] User found:", user ? "Yes" : "No");
 
     // Check if user exists
     if (!user) {
@@ -39,6 +45,8 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
+
+    console.log("[Login] Password valid:", isPasswordValid);
 
     if (!isPasswordValid) {
       return NextResponse.json(
