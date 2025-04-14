@@ -16,7 +16,8 @@ interface PendingRegistration {
   permanentAddress: string;
   city: string;
   state: string;
-  companyNameAndAddress: string;
+  companyName: string;
+  companyAddress: string;
   validIdType: string;
   validIdPhoto: string;
   profileImage: string;
@@ -455,10 +456,19 @@ export default function PendingRegistrationDetailsPage() {
 
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Company/Organization
+                    Company Name
                   </p>
                   <p className="text-gray-800 dark:text-white">
-                    {registration.companyNameAndAddress}
+                    {registration.companyName}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Company Address
+                  </p>
+                  <p className="text-gray-800 dark:text-white">
+                    {registration.companyAddress}
                   </p>
                 </div>
 

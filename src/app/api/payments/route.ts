@@ -93,6 +93,9 @@ export async function POST(request: NextRequest) {
       remarks,
       paymentMethod,
       transactionId,
+      isMultiMonthPayment,
+      coveredMonths,
+      isDepositPayment,
     } = await request.json();
 
     // Validate required fields
@@ -130,9 +133,19 @@ export async function POST(request: NextRequest) {
       paymentMethod,
       transactionId,
       remarks,
+      // Add multiple month payment fields
+      isMultiMonthPayment: isMultiMonthPayment || false,
+      coveredMonths: coveredMonths || [],
+      // Add deposit payment flag
+      isDepositPayment: isDepositPayment || false,
     });
 
     await newPayment.save();
+
+    // If this is a deposit payment, update the user's depositFees field
+    if (isDepositPayment) {
+      await User.findByIdAndUpdate(userId, { depositFees: amount });
+    }
 
     return NextResponse.json({
       success: true,

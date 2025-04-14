@@ -36,6 +36,12 @@ export default function CreatePaymentPage() {
   const [transactionId, setTransactionId] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
   const [status, setStatus] = useState<string>("Paid");
+  // New states for multi-month payments
+  const [isMultiMonthPayment, setIsMultiMonthPayment] =
+    useState<boolean>(false);
+  const [coveredMonths, setCoveredMonths] = useState<string[]>([]);
+  // State for deposit payment
+  const [isDepositPayment, setIsDepositPayment] = useState<boolean>(false);
 
   // UI states
   const [loading, setLoading] = useState(true);
@@ -120,11 +126,30 @@ export default function CreatePaymentPage() {
     }
   }, [selectedUser, users]);
 
+  // Update amount when multi-month payment option changes
+  useEffect(() => {
+    if (selectedUser && isMultiMonthPayment) {
+      const user = users.find((u) => u._id === selectedUser);
+      if (user && user.roomId && user.roomId.price) {
+        // If covered months selected, calculate total amount
+        if (coveredMonths.length > 0) {
+          setAmount(user.roomId.price * coveredMonths.length);
+        }
+      }
+    }
+  }, [selectedUser, isMultiMonthPayment, coveredMonths, users]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedUser || amount === "" || !month) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    // Additional validation for multi-month payments
+    if (isMultiMonthPayment && coveredMonths.length === 0) {
+      setError("Please select at least one month for multi-month payment");
       return;
     }
 
@@ -142,6 +167,11 @@ export default function CreatePaymentPage() {
         paymentMethod,
         transactionId: transactionId || undefined,
         remarks: remarks || undefined,
+        // Add multi-month payment data
+        isMultiMonthPayment,
+        coveredMonths: isMultiMonthPayment ? coveredMonths : [],
+        // Add deposit payment flag
+        isDepositPayment,
       };
 
       const response = await axios.post("/api/payments", paymentData);
@@ -165,6 +195,18 @@ export default function CreatePaymentPage() {
       );
       setSubmitting(false);
     }
+  };
+
+  // Handle covered months selection
+  const handleMonthSelection = (selectedMonth: string) => {
+    setCoveredMonths((prev) => {
+      // If already selected, remove it
+      if (prev.includes(selectedMonth)) {
+        return prev.filter((m) => m !== selectedMonth);
+      }
+      // Otherwise add it
+      return [...prev, selectedMonth];
+    });
   };
 
   if (loading) {
@@ -317,105 +359,171 @@ export default function CreatePaymentPage() {
                 ))}
               </select>
             </div>
+          </div>
 
-            {/* Payment Date */}
-            <div>
-              <label
-                htmlFor="paymentDate"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Payment Date
-              </label>
+          {/* Multi-month payment toggle */}
+          <div className="mt-4">
+            <div className="flex items-center mb-2">
               <input
-                type="date"
-                id="paymentDate"
-                value={paymentDate}
-                onChange={(e) => setPaymentDate(e.target.value)}
-                max={new Date().toISOString().split("T")[0]}
-                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                type="checkbox"
+                id="multiMonth"
+                checked={isMultiMonthPayment}
+                onChange={(e) => setIsMultiMonthPayment(e.target.checked)}
+                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
               />
-            </div>
-
-            {/* Due Date */}
-            <div>
               <label
-                htmlFor="dueDate"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                htmlFor="multiMonth"
+                className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
               >
-                Due Date <span className="text-red-500">*</span>
+                Payment covers multiple months
               </label>
-              <input
-                type="date"
-                id="dueDate"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-                required
-              />
             </div>
 
-            {/* Status */}
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-              >
-                <option value="Paid">Paid</option>
-                <option value="Due">Due</option>
-                <option value="Partial">Partial</option>
-              </select>
-            </div>
-
-            {/* Payment Method */}
-            <div>
-              <label
-                htmlFor="paymentMethod"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Payment Method
-              </label>
-              <select
-                id="paymentMethod"
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-              >
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Card">Card</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            {/* Transaction ID (only show for non-cash payment methods) */}
-            {paymentMethod !== "Cash" && (
-              <div>
-                <label
-                  htmlFor="transactionId"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Transaction ID
-                </label>
-                <input
-                  type="text"
-                  id="transactionId"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-                  placeholder="Enter transaction reference"
-                />
+            {/* Show covered months selection if multi-month payment is selected */}
+            {isMultiMonthPayment && (
+              <div className="ml-6 mt-2 border border-gray-200 dark:border-gray-700 rounded-md p-3">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select covered months:
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
+                  {months.map((m) => (
+                    <div key={m} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`month-${m}`}
+                        checked={coveredMonths.includes(m)}
+                        onChange={() => handleMonthSelection(m)}
+                        className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor={`month-${m}`}
+                        className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                      >
+                        {m}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
+
+          {/* Deposit payment toggle */}
+          <div className="mt-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="depositPayment"
+                checked={isDepositPayment}
+                onChange={(e) => setIsDepositPayment(e.target.checked)}
+                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="depositPayment"
+                className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+              >
+                This is a security deposit payment
+              </label>
+            </div>
+          </div>
+
+          {/* Payment Date */}
+          <div>
+            <label
+              htmlFor="paymentDate"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Payment Date
+            </label>
+            <input
+              type="date"
+              id="paymentDate"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              max={new Date().toISOString().split("T")[0]}
+              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+            />
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label
+              htmlFor="dueDate"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Due Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+              required
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Status
+            </label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+            >
+              <option value="Paid">Paid</option>
+              <option value="Due">Due</option>
+              <option value="Partial">Partial</option>
+            </select>
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <label
+              htmlFor="paymentMethod"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Payment Method
+            </label>
+            <select
+              id="paymentMethod"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+            >
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Card">Card</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Transaction ID (only show for non-cash payment methods) */}
+          {paymentMethod !== "Cash" && (
+            <div>
+              <label
+                htmlFor="transactionId"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Transaction ID
+              </label>
+              <input
+                type="text"
+                id="transactionId"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                placeholder="Enter transaction reference"
+              />
+            </div>
+          )}
 
           {/* Remarks */}
           <div>

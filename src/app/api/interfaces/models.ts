@@ -18,7 +18,8 @@ export interface IUser {
   state: string;
   guardianMobileNumber: string;
   validIdType: "Aadhar Card" | "Passport" | "Driving License" | "Voter Card";
-  companyNameAndAddress: string;
+  companyName: string;
+  companyAddress: string;
   validIdPhoto: string;
   profileImage: string;
   documents?: string[];

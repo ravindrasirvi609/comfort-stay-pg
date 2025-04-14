@@ -40,7 +40,7 @@ interface User {
   moveInDate: string;
   bedNumber?: number;
   gender?: string;
-  emergencyContact?: string;
+  guardianMobileNumber?: string;
   address?: string;
   idProof?: string;
   validIdPhoto?: string;
@@ -107,18 +107,31 @@ export default function UserProfilePage() {
         const userResponse = await axios.get("/api/auth/me");
         if (userResponse.data.success) {
           const userData = userResponse.data.user;
+          console.log("User data:", userData);
           setUser(userData);
 
           // Fetch room details if roomId exists
           if (userData.roomId && typeof userData.roomId === "object") {
+            console.log("Room ID is an object:", userData.roomId);
             setRoomDetails(userData.roomId);
           } else if (userData.roomId) {
             try {
+              console.log("Fetching room details for roomId:", userData.roomId);
               const roomResponse = await axios.get(
                 `/api/rooms/${userData.roomId}`
               );
-              if (roomResponse.data.success) {
-                setRoomDetails(roomResponse.data.room);
+              console.log("Room API response:", roomResponse.data);
+
+              if (roomResponse.data.success && roomResponse.data.room) {
+                // Extract relevant fields for our component
+                const roomData = {
+                  _id: roomResponse.data.room._id,
+                  roomNumber: roomResponse.data.room.roomNumber,
+                  type: roomResponse.data.room.type,
+                  price: roomResponse.data.room.price,
+                };
+                console.log("Setting room details:", roomData);
+                setRoomDetails(roomData);
               }
             } catch (err) {
               console.error("Error fetching room details:", err);
@@ -315,8 +328,8 @@ export default function UserProfilePage() {
                 <FaDoorOpen className="mr-2" />
                 <span>
                   Room{" "}
-                  {typeof user?.roomId === "object" && user?.roomId
-                    ? user.roomId.roomNumber
+                  {roomDetails
+                    ? roomDetails.roomNumber
                     : user?.allocatedRoomNo || "Not Assigned"}
                 </span>
               </div>
@@ -518,24 +531,13 @@ export default function UserProfilePage() {
                   </p>
                 </div>
 
-                {user?.gender && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Gender
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {user.gender}
-                    </p>
-                  </div>
-                )}
-
-                {user?.emergencyContact && (
+                {user?.guardianMobileNumber && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Emergency Contact
                     </h3>
                     <p className="text-gray-900 dark:text-white">
-                      {user.emergencyContact}
+                      {user.guardianMobileNumber}
                     </p>
                   </div>
                 )}
@@ -596,16 +598,6 @@ export default function UserProfilePage() {
                     <p className="text-gray-900 dark:text-white">
                       {user?.bedNumber || "Not assigned"}
                     </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Link
-                      href={`/dashboard/room/${roomDetails._id}`}
-                      className="text-pink-600 hover:text-pink-700 dark:text-pink-500 dark:hover:text-pink-400 flex items-center"
-                    >
-                      View Room Details
-                      <FaChevronRight className="ml-1 text-xs" />
-                    </Link>
                   </div>
                 </div>
               ) : (

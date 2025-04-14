@@ -66,7 +66,11 @@ const UserSchema = new Schema<IUser>(
       enum: ["Aadhar Card", "Passport", "Driving License", "Voter Card"],
       required: true,
     },
-    companyNameAndAddress: {
+    companyName: {
+      type: String,
+      required: true,
+    },
+    companyAddress: {
       type: String,
       required: true,
     },

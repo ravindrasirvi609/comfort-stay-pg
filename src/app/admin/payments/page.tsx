@@ -34,6 +34,9 @@ interface Payment {
   paymentMethod: string;
   remarks?: string;
   createdAt: string;
+  isMultiMonthPayment?: boolean;
+  coveredMonths?: string[];
+  isDepositPayment?: boolean;
 }
 
 export default function PaymentsPage() {
@@ -478,6 +481,12 @@ export default function PaymentsPage() {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                   >
+                    Type
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Date
                   </th>
                   <th
@@ -530,6 +539,29 @@ export default function PaymentsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {payment.month}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {payment.isDepositPayment ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                            Deposit
+                          </span>
+                        ) : payment.isMultiMonthPayment ? (
+                          <div>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              Multiple ({payment.coveredMonths?.length || 0})
+                            </span>
+                            {payment.coveredMonths &&
+                              payment.coveredMonths.length > 0 && (
+                                <div className="hidden group-hover:block absolute z-10 bg-white dark:bg-gray-800 p-2 rounded shadow-lg text-xs mt-1">
+                                  {payment.coveredMonths.join(", ")}
+                                </div>
+                              )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300">
+                            Regular
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(payment.paymentDate)}

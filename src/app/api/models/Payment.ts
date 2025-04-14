@@ -18,6 +18,15 @@ const PaymentSchema = new Schema(
       type: String,
       required: true,
     },
+    // For multiple month payments
+    coveredMonths: {
+      type: [String],
+      default: [],
+    },
+    isMultiMonthPayment: {
+      type: Boolean,
+      default: false,
+    },
     paymentDate: {
       type: Date,
       default: Date.now,
@@ -49,6 +58,12 @@ const PaymentSchema = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    // Deposit fee tracking
+    isDepositPayment: {
+      type: Boolean,
+      default: false,
     },
 
     // Timestamps

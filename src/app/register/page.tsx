@@ -37,7 +37,8 @@ export default function RegisterPage() {
     guardianMobileNumber: "",
     validIdType: validIdTypes[0],
     validIdPhoto: "",
-    companyNameAndAddress: "",
+    companyName: "",
+    companyAddress: "",
     profileImage: "",
   });
 
@@ -131,7 +132,8 @@ export default function RegisterPage() {
         guardianMobileNumber: formData.guardianMobileNumber,
         validIdType: formData.validIdType,
         validIdPhoto: formData.validIdPhoto,
-        companyNameAndAddress: formData.companyNameAndAddress,
+        companyName: formData.companyName,
+        companyAddress: formData.companyAddress,
         profileImage: formData.profileImage,
       });
 
@@ -150,7 +152,8 @@ export default function RegisterPage() {
           guardianMobileNumber: "",
           validIdType: validIdTypes[0],
           validIdPhoto: "",
-          companyNameAndAddress: "",
+          companyName: "",
+          companyAddress: "",
           profileImage: "",
         });
       } else {
@@ -548,18 +551,39 @@ export default function RegisterPage() {
                       <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
                       <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
                         <label
-                          htmlFor="companyNameAndAddress"
+                          htmlFor="companyName"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          Company Name & Address
+                          Company Name
+                        </label>
+                        <input
+                          id="companyName"
+                          name="companyName"
+                          type="text"
+                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                          placeholder="Enter your company name"
+                          value={formData.companyName}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                        <label
+                          htmlFor="companyAddress"
+                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                        >
+                          Company Address
                         </label>
                         <textarea
-                          id="companyNameAndAddress"
-                          name="companyNameAndAddress"
+                          id="companyAddress"
+                          name="companyAddress"
                           rows={3}
                           className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your company name and address"
-                          value={formData.companyNameAndAddress}
+                          placeholder="Enter your company address"
+                          value={formData.companyAddress}
                           onChange={handleChange}
                         />
                       </div>

@@ -18,7 +18,8 @@ export async function POST(request: NextRequest) {
       guardianMobileNumber,
       validIdType,
       validIdPhoto,
-      companyNameAndAddress,
+      companyName,
+      companyAddress,
       profileImage,
     } = requestData;
 
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
       !guardianMobileNumber ||
       !validIdType ||
       !validIdPhoto ||
-      !companyNameAndAddress ||
+      !companyName ||
+      !companyAddress ||
       !profileImage
     ) {
       return NextResponse.json(
@@ -68,7 +70,8 @@ export async function POST(request: NextRequest) {
       guardianMobileNumber,
       validIdType,
       validIdPhoto,
-      companyNameAndAddress,
+      companyName,
+      companyAddress,
       profileImage,
     });
 

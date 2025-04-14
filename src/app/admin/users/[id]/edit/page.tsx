@@ -30,7 +30,8 @@ interface UserData {
   state?: string;
   guardianMobileNumber?: string;
   validIdType?: string;
-  companyNameAndAddress?: string;
+  companyName?: string;
+  companyAddress?: string;
   validIdPhoto?: string;
   profileImage?: string;
   documents?: string[];
@@ -66,7 +67,8 @@ export default function EditUserPage() {
     state: "",
     guardianMobileNumber: "",
     validIdType: "",
-    companyNameAndAddress: "",
+    companyName: "",
+    companyAddress: "",
     validIdPhoto: "",
     profileImage: "",
     documents: [],
@@ -101,7 +103,8 @@ export default function EditUserPage() {
             state: user.state || "",
             guardianMobileNumber: user.guardianMobileNumber || "",
             validIdType: user.validIdType || "",
-            companyNameAndAddress: user.companyNameAndAddress || "",
+            companyName: user.companyName || "",
+            companyAddress: user.companyAddress || "",
             validIdPhoto: user.validIdPhoto || "",
             profileImage: user.profileImage || "",
             documents: user.documents || [],
@@ -339,22 +342,44 @@ export default function EditUserPage() {
             </div>
 
             {/* Company Name and Address */}
-            <div>
-              <label
-                htmlFor="companyNameAndAddress"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Company Name and Address
-              </label>
-              <textarea
-                id="companyNameAndAddress"
-                name="companyNameAndAddress"
-                value={userData.companyNameAndAddress}
-                onChange={handleInputChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Company Name and Address"
-              ></textarea>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Company Name */}
+              <div>
+                <label
+                  htmlFor="companyName"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  id="companyName"
+                  name="companyName"
+                  value={userData.companyName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Company Name"
+                />
+              </div>
+
+              {/* Company Address */}
+              <div>
+                <label
+                  htmlFor="companyAddress"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Company Address
+                </label>
+                <textarea
+                  id="companyAddress"
+                  name="companyAddress"
+                  value={userData.companyAddress}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Company Address"
+                ></textarea>
+              </div>
             </div>
           </div>
         );

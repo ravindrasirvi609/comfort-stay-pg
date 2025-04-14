@@ -289,7 +289,7 @@ export default function RoomDetailPage() {
                           </div>
                           <div className="mt-3">
                             <Link
-                              href={`/admin/residents/${bed.resident._id}`}
+                              href={`/admin/users/${bed.resident._id}`}
                               className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                             >
                               View resident details →
