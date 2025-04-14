@@ -1,12 +1,18 @@
 import mongoose from "mongoose";
 
-// Use hardcoded MongoDB URI as fallback for development
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/comfortstay";
+// Get MongoDB URI from environment or throw error if missing
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable");
+}
+
+// Now TypeScript knows MONGODB_URI is definitely a string
+const connectionString: string = MONGODB_URI;
 
 console.log(
   "[DB] Connecting to MongoDB:",
-  MONGODB_URI.replace(
+  connectionString.replace(
     /mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/,
     "mongodb$1://**:**@"
   )
@@ -33,16 +39,18 @@ export async function connectToDatabase(): Promise<mongoose.Connection> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+      connectTimeoutMS: 30000, // Increase connection timeout
+      socketTimeoutMS: 45000,
     };
 
     // Store connection promise
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log("[DB] MongoDB connected successfully");
-      return mongoose.connection;
-    });
+    cached.promise = mongoose
+      .connect(connectionString, opts)
+      .then((mongoose) => {
+        console.log("[DB] MongoDB connected successfully");
+        return mongoose.connection;
+      });
   }
 
   try {

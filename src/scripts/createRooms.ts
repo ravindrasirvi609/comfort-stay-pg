@@ -1,3 +1,15 @@
+// Load environment variables first
+import { config } from "dotenv";
+import * as path from "path";
+import * as url from "url";
+
+// Get the directory of the current module
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env.local
+config({ path: path.resolve(__dirname, "../../../.env.local") });
+
 import mongoose from "mongoose";
 import { connectToDatabase } from "../app/lib/db";
 import Room from "../app/api/models/Room";

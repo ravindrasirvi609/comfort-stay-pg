@@ -2,13 +2,15 @@
   "name": "comfort-stay-pg",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "create-rooms": "npx tsx src/scripts/createRooms.ts",
-    "migrate": "npx ts-node src/scripts/migrate-room-relationships.ts"
+    "create-rooms-with-env": "npx tsx runCreateRooms.js",
+    "migrate": "npx tsx src/scripts/migrate-room-relationships.ts"
   },
   "dependencies": {
     "axios": "^1.8.4",
