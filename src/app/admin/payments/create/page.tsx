@@ -23,7 +23,7 @@ export default function CreatePaymentPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [amount, setAmount] = useState<number | "">("");
-  const [month, setMonth] = useState<string>("");
+  const [months, setMonths] = useState<string[]>([]);
   const [paymentDate, setPaymentDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -36,10 +36,6 @@ export default function CreatePaymentPage() {
   const [transactionId, setTransactionId] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
   const [status, setStatus] = useState<string>("Paid");
-  // New states for multi-month payments
-  const [isMultiMonthPayment, setIsMultiMonthPayment] =
-    useState<boolean>(false);
-  const [coveredMonths, setCoveredMonths] = useState<string[]>([]);
   // State for deposit payment
   const [isDepositPayment, setIsDepositPayment] = useState<boolean>(false);
 
@@ -52,7 +48,7 @@ export default function CreatePaymentPage() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
   // Generate months array for month selection (last 3 months, current month, next 3 months)
-  const months = [];
+  const availableMonths = [];
   const today = new Date();
   for (let i = -3; i <= 3; i++) {
     const month = new Date(today.getFullYear(), today.getMonth() + i, 1);
@@ -60,7 +56,7 @@ export default function CreatePaymentPage() {
       month: "long",
       year: "numeric",
     });
-    months.push(monthStr);
+    availableMonths.push(monthStr);
   }
 
   // Set default month to current month
@@ -69,7 +65,7 @@ export default function CreatePaymentPage() {
       month: "long",
       year: "numeric",
     });
-    setMonth(currentMonth);
+    setMonths([currentMonth]);
   }, []);
 
   // Fetch all users
@@ -126,30 +122,32 @@ export default function CreatePaymentPage() {
     }
   }, [selectedUser, users]);
 
-  // Update amount when multi-month payment option changes
-  useEffect(() => {
-    if (selectedUser && isMultiMonthPayment) {
-      const user = users.find((u) => u._id === selectedUser);
-      if (user && user.roomId && user.roomId.price) {
-        // If covered months selected, calculate total amount
-        if (coveredMonths.length > 0) {
-          setAmount(user.roomId.price * coveredMonths.length);
-        }
-      }
+  // Handle deposit payment toggle
+  const handleDepositToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setIsDepositPayment(isChecked);
+    if (isChecked) {
+      setStatus("Paid"); // Auto-set status to Paid for deposit payments
     }
-  }, [selectedUser, isMultiMonthPayment, coveredMonths, users]);
+  };
+
+  // Handle month selection
+  const handleMonthSelection = (selectedMonth: string) => {
+    setMonths((prev) => {
+      // If already selected, remove it
+      if (prev.includes(selectedMonth)) {
+        return prev.filter((m) => m !== selectedMonth);
+      }
+      // Otherwise add it
+      return [...prev, selectedMonth];
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedUser || amount === "" || !month) {
+    if (!selectedUser || !amount || months.length === 0 || !dueDate) {
       setError("Please fill in all required fields");
-      return;
-    }
-
-    // Additional validation for multi-month payments
-    if (isMultiMonthPayment && coveredMonths.length === 0) {
-      setError("Please select at least one month for multi-month payment");
       return;
     }
 
@@ -160,17 +158,13 @@ export default function CreatePaymentPage() {
       const paymentData = {
         userId: selectedUser,
         amount: Number(amount),
-        month,
+        months,
         paymentDate,
         dueDate,
         status,
         paymentMethod,
         transactionId: transactionId || undefined,
         remarks: remarks || undefined,
-        // Add multi-month payment data
-        isMultiMonthPayment,
-        coveredMonths: isMultiMonthPayment ? coveredMonths : [],
-        // Add deposit payment flag
         isDepositPayment,
       };
 
@@ -195,18 +189,6 @@ export default function CreatePaymentPage() {
       );
       setSubmitting(false);
     }
-  };
-
-  // Handle covered months selection
-  const handleMonthSelection = (selectedMonth: string) => {
-    setCoveredMonths((prev) => {
-      // If already selected, remove it
-      if (prev.includes(selectedMonth)) {
-        return prev.filter((m) => m !== selectedMonth);
-      }
-      // Otherwise add it
-      return [...prev, selectedMonth];
-    });
   };
 
   if (loading) {
@@ -334,64 +316,25 @@ export default function CreatePaymentPage() {
               />
             </div>
 
-            {/* Month */}
+            {/* Month selection */}
             <div>
               <label
-                htmlFor="month"
+                htmlFor="months"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Month <span className="text-red-500">*</span>
+                Months <span className="text-red-500">*</span>
               </label>
-              <select
-                id="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-                required
-              >
-                <option value="" disabled>
-                  Select month
-                </option>
-                {months.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Multi-month payment toggle */}
-          <div className="mt-4">
-            <div className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                id="multiMonth"
-                checked={isMultiMonthPayment}
-                onChange={(e) => setIsMultiMonthPayment(e.target.checked)}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="multiMonth"
-                className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-              >
-                Payment covers multiple months
-              </label>
-            </div>
-
-            {/* Show covered months selection if multi-month payment is selected */}
-            {isMultiMonthPayment && (
-              <div className="ml-6 mt-2 border border-gray-200 dark:border-gray-700 rounded-md p-3">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-md p-3">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select covered months:
+                  Select months:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
-                  {months.map((m) => (
+                  {availableMonths.map((m) => (
                     <div key={m} className="flex items-center">
                       <input
                         type="checkbox"
                         id={`month-${m}`}
-                        checked={coveredMonths.includes(m)}
+                        checked={months.includes(m)}
                         onChange={() => handleMonthSelection(m)}
                         className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
                       />
@@ -404,8 +347,13 @@ export default function CreatePaymentPage() {
                     </div>
                   ))}
                 </div>
+                {months.length > 0 && (
+                  <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    Selected months: {months.join(", ")}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Deposit payment toggle */}
@@ -415,7 +363,7 @@ export default function CreatePaymentPage() {
                 type="checkbox"
                 id="depositPayment"
                 checked={isDepositPayment}
-                onChange={(e) => setIsDepositPayment(e.target.checked)}
+                onChange={handleDepositToggle}
                 className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
               />
               <label
@@ -425,6 +373,14 @@ export default function CreatePaymentPage() {
                 This is a security deposit payment
               </label>
             </div>
+            {isDepositPayment && (
+              <div className="mt-2 ml-6 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  Note: This payment will be recorded as a security deposit and
+                  will automatically approve the user&apos;s registration.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Payment Date */}

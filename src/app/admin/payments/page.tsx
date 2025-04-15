@@ -27,15 +27,13 @@ interface Payment {
   _id: string;
   userId: string | User;
   amount: number;
-  month: string;
+  months: string[];
   status: string;
   paymentDate: string;
   receiptNumber: string;
   paymentMethod: string;
   remarks?: string;
   createdAt: string;
-  isMultiMonthPayment?: boolean;
-  coveredMonths?: string[];
   isDepositPayment?: boolean;
 }
 
@@ -98,7 +96,8 @@ export default function PaymentsPage() {
     // Apply month filter
     if (monthFilter) {
       result = result.filter((payment) => {
-        const [paymentMonth] = payment.month.split(" ");
+        if (!payment.months || payment.months.length === 0) return false;
+        const [paymentMonth] = payment.months[0].split(" ");
         return paymentMonth === monthFilter;
       });
     }
@@ -106,7 +105,8 @@ export default function PaymentsPage() {
     // Apply year filter
     if (yearFilter) {
       result = result.filter((payment) => {
-        const parts = payment.month.split(" ");
+        if (!payment.months || payment.months.length === 0) return false;
+        const parts = payment.months[0].split(" ");
         return parts.length > 1 && parts[1] === yearFilter;
       });
     }
@@ -353,7 +353,11 @@ export default function PaymentsPage() {
                   month: "long",
                   year: "numeric",
                 });
-                return p.month === currentMonth && p.status === "Paid";
+                return (
+                  p.months &&
+                  p.months.includes(currentMonth) &&
+                  p.status === "Paid"
+                );
               })
               .reduce((sum, payment) => sum + payment.amount, 0)
               .toLocaleString()}
@@ -538,24 +542,25 @@ export default function PaymentsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {payment.month}
+                        {payment.months && payment.months.length > 0
+                          ? payment.months[0]
+                          : "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {payment.isDepositPayment ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                             Deposit
                           </span>
-                        ) : payment.isMultiMonthPayment ? (
+                        ) : payment.months && payment.months.length > 1 ? (
                           <div>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                              Multiple ({payment.coveredMonths?.length || 0})
+                              Multiple ({payment.months.length})
                             </span>
-                            {payment.coveredMonths &&
-                              payment.coveredMonths.length > 0 && (
-                                <div className="hidden group-hover:block absolute z-10 bg-white dark:bg-gray-800 p-2 rounded shadow-lg text-xs mt-1">
-                                  {payment.coveredMonths.join(", ")}
-                                </div>
-                              )}
+                            {payment.months && payment.months.length > 0 && (
+                              <div className="hidden group-hover:block absolute z-10 bg-white dark:bg-gray-800 p-2 rounded shadow-lg text-xs mt-1">
+                                {payment.months.join(", ")}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300">

@@ -74,7 +74,7 @@ export interface IPayment {
   _id?: string;
   userId: Schema.Types.ObjectId | IUser;
   amount: number;
-  month: string;
+  months: string[];
   paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Other";
   paymentStatus: "Paid" | "Pending" | "Failed";
   transactionId?: string;

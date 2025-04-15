@@ -86,20 +86,18 @@ export async function POST(request: NextRequest) {
     const {
       userId,
       amount,
-      month,
+      months,
       paymentDate,
       dueDate,
       status,
       remarks,
       paymentMethod,
       transactionId,
-      isMultiMonthPayment,
-      coveredMonths,
       isDepositPayment,
     } = await request.json();
 
     // Validate required fields
-    if (!userId || !amount || !month || !dueDate) {
+    if (!userId || !amount || !months || !dueDate) {
       return NextResponse.json(
         { success: false, message: "Please provide all required fields" },
         { status: 400 }
@@ -125,7 +123,7 @@ export async function POST(request: NextRequest) {
     const newPayment = new Payment({
       userId,
       amount,
-      month,
+      months,
       paymentDate: paymentDate || new Date(),
       dueDate,
       status: status || "Paid",
@@ -133,10 +131,6 @@ export async function POST(request: NextRequest) {
       paymentMethod,
       transactionId,
       remarks,
-      // Add multiple month payment fields
-      isMultiMonthPayment: isMultiMonthPayment || false,
-      coveredMonths: coveredMonths || [],
-      // Add deposit payment flag
       isDepositPayment: isDepositPayment || false,
     });
 
@@ -144,7 +138,10 @@ export async function POST(request: NextRequest) {
 
     // If this is a deposit payment, update the user's depositFees field
     if (isDepositPayment) {
-      await User.findByIdAndUpdate(userId, { depositFees: amount });
+      await User.findByIdAndUpdate(userId, {
+        depositFees: amount,
+        $set: { registrationStatus: "Approved" }, // Auto-approve registration when deposit is paid
+      });
     }
 
     return NextResponse.json({

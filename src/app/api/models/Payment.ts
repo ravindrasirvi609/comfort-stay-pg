@@ -14,18 +14,9 @@ const PaymentSchema = new Schema(
       type: Number,
       required: true,
     },
-    month: {
-      type: String,
-      required: true,
-    },
-    // For multiple month payments
-    coveredMonths: {
+    months: {
       type: [String],
-      default: [],
-    },
-    isMultiMonthPayment: {
-      type: Boolean,
-      default: false,
+      required: true,
     },
     paymentDate: {
       type: Date,
@@ -65,6 +56,10 @@ const PaymentSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    depositAmount: {
+      type: Number,
+      default: 0,
+    },
 
     // Timestamps
     createdAt: {
@@ -89,6 +84,11 @@ PaymentSchema.virtual("user", {
   localField: "userId",
   foreignField: "_id",
   justOne: true,
+});
+
+// Virtual to detect if it's a multi-month payment
+PaymentSchema.virtual("isMultiMonthPayment").get(function () {
+  return this.months.length > 1;
 });
 
 // Create model
