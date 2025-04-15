@@ -10,10 +10,15 @@ interface User {
   _id: string;
   name: string;
   pgId: string;
-  allocatedRoomNo: string;
-  roomId: {
-    price: number;
-  };
+  roomId:
+    | {
+        _id: string;
+        roomNumber: string;
+        price: number;
+        type: string;
+      }
+    | string
+    | null;
 }
 
 export default function CreatePaymentPage() {
@@ -78,7 +83,10 @@ export default function CreatePaymentPage() {
         if (response.data.success) {
           // Only include active users with assigned rooms
           const activeUsers = response.data.users.filter(
-            (user: User) => user.roomId && user.allocatedRoomNo
+            (user: User) =>
+              user.roomId &&
+              typeof user.roomId === "object" &&
+              user.roomId.roomNumber
           );
           setUsers(activeUsers);
           setFilteredUsers(activeUsers);
@@ -104,7 +112,11 @@ export default function CreatePaymentPage() {
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.pgId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.allocatedRoomNo.toLowerCase().includes(searchTerm.toLowerCase())
+          (typeof user.roomId === "object" &&
+            user.roomId?.roomNumber &&
+            user.roomId.roomNumber
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()))
       );
       setFilteredUsers(filtered);
     } else {
@@ -116,7 +128,12 @@ export default function CreatePaymentPage() {
   useEffect(() => {
     if (selectedUser) {
       const user = users.find((u) => u._id === selectedUser);
-      if (user && user.roomId && user.roomId.price) {
+      if (
+        user &&
+        user.roomId &&
+        typeof user.roomId === "object" &&
+        user.roomId.price
+      ) {
         setAmount(user.roomId.price);
       }
     }
@@ -276,7 +293,13 @@ export default function CreatePaymentPage() {
                     </div>
                     <div className="flex text-sm text-gray-500 dark:text-gray-400 mt-1">
                       <span className="mr-3">ID: {user.pgId}</span>
-                      <span>Room: {user.allocatedRoomNo}</span>
+                      <span>
+                        Room:{" "}
+                        {typeof user.roomId === "object" &&
+                        user.roomId?.roomNumber
+                          ? user.roomId.roomNumber
+                          : "Not Assigned"}
+                      </span>
                     </div>
                   </div>
                 ))

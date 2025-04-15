@@ -28,7 +28,9 @@ export async function GET() {
     await connectToDatabase();
 
     // Get all users (excluding password)
-    const users = await User.find({ isActive: true }).select("-password");
+    const users = await User.find({ isActive: true })
+      .select("-password")
+      .populate("roomId");
 
     return NextResponse.json({
       success: true,

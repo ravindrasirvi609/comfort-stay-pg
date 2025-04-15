@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IUser } from "../interfaces/models";
 
 const UserSchema = new Schema<IUser>(
@@ -86,7 +86,7 @@ const UserSchema = new Schema<IUser>(
     },
     documents: [String], // Additional documents
 
-    // Room relationship - only keep the reference to the Room model
+    // Room relationship - reference to the Room model
     roomId: {
       type: Schema.Types.ObjectId,
       ref: "Room",
@@ -145,18 +145,6 @@ const UserSchema = new Schema<IUser>(
     toObject: { virtuals: true }, // Include virtuals when converted to objects
   }
 );
-
-// Virtual field to get the user's room number through the roomId reference
-UserSchema.virtual("allocatedRoomNo").get(function (this: Document & IUser) {
-  if (
-    this.roomId &&
-    typeof this.roomId === "object" &&
-    "roomNumber" in this.roomId
-  ) {
-    return this.roomId.roomNumber;
-  }
-  return "";
-});
 
 // Virtual fields for relationship navigation
 UserSchema.virtual("payments", {

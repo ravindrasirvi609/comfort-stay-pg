@@ -54,13 +54,20 @@ interface UserData {
   validIdPhoto?: string;
   profileImage?: string;
   documents?: string[];
-  allocatedRoomNo?: string;
   bedNumber?: string | null;
   isActive?: boolean;
   approvalDate?: string;
   moveInDate?: string;
   pgId?: string;
-  roomId?: string;
+  roomId?:
+    | {
+        _id: string;
+        roomNumber: string;
+        type: string;
+        price: number;
+      }
+    | string
+    | null;
 }
 
 interface ErrorResponse {
@@ -410,7 +417,9 @@ export default function UserDetailPage() {
                   Room Number
                 </p>
                 <p className="text-base font-medium text-gray-900 dark:text-white">
-                  {user.allocatedRoomNo || "Not allocated"}
+                  {typeof user.roomId === "object" && user.roomId?.roomNumber
+                    ? user.roomId.roomNumber
+                    : "Not allocated"}
                 </p>
               </div>
             </div>
@@ -435,7 +444,9 @@ export default function UserDetailPage() {
                     Room ID
                   </p>
                   <p className="text-base font-medium text-gray-900 dark:text-white">
-                    {user.roomId}
+                    {typeof user.roomId === "object"
+                      ? user.roomId._id
+                      : user.roomId}
                   </p>
                 </div>
               </div>

@@ -34,25 +34,25 @@ export async function POST(
 
     // Get data from the request body
     const data = await request.json();
-    const { allocatedRoomNo, checkInDate, paymentDetails } = data;
+    const { roomId, checkInDate, paymentDetails, depositAmount } = data;
 
-    if (!allocatedRoomNo) {
+    if (!roomId) {
       return NextResponse.json(
-        { success: false, message: "Room number is required" },
+        { success: false, message: "Room ID is required" },
         { status: 400 }
       );
     }
 
     await connectToDatabase();
 
-    // Find the room by room number
-    const room = await Room.findOne({ roomNumber: allocatedRoomNo });
+    // Find the room by room ID
+    const room = await Room.findById(roomId);
 
     if (!room) {
       return NextResponse.json(
         {
           success: false,
-          message: "Room not found with the given room number",
+          message: "Room not found with the given ID",
         },
         { status: 404 }
       );
@@ -163,16 +163,22 @@ export async function POST(
 
       // If payment details are provided, create a payment record
       if (paymentDetails && paymentDetails.amount) {
-        const newPayment = new Payment({
-          userId: pendingRegistration._id,
-          amount: paymentDetails.amount,
-          month: paymentDetails.month,
-          paymentMethod: paymentDetails.paymentMethod || "Cash",
-          paymentStatus: paymentDetails.paymentStatus || "Paid",
-          paymentDate: new Date(),
-        });
+        const paymentPromises = paymentDetails.months.map(
+          async (month: string) => {
+            const newPayment = new Payment({
+              userId: pendingRegistration._id,
+              amount: paymentDetails.amount,
+              month: month,
+              paymentMethod: paymentDetails.paymentMethod || "Cash",
+              paymentStatus: paymentDetails.paymentStatus || "Paid",
+              paymentDate: new Date(),
+              depositAmount: depositAmount || 0,
+            });
+            return newPayment.save({ session });
+          }
+        );
 
-        await newPayment.save({ session });
+        await Promise.all(paymentPromises);
       }
 
       // Commit the transaction
@@ -201,7 +207,7 @@ export async function POST(
               <p><strong>Password:</strong> ${plainPassword}</p>
             </div>
             <p style="font-weight: bold;">Room Details:</p>
-            <p>You have been allocated Room Number: ${allocatedRoomNo}</p>
+            <p>You have been allocated Room Number: ${room.roomNumber}</p>
             <p>Bed Number: ${selectedBedNumber}</p>
             <p>Check-in Date: ${new Date(checkInDate).toLocaleDateString()}</p>
             ${
@@ -211,6 +217,7 @@ export async function POST(
             <p>Amount: ₹${paymentDetails.amount}</p>
             <p>Month: ${paymentDetails.month}</p>
             <p>Status: ${paymentDetails.paymentStatus || "Paid"}</p>
+            ${depositAmount ? `<p>Security Deposit: ₹${depositAmount}</p>` : ""}
             `
                 : ""
             }

@@ -23,9 +23,26 @@ interface PendingRegistration {
   profileImage: string;
   registrationStatus: string;
   createdAt: string;
-  allocatedRoomNo?: string;
   checkInDate?: string;
   pgId?: string;
+  roomId?:
+    | {
+        _id: string;
+        roomNumber: string;
+        type: string;
+        currentOccupancy: number;
+        capacity: number;
+      }
+    | string
+    | null;
+}
+
+interface Room {
+  _id: string;
+  roomNumber: string;
+  type: string;
+  currentOccupancy: number;
+  capacity: number;
 }
 
 export default function PendingRegistrationDetailsPage() {
@@ -45,16 +62,19 @@ export default function PendingRegistrationDetailsPage() {
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [formData, setFormData] = useState({
-    room: "",
+    roomId: "",
+    roomNumber: "",
     amount: "",
-    month: new Date().toLocaleString("default", {
-      month: "long",
-      year: "numeric",
-    }),
+    months: [
+      new Date().toLocaleString("default", { month: "long", year: "numeric" }),
+    ],
     paymentMethod: "Cash",
     paymentStatus: "Paid",
     checkInDate: new Date().toISOString().split("T")[0],
+    depositAmount: "",
   });
+
+  const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
     const fetchRegistrationDetails = async () => {
@@ -78,8 +98,20 @@ export default function PendingRegistrationDetailsPage() {
       }
     };
 
+    const fetchRooms = async () => {
+      try {
+        const roomsResponse = await axios.get("/api/rooms");
+        setRooms(roomsResponse.data.rooms);
+      } catch (err) {
+        console.error("Error fetching rooms:", err);
+        setError("Failed to load rooms");
+        setLoading(false);
+      }
+    };
+
     if (id) {
       fetchRegistrationDetails();
+      fetchRooms();
     }
   }, [id]);
 
@@ -90,6 +122,25 @@ export default function PendingRegistrationDetailsPage() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      months: checked
+        ? [...prev.months, value]
+        : prev.months.filter((month) => month !== value),
+    }));
+  };
+
+  const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedRoom = rooms.find((room) => room._id === e.target.value);
+    setFormData((prev) => ({
+      ...prev,
+      roomId: e.target.value,
+      roomNumber: selectedRoom ? selectedRoom.roomNumber : "",
     }));
   };
 
@@ -104,8 +155,8 @@ export default function PendingRegistrationDetailsPage() {
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.room) {
-      setError("Please enter a room number");
+    if (!formData.roomId) {
+      setError("Please select a room");
       return;
     }
 
@@ -116,14 +167,17 @@ export default function PendingRegistrationDetailsPage() {
       const response = await axios.post(
         `/api/pending-registrations/${id}/confirm`,
         {
-          allocatedRoomNo: formData.room,
+          roomId: formData.roomId,
           checkInDate: new Date(formData.checkInDate).toISOString(),
           paymentDetails: {
             amount: Number(formData.amount),
-            month: formData.month,
+            months: formData.months,
             paymentMethod: formData.paymentMethod,
             paymentStatus: formData.paymentStatus,
           },
+          depositAmount: formData.depositAmount
+            ? Number(formData.depositAmount)
+            : 0,
         }
       );
 
@@ -136,7 +190,7 @@ export default function PendingRegistrationDetailsPage() {
             ? {
                 ...prev,
                 registrationStatus: "Approved",
-                allocatedRoomNo: formData.room,
+                roomId: formData.roomId,
                 checkInDate: formData.checkInDate,
                 pgId: response.data.pgId,
               }
@@ -627,7 +681,11 @@ export default function PendingRegistrationDetailsPage() {
                       Room Number
                     </p>
                     <p className="text-green-800 dark:text-green-200 font-medium">
-                      {registration.allocatedRoomNo}
+                      {registration.roomId &&
+                      typeof registration.roomId === "object" &&
+                      registration.roomId.roomNumber
+                        ? registration.roomId.roomNumber
+                        : "Not assigned"}
                     </p>
                   </div>
 
@@ -681,18 +739,29 @@ export default function PendingRegistrationDetailsPage() {
                   htmlFor="room"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Room Number *
+                  Room *
                 </label>
-                <input
-                  type="text"
+                <select
                   id="room"
                   name="room"
-                  value={formData.room}
-                  onChange={handleInputChange}
+                  value={formData.roomId}
+                  onChange={handleRoomChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                  placeholder="Enter room number"
-                />
+                >
+                  <option value="">Select a room</option>
+                  {rooms.map((room) => (
+                    <option key={room._id} value={room._id}>
+                      Room {room.roomNumber} - {room.type} (
+                      {room.currentOccupancy}/{room.capacity})
+                    </option>
+                  ))}
+                </select>
+                {formData.roomNumber && (
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Selected Room: {formData.roomNumber}
+                  </p>
+                )}
               </div>
 
               {/* Amount field */}
@@ -715,24 +784,60 @@ export default function PendingRegistrationDetailsPage() {
                 />
               </div>
 
-              {/* Month field */}
+              {/* Deposit Amount field */}
               <div>
                 <label
-                  htmlFor="month"
+                  htmlFor="depositAmount"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Month *
+                  Security Deposit (₹)
                 </label>
                 <input
-                  type="text"
-                  id="month"
-                  name="month"
-                  value={formData.month}
+                  type="number"
+                  id="depositAmount"
+                  name="depositAmount"
+                  value={formData.depositAmount}
                   onChange={handleInputChange}
-                  required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                  placeholder="e.g. April 2025"
+                  placeholder="Enter security deposit amount"
                 />
+              </div>
+
+              {/* Month field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Months *
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border border-gray-300 dark:border-gray-700 rounded-md">
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const date = new Date();
+                    date.setMonth(date.getMonth() + i);
+                    const month = date.toLocaleString("default", {
+                      month: "long",
+                      year: "numeric",
+                    });
+                    return (
+                      <label
+                        key={month}
+                        className="flex items-center space-x-2"
+                      >
+                        <input
+                          type="checkbox"
+                          value={month}
+                          checked={formData.months.includes(month)}
+                          onChange={handleMonthChange}
+                          className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {month}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Select the months for which payment is being made
+                </p>
               </div>
 
               {/* Payment Method field */}
@@ -807,7 +912,7 @@ export default function PendingRegistrationDetailsPage() {
                 <button
                   type="submit"
                   disabled={
-                    confirmLoading || !formData.room || !formData.amount
+                    confirmLoading || !formData.roomId || !formData.amount
                   }
                   className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

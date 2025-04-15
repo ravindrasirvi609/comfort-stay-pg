@@ -35,13 +35,20 @@ interface UserData {
   validIdPhoto?: string;
   profileImage?: string;
   documents?: string[];
-  allocatedRoomNo?: string;
   bedNumber?: string | null;
   isActive?: boolean;
   approvalDate?: string;
   moveInDate?: string;
   pgId?: string;
-  roomId?: string;
+  roomId?:
+    | {
+        _id: string;
+        roomNumber: string;
+        price: number;
+        type: string;
+      }
+    | string
+    | null;
 }
 
 interface ErrorResponse {
@@ -72,7 +79,6 @@ export default function EditUserPage() {
     validIdPhoto: "",
     profileImage: "",
     documents: [],
-    allocatedRoomNo: "",
     bedNumber: null,
     isActive: true,
     moveInDate: "",
@@ -108,7 +114,6 @@ export default function EditUserPage() {
             validIdPhoto: user.validIdPhoto || "",
             profileImage: user.profileImage || "",
             documents: user.documents || [],
-            allocatedRoomNo: user.allocatedRoomNo || "",
             bedNumber: user.bedNumber,
             isActive: user.isActive !== undefined ? user.isActive : true,
             moveInDate: user.moveInDate || "",
@@ -388,23 +393,31 @@ export default function EditUserPage() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Room Number */}
+              {/* Room Number - Use roomId data */}
               <div>
                 <label
-                  htmlFor="allocatedRoomNo"
+                  htmlFor="roomId"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Room Number
                 </label>
                 <input
                   type="text"
-                  id="allocatedRoomNo"
-                  name="allocatedRoomNo"
-                  value={userData.allocatedRoomNo}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Room Number"
+                  id="roomId"
+                  name="roomId"
+                  value={
+                    typeof userData.roomId === "object" &&
+                    userData.roomId?.roomNumber
+                      ? userData.roomId.roomNumber
+                      : ""
+                  }
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white bg-gray-100 dark:bg-gray-600"
+                  placeholder="Room Number (View Only)"
                 />
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Room assignment must be managed through room management
+                </p>
               </div>
 
               {/* Bed Number */}

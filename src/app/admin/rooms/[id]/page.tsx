@@ -19,7 +19,6 @@ interface User {
   email: string;
   pgId: string;
   phone: string;
-  allocatedRoomNo: string;
   bedNumber: number;
   moveInDate: string;
 }

@@ -45,7 +45,6 @@ interface User {
   idProof?: string;
   validIdPhoto?: string;
   profileImage?: string;
-  allocatedRoomNo?: string;
   isOnNoticePeriod?: boolean;
   lastStayingDate?: string;
 }
@@ -330,7 +329,10 @@ export default function UserProfilePage() {
                   Room{" "}
                   {roomDetails
                     ? roomDetails.roomNumber
-                    : user?.allocatedRoomNo || "Not Assigned"}
+                    : typeof user?.roomId === "object" &&
+                        user?.roomId?.roomNumber
+                      ? user.roomId.roomNumber
+                      : "Not Assigned"}
                 </span>
               </div>
               {user?.bedNumber && (

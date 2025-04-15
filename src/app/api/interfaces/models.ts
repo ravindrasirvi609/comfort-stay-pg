@@ -100,3 +100,22 @@ export interface IComplaint {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface Payment {
+  _id: string;
+  userId: string;
+  amount: number;
+  months: string[];
+  paymentDate: Date;
+  dueDate?: Date;
+  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  receiptNumber?: string;
+  paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Card" | "Other";
+  transactionId?: string;
+  remarks?: string;
+  isActive: boolean;
+  isDepositPayment: boolean;
+  depositAmount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

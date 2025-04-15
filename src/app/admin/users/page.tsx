@@ -10,7 +10,15 @@ interface User {
   email: string;
   pgId: string;
   phone?: string;
-  allocatedRoomNo?: string;
+  roomId?:
+    | {
+        _id: string;
+        roomNumber: string;
+        type: string;
+        price: number;
+      }
+    | string
+    | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -250,7 +258,10 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {user.allocatedRoomNo || "-"}
+                        {typeof user.roomId === "object" &&
+                        user.roomId?.roomNumber
+                          ? user.roomId.roomNumber
+                          : "-"}
                       </div>
                     </td>
 

@@ -4,7 +4,10 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 
 // Get a single user
-export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated
@@ -28,7 +31,9 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     await connectToDatabase();
 
     // Find user by ID
-    const userData = await User.findById(params.id).select("-password");
+    const userData = await User.findById(params.id)
+      .select("-password")
+      .populate("roomId");
 
     if (!userData) {
       return NextResponse.json(
@@ -51,7 +56,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // Update a user
-export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated
@@ -145,7 +153,10 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // Delete a user (admin only)
-export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin

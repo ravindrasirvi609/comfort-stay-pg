@@ -27,10 +27,10 @@ const PaymentSchema = new Schema(
     },
 
     // Status and receipt
-    status: {
+    paymentStatus: {
       type: String,
-      enum: ["Paid", "Due", "Overdue", "Partial"],
-      default: "Due",
+      enum: ["Paid", "Due", "Overdue", "Partial", "Pending"],
+      default: "Pending",
     },
     receiptNumber: {
       type: String,
