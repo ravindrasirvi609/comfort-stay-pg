@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
+import { useToast } from "@/hooks/useToast";
 
 interface User {
   _id: string;
@@ -21,6 +22,7 @@ interface User {
     | null;
   isActive: boolean;
   createdAt: string;
+  hasUnpaidDues?: boolean;
 }
 
 export default function UsersPage() {
@@ -30,8 +32,11 @@ export default function UsersPage() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPayment, setFilterPayment] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch users data
   useEffect(() => {
@@ -39,8 +44,22 @@ export default function UsersPage() {
       try {
         setLoading(true);
         const response = await axios.get("/api/users");
-        setUsers(response.data.users || []);
-        setFilteredUsers(response.data.users || []);
+
+        // Get payment status for active users
+        const usersData = response.data.users || [];
+
+        // Fetch payment data to check unpaid dues
+        const paymentsResponse = await axios.get("/api/payments/dues");
+        const unpaidUserIds = paymentsResponse.data.usersWithDues || [];
+
+        // Mark users with unpaid dues
+        const usersWithPaymentInfo = usersData.map((user: User) => ({
+          ...user,
+          hasUnpaidDues: unpaidUserIds.includes(user._id),
+        }));
+
+        setUsers(usersWithPaymentInfo);
+        setFilteredUsers(usersWithPaymentInfo);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching users:", err);
@@ -70,15 +89,42 @@ export default function UsersPage() {
       result = result.filter((user) => user.isActive === isActive);
     }
 
+    if (filterPayment !== "all") {
+      const hasUnpaidDues = filterPayment === "unpaid";
+      result = result.filter((user) => user.hasUnpaidDues === hasUnpaidDues);
+    }
+
     setFilteredUsers(result);
     setCurrentPage(1); // Reset to first page on filter change
-  }, [searchTerm, filterStatus, users]);
+  }, [searchTerm, filterStatus, filterPayment, users]);
 
   // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  // Function to send payment reminder
+  const handleSendReminder = async (userId: string) => {
+    try {
+      setSendingReminder(userId);
+      // Call the API endpoint to send payment reminders
+      const response = await axios.post(
+        `/api/payments/send-reminder/${userId}`
+      );
+
+      if (response.data.success) {
+        toast.success("Payment reminder sent successfully!");
+      } else {
+        toast.error(response.data.message || "Failed to send reminder");
+      }
+    } catch (err) {
+      console.error("Error sending payment reminder:", err);
+      toast.error("Failed to send payment reminder");
+    } finally {
+      setSendingReminder(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -177,6 +223,22 @@ export default function UsersPage() {
                 </select>
               </div>
             </div>
+
+            {/* Payment filter */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg">
+                <select
+                  className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white focus:outline-none focus:ring-0 sm:text-sm"
+                  value={filterPayment}
+                  onChange={(e) => setFilterPayment(e.target.value)}
+                >
+                  <option value="all">All Payments</option>
+                  <option value="unpaid">Unpaid Dues</option>
+                  <option value="paid">No Dues</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -249,6 +311,11 @@ export default function UsersPage() {
                             </div>
                           )}
                         </div>
+                        {user.hasUnpaidDues && user.isActive && (
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200">
+                            Unpaid
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -294,6 +361,53 @@ export default function UsersPage() {
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                           </svg>
                         </Link>
+
+                        {user.hasUnpaidDues && user.isActive && (
+                          <button
+                            onClick={() => handleSendReminder(user._id)}
+                            disabled={sendingReminder === user._id}
+                            className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-200 dark:hover:bg-yellow-800/60 transition-colors"
+                            title="Send payment reminder"
+                          >
+                            {sendingReminder === user._id ? (
+                              <>
+                                <svg
+                                  className="animate-spin h-4 w-4 mr-1"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4 mr-1"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                                </svg>
+                                Send Reminder
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
