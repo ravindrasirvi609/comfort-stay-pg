@@ -8,8 +8,9 @@ import { sendEmail } from "@/app/lib/email";
 // POST /api/payments/send-reminder/[userId] - Send payment reminder to a specific user
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  props: { params: Promise<{ userId: string }> }
 ) {
+  const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
     const { isAuth, user } = await isAuthenticated();
