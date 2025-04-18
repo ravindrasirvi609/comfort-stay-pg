@@ -18,6 +18,7 @@ import {
   FaChevronRight,
   FaCalendarTimes,
   FaSignOutAlt,
+  FaDownload,
 } from "react-icons/fa";
 import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import Image from "next/image";
@@ -675,6 +676,9 @@ export default function UserProfilePage() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Payment Date
                         </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/30 dark:bg-gray-800/30">
@@ -712,6 +716,15 @@ export default function UserProfilePage() {
                                 day: "numeric",
                               }
                             )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <Link
+                              href={`/api/payments/${payment._id}/receipt`}
+                              className="inline-flex items-center px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium transition-all duration-200"
+                            >
+                              <FaDownload className="mr-1" />
+                              Download
+                            </Link>
                           </td>
                         </tr>
                       ))}
