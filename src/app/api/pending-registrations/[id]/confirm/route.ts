@@ -163,22 +163,22 @@ export async function POST(
 
       // If payment details are provided, create a payment record
       if (paymentDetails && paymentDetails.amount) {
-        const paymentPromises = paymentDetails.months.map(
-          async (month: string) => {
-            const newPayment = new Payment({
-              userId: pendingRegistration._id,
-              amount: paymentDetails.amount,
-              month: month,
-              paymentMethod: paymentDetails.paymentMethod || "Cash",
-              paymentStatus: paymentDetails.paymentStatus || "Paid",
-              paymentDate: new Date(),
-              depositAmount: depositAmount || 0,
-            });
-            return newPayment.save({ session });
-          }
-        );
+        // Create a single payment record with an array of months
+        const newPayment = new Payment({
+          userId: pendingRegistration._id,
+          amount: paymentDetails.amount,
+          // Make sure months is stored as an array
+          months: Array.isArray(paymentDetails.months)
+            ? paymentDetails.months
+            : [paymentDetails.months],
+          paymentMethod: paymentDetails.paymentMethod || "Cash",
+          paymentStatus: paymentDetails.paymentStatus || "Paid",
+          paymentDate: new Date(),
+          depositAmount: depositAmount || 0,
+        });
 
-        await Promise.all(paymentPromises);
+        console.log("Creating payment record with months:", newPayment.months);
+        await newPayment.save({ session });
       }
 
       // Commit the transaction
@@ -215,7 +215,7 @@ export async function POST(
                 ? `
             <p style="font-weight: bold;">Payment Information:</p>
             <p>Amount: ₹${paymentDetails.amount}</p>
-            <p>Month: ${paymentDetails.month}</p>
+            <p>Months: ${Array.isArray(paymentDetails.months) ? paymentDetails.months.join(", ") : paymentDetails.months}</p>
             <p>Status: ${paymentDetails.paymentStatus || "Paid"}</p>
             ${depositAmount ? `<p>Security Deposit: ₹${depositAmount}</p>` : ""}
             `

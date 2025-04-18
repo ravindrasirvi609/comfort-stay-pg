@@ -28,6 +28,7 @@ interface User {
   email: string;
   pgId: string;
   phone: string;
+  role?: "admin" | "user";
   roomId:
     | {
         _id: string;
@@ -41,29 +42,44 @@ interface User {
   bedNumber?: number;
   gender?: string;
   guardianMobileNumber?: string;
-  address?: string;
-  idProof?: string;
+  fathersName?: string;
+  permanentAddress?: string;
+  city?: string;
+  state?: string;
+  validIdType?: string;
+  companyName?: string;
+  companyAddress?: string;
   validIdPhoto?: string;
   profileImage?: string;
   isOnNoticePeriod?: boolean;
   lastStayingDate?: string;
+  isActive?: boolean;
+  depositFees?: number;
 }
 
 interface Payment {
   _id: string;
+  userId?: string;
   amount: number;
   month: string;
-  status: string;
+  months?: string[];
+  paymentStatus: string;
   paymentDate: string;
   receiptNumber: string;
   dueDate?: string;
+  paymentMethod?: string;
+  transactionId?: string;
 }
 
 interface Complaint {
   _id: string;
+  userId?: string;
   title: string;
   description: string;
   status: string;
+  priority?: string;
+  category?: string;
+  adminResponse?: string;
   createdAt: string;
 }
 
@@ -287,8 +303,14 @@ export default function UserProfilePage() {
     month: "long",
     year: "numeric",
   });
+
+  // Find payment for current month by checking both month field and months array
   const currentMonthPayment = payments.find(
-    (payment) => payment.month === currentMonth
+    (payment) =>
+      payment.month === currentMonth ||
+      (payment.months &&
+        Array.isArray(payment.months) &&
+        payment.months.includes(currentMonth))
   );
 
   return (
@@ -417,17 +439,27 @@ export default function UserProfilePage() {
                 {currentMonth} Rent
               </h3>
               <p
-                className={`text-xl font-bold ${currentMonthPayment ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
+                className={`text-xl font-bold ${
+                  currentMonthPayment
+                    ? currentMonthPayment.paymentStatus === "Paid"
+                      ? "text-green-700 dark:text-green-400"
+                      : currentMonthPayment.paymentStatus === "Partial"
+                        ? "text-yellow-700 dark:text-yellow-400"
+                        : "text-red-700 dark:text-red-400"
+                    : "text-red-700 dark:text-red-400"
+                }`}
               >
-                {currentMonthPayment ? "Paid" : "Due"}
+                {currentMonthPayment
+                  ? currentMonthPayment.paymentStatus
+                  : "Due"}
               </p>
               <p className="text-sm mt-1">
                 {currentMonthPayment
                   ? `Paid on ${new Date(currentMonthPayment.paymentDate).toLocaleDateString()}`
                   : roomDetails?.price
-                    ? `₹${roomDetails.price} due`
-                    : typeof user?.roomId === "object" && user?.roomId
-                      ? `₹${user.roomId.price} due`
+                    ? `₹${roomDetails.price.toLocaleString("en-IN")} due`
+                    : typeof user?.roomId === "object" && user?.roomId?.price
+                      ? `₹${user.roomId.price.toLocaleString("en-IN")} due`
                       : ""}
               </p>
             </div>
@@ -685,9 +717,6 @@ export default function UserProfilePage() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Payment Date
                         </th>
-                        {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Receipt
-                        </th> */}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/30 dark:bg-gray-800/30">
@@ -697,7 +726,8 @@ export default function UserProfilePage() {
                           className="hover:bg-gray-50 dark:hover:bg-gray-800"
                         >
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {payment.month}
+                            {payment.month ||
+                              (payment.months && payment.months.join(", "))}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             ₹{payment.amount.toLocaleString("en-IN")}
@@ -705,14 +735,14 @@ export default function UserProfilePage() {
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span
                               className={`px-2 py-1 rounded text-xs font-medium ${
-                                payment.status === "Paid"
+                                payment.paymentStatus === "Paid"
                                   ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                                  : payment.status === "Partial"
+                                  : payment.paymentStatus === "Partial"
                                     ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
                                     : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
                               }`}
                             >
-                              {payment.status}
+                              {payment.paymentStatus}
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
@@ -725,15 +755,6 @@ export default function UserProfilePage() {
                               }
                             )}
                           </td>
-                          {/* <td className="px-4 py-3 whitespace-nowrap text-sm">
-                            <Link
-                              href={`/dashboard/payments/${payment._id}`}
-                              className="text-pink-600 hover:text-pink-700 dark:text-pink-500 dark:hover:text-pink-400 flex items-center"
-                            >
-                              View
-                              <FaChevronRight className="ml-1 text-xs" />
-                            </Link>
-                          </td> */}
                         </tr>
                       ))}
                     </tbody>

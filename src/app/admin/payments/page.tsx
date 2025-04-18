@@ -28,7 +28,9 @@ interface Payment {
   userId: string | User;
   amount: number;
   months: string[];
-  status: string;
+  month?: string; // Virtual field
+  status?: string; // Backward compatibility
+  paymentStatus: string;
   paymentDate: string;
   receiptNumber: string;
   paymentMethod: string;
@@ -90,15 +92,23 @@ export default function PaymentsPage() {
 
     // Apply status filter
     if (statusFilter) {
-      result = result.filter((payment) => payment.status === statusFilter);
+      result = result.filter(
+        (payment) =>
+          payment.paymentStatus === statusFilter ||
+          payment.status === statusFilter
+      );
     }
 
     // Apply month filter
     if (monthFilter) {
       result = result.filter((payment) => {
         if (!payment.months || payment.months.length === 0) return false;
-        const [paymentMonth] = payment.months[0].split(" ");
-        return paymentMonth === monthFilter;
+
+        // Check if any month in the array contains the filter month
+        return payment.months.some((monthStr) => {
+          const [paymentMonth] = monthStr.split(" ");
+          return paymentMonth === monthFilter;
+        });
       });
     }
 
@@ -106,8 +116,12 @@ export default function PaymentsPage() {
     if (yearFilter) {
       result = result.filter((payment) => {
         if (!payment.months || payment.months.length === 0) return false;
-        const parts = payment.months[0].split(" ");
-        return parts.length > 1 && parts[1] === yearFilter;
+
+        // Check if any month in the array contains the filter year
+        return payment.months.some((monthStr) => {
+          const parts = monthStr.split(" ");
+          return parts.length > 1 && parts[1] === yearFilter;
+        });
       });
     }
 
@@ -130,7 +144,9 @@ export default function PaymentsPage() {
 
     // Calculate total amount for current filter
     const total = result.reduce((sum, payment) => {
-      return payment.status === "Paid" ? sum + payment.amount : sum;
+      return payment.paymentStatus === "Paid" || payment.status === "Paid"
+        ? sum + payment.amount
+        : sum;
     }, 0);
 
     setTotalAmount(total);
@@ -143,6 +159,7 @@ export default function PaymentsPage() {
       setLoading(true);
 
       const response = await axios.get("/api/payments");
+      console.log("Payments response:", response.data);
 
       if (response.data.success) {
         setPayments(response.data.payments);
@@ -151,7 +168,9 @@ export default function PaymentsPage() {
         // Calculate initial total amount
         const total = response.data.payments.reduce(
           (sum: number, payment: Payment) => {
-            return payment.status === "Paid" ? sum + payment.amount : sum;
+            return payment.paymentStatus === "Paid" || payment.status === "Paid"
+              ? sum + payment.amount
+              : sum;
           },
           0
         );
@@ -193,7 +212,9 @@ export default function PaymentsPage() {
   };
 
   // Get status badge style
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (payment: Payment) => {
+    const status = payment.paymentStatus || payment.status || "Unknown";
+
     switch (status) {
       case "Paid":
         return (
@@ -300,7 +321,7 @@ export default function PaymentsPage() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {payments.length}
+            {filteredPayments.length}
           </h3>
         </div>
 
@@ -330,7 +351,11 @@ export default function PaymentsPage() {
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
             {
               payments.filter(
-                (p) => p.status === "Due" || p.status === "Overdue"
+                (p) =>
+                  p.paymentStatus === "Due" ||
+                  p.paymentStatus === "Overdue" ||
+                  p.status === "Due" ||
+                  p.status === "Overdue"
               ).length
             }
           </h3>
@@ -355,8 +380,8 @@ export default function PaymentsPage() {
                 });
                 return (
                   p.months &&
-                  p.months.includes(currentMonth) &&
-                  p.status === "Paid"
+                  p.months.some((month) => month === currentMonth) &&
+                  (p.paymentStatus === "Paid" || p.status === "Paid")
                 );
               })
               .reduce((sum, payment) => sum + payment.amount, 0)
@@ -543,7 +568,7 @@ export default function PaymentsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {payment.months && payment.months.length > 0
-                          ? payment.months[0]
+                          ? payment.months.join(", ")
                           : "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -572,7 +597,7 @@ export default function PaymentsPage() {
                         {formatDate(payment.paymentDate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(payment.status)}
+                        {getStatusBadge(payment)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {payment.paymentMethod}

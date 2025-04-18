@@ -91,6 +91,11 @@ PaymentSchema.virtual("isMultiMonthPayment").get(function () {
   return this.months.length > 1;
 });
 
+// Virtual to get the first month for backward compatibility
+PaymentSchema.virtual("month").get(function () {
+  return this.months && this.months.length > 0 ? this.months[0] : "";
+});
+
 // Create model
 const Payment =
   mongoose.models.Payment || mongoose.model("Payment", PaymentSchema);

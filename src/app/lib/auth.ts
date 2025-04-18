@@ -1,5 +1,6 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
+import bcrypt from "bcryptjs";
 
 // Secret key for JWT - should be in .env file
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
@@ -53,43 +54,34 @@ export function generatePassword(length: number = 10): string {
     .join("");
 }
 
-// Edge-compatible password hashing (simulated for demo)
-// Note: In production, use a proper edge-compatible hashing solution
+// Hash password using bcrypt
 export async function hashPassword(password: string): Promise<string> {
-  // This is a simplified hash for Edge compatibility
-  // WARNING: This is NOT secure for production use
-  // For production, consider using a service like Auth.js or a serverless function
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + JWT_SECRET);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return hashHex;
+  // Using bcryptjs for password hashing - compatible with Edge Runtime
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
 }
 
-// Compare password
+// Compare password using bcrypt
 export async function comparePassword(
   password: string,
   hashedPassword: string
 ): Promise<boolean> {
-  // Compare with our simplified hash
-  const newHash = await hashPassword(password);
-  const result = newHash === hashedPassword;
+  // Using bcryptjs for password comparison
+  try {
+    const result = await bcrypt.compare(password, hashedPassword);
 
-  // Add detailed logging for debugging
-  console.log("[Auth] Password comparison details:", {
-    passwordLength: password.length,
-    hashedInputLength: newHash.length,
-    storedHashLength: hashedPassword.length,
-    match: result,
-    // Show first and last few characters of hashes to help diagnose without revealing full values
-    inputHashPreview: `${newHash.substring(0, 8)}...${newHash.substring(newHash.length - 8)}`,
-    storedHashPreview: `${hashedPassword.substring(0, 8)}...${hashedPassword.substring(hashedPassword.length - 8)}`,
-  });
+    console.log("[Auth] Password comparison details:", {
+      passwordLength: password.length,
+      storedHashLength: hashedPassword.length,
+      match: result,
+      algorithm: "bcrypt",
+    });
 
-  return result;
+    return result;
+  } catch (error) {
+    console.error("[Auth] Password comparison error:", error);
+    return false;
+  }
 }
 
 // Generate JWT token - Edge compatible

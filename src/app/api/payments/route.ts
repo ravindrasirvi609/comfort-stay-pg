@@ -28,11 +28,16 @@ export async function GET(request: NextRequest) {
       const userId = url.searchParams.get("userId");
       const status = url.searchParams.get("status");
       const month = url.searchParams.get("month");
+
       // Build query based on parameters
-      const query: Record<string, string | boolean> = { isActive: true };
+      const query: Record<string, any> = { isActive: true };
       if (userId) query.userId = userId;
-      if (status) query.status = status;
-      if (month) query.month = month;
+      if (status) query.paymentStatus = status;
+
+      // Handle month filter by checking if it exists in the months array
+      if (month) {
+        query.months = { $in: [month] };
+      }
 
       payments = await Payment.find(query)
         .populate("userId", "name email pgId")
@@ -45,9 +50,23 @@ export async function GET(request: NextRequest) {
       }).sort({ paymentDate: -1 });
     }
 
+    // Make sure virtuals are included
+    const paymentsWithVirtuals = payments.map((payment) => {
+      const paymentObj = payment.toObject({ virtuals: true });
+      // Ensure month is set if it doesn't exist but months does
+      if (
+        !paymentObj.month &&
+        paymentObj.months &&
+        paymentObj.months.length > 0
+      ) {
+        paymentObj.month = paymentObj.months[0];
+      }
+      return paymentObj;
+    });
+
     return NextResponse.json({
       success: true,
-      payments,
+      payments: paymentsWithVirtuals,
     });
   } catch (error) {
     console.error("Get payments error:", error);
@@ -90,6 +109,7 @@ export async function POST(request: NextRequest) {
       paymentDate,
       dueDate,
       status,
+      paymentStatus,
       remarks,
       paymentMethod,
       transactionId,
@@ -103,6 +123,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Log for debugging
+    console.log("Received payment data:", {
+      userId,
+      amount,
+      months,
+      paymentStatus,
+      status,
+    });
 
     // Check if user exists
     const userExists = await User.findById(userId);
@@ -123,15 +152,21 @@ export async function POST(request: NextRequest) {
     const newPayment = new Payment({
       userId,
       amount,
-      months,
+      months: Array.isArray(months) ? months : [months], // Ensure months is an array
       paymentDate: paymentDate || new Date(),
       dueDate,
-      status: status || "Paid",
+      paymentStatus: paymentStatus || status || "Paid", // Use paymentStatus field if provided, otherwise use status
       receiptNumber,
       paymentMethod,
       transactionId,
       remarks,
       isDepositPayment: isDepositPayment || false,
+    });
+
+    // Log the payment record before saving
+    console.log("Saving payment with data:", {
+      months: newPayment.months,
+      paymentStatus: newPayment.paymentStatus,
     });
 
     await newPayment.save();

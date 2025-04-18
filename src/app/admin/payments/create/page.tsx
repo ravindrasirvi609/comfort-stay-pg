@@ -175,15 +175,17 @@ export default function CreatePaymentPage() {
       const paymentData = {
         userId: selectedUser,
         amount: Number(amount),
-        months,
+        months: months,
         paymentDate,
         dueDate,
-        status,
+        paymentStatus: status,
         paymentMethod,
         transactionId: transactionId || undefined,
         remarks: remarks || undefined,
         isDepositPayment,
       };
+
+      console.log("Sending payment data:", paymentData);
 
       const response = await axios.post("/api/payments", paymentData);
 

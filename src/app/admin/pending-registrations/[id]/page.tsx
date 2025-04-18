@@ -193,6 +193,9 @@ export default function PendingRegistrationDetailsPage() {
                 roomId: formData.roomId,
                 checkInDate: formData.checkInDate,
                 pgId: response.data.pgId,
+                roomNumber:
+                  rooms.find((room) => room._id === formData.roomId)
+                    ?.roomNumber || null,
               }
             : null
         );
