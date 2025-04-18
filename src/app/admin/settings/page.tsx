@@ -349,7 +349,7 @@ export default function SettingsPage() {
                       name="name"
                       value={pgDetails.name}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -365,7 +365,7 @@ export default function SettingsPage() {
                       name="contactEmail"
                       value={pgDetails.contactEmail}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -381,7 +381,7 @@ export default function SettingsPage() {
                       name="contactPhone"
                       value={pgDetails.contactPhone}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -397,7 +397,7 @@ export default function SettingsPage() {
                       name="address"
                       value={pgDetails.address}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -413,7 +413,7 @@ export default function SettingsPage() {
                       name="city"
                       value={pgDetails.city}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -429,7 +429,7 @@ export default function SettingsPage() {
                       name="state"
                       value={pgDetails.state}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -445,7 +445,7 @@ export default function SettingsPage() {
                       name="pincode"
                       value={pgDetails.pincode}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -461,7 +461,7 @@ export default function SettingsPage() {
                       rows={4}
                       value={pgDetails.description}
                       onChange={handleInputChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                 </div>
@@ -513,7 +513,7 @@ export default function SettingsPage() {
                           onChange={(e) =>
                             handleRuleChange(index, e.target.value)
                           }
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                           placeholder="Enter rule"
                         />
                         <button
@@ -557,7 +557,7 @@ export default function SettingsPage() {
                       name="bankName"
                       value={pgDetails.paymentDetails.bankName}
                       onChange={handlePaymentDetailsChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -573,7 +573,7 @@ export default function SettingsPage() {
                       name="accountNumber"
                       value={pgDetails.paymentDetails.accountNumber}
                       onChange={handlePaymentDetailsChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -589,7 +589,7 @@ export default function SettingsPage() {
                       name="ifscCode"
                       value={pgDetails.paymentDetails.ifscCode}
                       onChange={handlePaymentDetailsChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                   <div>
@@ -605,7 +605,7 @@ export default function SettingsPage() {
                       name="upiId"
                       value={pgDetails.paymentDetails.upiId}
                       onChange={handlePaymentDetailsChange}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm p-2"
                     />
                   </div>
                 </div>
