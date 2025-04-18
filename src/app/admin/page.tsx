@@ -91,7 +91,7 @@ interface Payment {
   };
   amount: number;
   month: string;
-  status: string;
+  paymentStatus: string;
   paymentDate: string;
 }
 
@@ -208,7 +208,7 @@ export default function AdminDashboard() {
           const userDuePayments = payments.filter(
             (p: Payment) =>
               p.userId._id === user._id &&
-              (p.status === "Due" || p.status === "Overdue")
+              (p.paymentStatus === "Due" || p.paymentStatus === "Overdue")
           );
 
           const totalDueAmount = userDuePayments.reduce(
@@ -255,11 +255,11 @@ export default function AdminDashboard() {
       });
 
       const currentMonthPayments = payments.filter(
-        (p: Payment) => p.month === currentMonth && p.status === "Paid"
+        (p: Payment) => p.month === currentMonth && p.paymentStatus === "Paid"
       );
 
       const previousMonthPayments = payments.filter(
-        (p: Payment) => p.month === previousMonth && p.status === "Paid"
+        (p: Payment) => p.month === previousMonth && p.paymentStatus === "Paid"
       );
 
       const currentRentCollected = currentMonthPayments.reduce(
@@ -312,7 +312,9 @@ export default function AdminDashboard() {
 
       // Calculate revenue for this month
       const monthlyRevenue = payments
-        .filter((p: Payment) => p.month === monthYear && p.status === "Paid")
+        .filter(
+          (p: Payment) => p.month === monthYear && p.paymentStatus === "Paid"
+        )
         .reduce((sum: number, payment: Payment) => sum + payment.amount, 0);
 
       data.push({
@@ -807,21 +809,6 @@ export default function AdminDashboard() {
           </div>
           <div className="space-y-4">
             <Link
-              href="/admin/users/register"
-              className="flex items-center p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-purple-700 dark:text-purple-300"
-            >
-              <div className="h-10 w-10 flex items-center justify-center bg-purple-200 dark:bg-purple-800 rounded-full mr-3">
-                <FiUsers className="h-5 w-5 text-purple-700 dark:text-purple-300" />
-              </div>
-              <div>
-                <h3 className="font-medium">Register New User</h3>
-                <p className="text-xs text-purple-600 dark:text-purple-400">
-                  Add a new resident or staff member
-                </p>
-              </div>
-            </Link>
-
-            <Link
               href="/admin/rooms"
               className="flex items-center p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-700 dark:text-blue-300"
             >
@@ -1054,14 +1041,14 @@ export default function AdminDashboard() {
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                           ${
-                            payment.status === "Paid"
+                            payment.paymentStatus === "Paid"
                               ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                              : payment.status === "Due"
+                              : payment.paymentStatus === "Due"
                                 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
                                 : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                           }`}
                         >
-                          {payment.status}
+                          {payment.paymentStatus}
                         </span>
                       </td>
                     </tr>
