@@ -27,8 +27,8 @@ export async function GET() {
 
     await connectToDatabase();
 
-    // Get all users (excluding password)
-    const users = await User.find({ isActive: true })
+    // Get all users (excluding password and filtering out deleted users)
+    const users = await User.find({ isDeleted: false })
       .select("-password")
       .populate("roomId");
 

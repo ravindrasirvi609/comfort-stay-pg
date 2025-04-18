@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
+import Room from "@/app/api/models/Room";
+import mongoose from "mongoose";
 
 // Get a single user
 export async function GET(
@@ -182,7 +184,7 @@ export async function DELETE(
     await connectToDatabase();
 
     // Find the user
-    const userToDelete = await User.findById(params.id);
+    const userToDelete = await User.findById(params.id).populate("roomId");
 
     if (!userToDelete) {
       return NextResponse.json(
@@ -191,15 +193,55 @@ export async function DELETE(
       );
     }
 
-    // Instead of deleting completely, deactivate the user
-    userToDelete.isActive = false;
-    userToDelete.moveOutDate = new Date();
-    await userToDelete.save();
+    // Start a transaction to handle user deactivation and room updates
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    return NextResponse.json({
-      success: true,
-      message: "User deactivated successfully",
-    });
+    try {
+      // If user has a room assigned, update the room occupancy
+      if (userToDelete.roomId) {
+        const roomId =
+          typeof userToDelete.roomId === "object"
+            ? userToDelete.roomId._id
+            : userToDelete.roomId;
+
+        // Find and update the room
+        const room = await Room.findById(roomId);
+        if (room) {
+          // Decrease the room occupancy
+          room.currentOccupancy = Math.max(0, room.currentOccupancy - 1);
+          await room.save({ session });
+        }
+
+        // Clear the room assignment from the user
+        userToDelete.roomId = null;
+        userToDelete.bedNumber = null;
+      }
+
+      // Mark the user as deleted and inactive
+      userToDelete.isActive = false;
+      userToDelete.isDeleted = true;
+      userToDelete.moveOutDate = new Date();
+      await userToDelete.save({ session });
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      return NextResponse.json({
+        success: true,
+        message: "User deactivated successfully",
+      });
+    } catch (error) {
+      // Abort the transaction on error
+      await session.abortTransaction();
+      console.error("User deactivation transaction error:", error);
+      return NextResponse.json(
+        { success: false, message: "Failed to deactivate user" },
+        { status: 500 }
+      );
+    } finally {
+      session.endSession();
+    }
   } catch (error) {
     console.error("Delete user error:", error);
     return NextResponse.json(

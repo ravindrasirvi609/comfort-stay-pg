@@ -21,6 +21,7 @@ interface User {
     | string
     | null;
   isActive: boolean;
+  isDeleted?: boolean;
   createdAt: string;
   hasUnpaidDues?: boolean;
 }
@@ -85,8 +86,15 @@ export default function UsersPage() {
     }
 
     if (filterStatus !== "all") {
-      const isActive = filterStatus === "active";
-      result = result.filter((user) => user.isActive === isActive);
+      if (filterStatus === "active") {
+        result = result.filter((user) => user.isActive === true);
+      } else if (filterStatus === "inactive") {
+        result = result.filter(
+          (user) => user.isActive === false && !user.isDeleted
+        );
+      } else if (filterStatus === "deleted") {
+        result = result.filter((user) => user.isDeleted === true);
+      }
     }
 
     if (filterPayment !== "all") {
@@ -220,6 +228,7 @@ export default function UsersPage() {
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                  <option value="deleted">Deleted</option>
                 </select>
               </div>
             </div>
@@ -335,12 +344,18 @@ export default function UsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.isActive
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                          user.isDeleted
+                            ? "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200"
+                            : user.isActive
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
                         }`}
                       >
-                        {user.isActive ? "Active" : "Inactive"}
+                        {user.isDeleted
+                          ? "Deleted"
+                          : user.isActive
+                            ? "Active"
+                            : "Inactive"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

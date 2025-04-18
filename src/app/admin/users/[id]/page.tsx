@@ -31,6 +31,7 @@ import {
   Bed,
 } from "lucide-react";
 import AdminRoomChange from "@/components/AdminRoomChange";
+import DeleteUserDialog from "@/components/DeleteUserDialog";
 
 interface UserData {
   _id: string;
@@ -86,6 +87,7 @@ export default function UserDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -109,11 +111,15 @@ export default function UserDetailPage() {
     fetchUserData();
   }, [id, refreshTrigger]);
 
-  const handleDeleteUser = async () => {
-    if (!confirm("Are you sure you want to delete this user?")) {
-      return;
-    }
+  const openDeleteDialog = () => {
+    setIsDeleteDialogOpen(true);
+  };
 
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleDeleteUser = async () => {
     try {
       setIsDeleting(true);
       const response = await axios.delete(`/api/users/${id}`);
@@ -131,6 +137,7 @@ export default function UserDetailPage() {
       );
     } finally {
       setIsDeleting(false);
+      closeDeleteDialog();
     }
   };
 
@@ -169,16 +176,25 @@ export default function UserDetailPage() {
               Edit User
             </Link>
             <button
-              onClick={handleDeleteUser}
+              onClick={openDeleteDialog}
               className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition shadow-sm"
               disabled={isDeleting}
             >
               <Trash2 size={18} className="mr-2" />
-              {isDeleting ? "Deleting..." : "Delete User"}
+              Delete User
             </button>
           </div>
         </div>
       </div>
+
+      {/* Delete User Dialog */}
+      <DeleteUserDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDeleteUser}
+        isDeleting={isDeleting}
+        userName={user?.name || ""}
+      />
 
       {/* User Profile Card */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden mb-8">
