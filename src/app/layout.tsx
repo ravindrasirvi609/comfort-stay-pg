@@ -24,8 +24,6 @@ export const metadata: Metadata = {
     locale: "en_IN",
   },
   authors: [{ name: "Comfort Stay PG" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#FF92B7",
 };
 
 export const viewport: Viewport = {
@@ -33,6 +31,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#FF92B7",
 };
 
 export default function RootLayout({
