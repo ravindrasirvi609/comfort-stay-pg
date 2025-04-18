@@ -163,6 +163,11 @@ export async function POST(
 
       // If payment details are provided, create a payment record
       if (paymentDetails && paymentDetails.amount) {
+        // Generate unique receipt number (timestamp + user id last 5 chars)
+        const timestamp = Date.now().toString();
+        const userIdShort = pendingRegistration._id.toString().slice(-5);
+        const receiptNumber = `PG-${timestamp.slice(-8)}-${userIdShort}`;
+
         // Create a single payment record with an array of months
         const newPayment = new Payment({
           userId: pendingRegistration._id,
@@ -175,10 +180,14 @@ export async function POST(
           paymentStatus: paymentDetails.paymentStatus || "Paid",
           paymentDate: new Date(),
           depositAmount: depositAmount || 0,
+          receiptNumber: receiptNumber, // Add receipt number to the payment record
         });
 
         console.log("Creating payment record with months:", newPayment.months);
         await newPayment.save({ session });
+
+        // Store receipt number in a variable accessible outside this block
+        pendingRegistration.lastReceiptNumber = receiptNumber;
       }
 
       // Commit the transaction
@@ -217,6 +226,7 @@ export async function POST(
             <p>Amount: ₹${paymentDetails.amount}</p>
             <p>Months: ${Array.isArray(paymentDetails.months) ? paymentDetails.months.join(", ") : paymentDetails.months}</p>
             <p>Status: ${paymentDetails.paymentStatus || "Paid"}</p>
+            <p>Receipt Number: ${pendingRegistration.lastReceiptNumber}</p>
             ${depositAmount ? `<p>Security Deposit: ₹${depositAmount}</p>` : ""}
             `
                 : ""
