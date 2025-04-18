@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter, useParams } from "next/navigation";
 
 // Interface for Room data structure - used for documentation purposes
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line no-unused-vars
 interface RoomData {
   _id: string;
   roomNumber: string;

@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
@@ -7,6 +7,9 @@ import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
+
+// Set Node.js runtime for file operations
+export const runtime = "nodejs";
 
 // Interface for the populated payment document
 interface PopulatedPayment {
@@ -36,11 +39,14 @@ interface PopulatedPayment {
   isDepositPayment?: boolean;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// For Next.js 15.3.0, we need to use this specific signature
+export async function GET(request: Request, context: unknown) {
   try {
+    // Extract the payment ID from URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split("/");
+    const id = pathParts[pathParts.length - 2]; // Get the ID from the URL path
+
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
 
@@ -54,7 +60,7 @@ export async function GET(
     await connectToDatabase();
 
     // Get payment details
-    const paymentDoc = await Payment.findById(params.id)
+    const paymentDoc = await Payment.findById(id)
       .populate({
         path: "userId",
         select: "name email pgId phone roomId",
@@ -429,9 +435,9 @@ export async function GET(
       headers,
     });
   } catch (error) {
-    console.error("Error generating receipt:", error);
+    console.error("[API] Receipt generation error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to generate receipt" },
+      { success: false, message: "Error generating receipt" },
       { status: 500 }
     );
   }

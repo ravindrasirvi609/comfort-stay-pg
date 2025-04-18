@@ -1,6 +1,7 @@
+// Use next.js middleware without edge runtime
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyToken } from "./app/lib/auth";
+import { jwtVerify } from "jose";
 
 // Public paths that don't require authentication
 const publicPaths = [
@@ -19,6 +20,29 @@ const publicPaths = [
 
 // Admin only paths
 const adminPaths = ["/admin"];
+
+// Edge-compatible token verification
+async function verifyToken(token: string) {
+  try {
+    // Secret key for JWT
+    const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+    // Convert the secret to the format expected by jose
+    const JWT_SECRET_BYTES = new TextEncoder().encode(JWT_SECRET);
+
+    const { payload } = await jwtVerify(token, JWT_SECRET_BYTES);
+
+    return {
+      _id: (payload._id as string) || (payload.sub as string) || "unknown",
+      name: (payload.name as string) || "Unknown",
+      email: (payload.email as string) || "unknown@example.com",
+      role: (payload.role as string) || "user",
+      pgId: payload.pgId as string | undefined,
+    };
+  } catch (error) {
+    console.error("[Auth] Token verification failed:", error);
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
