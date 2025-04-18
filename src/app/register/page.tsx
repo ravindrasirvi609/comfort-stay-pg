@@ -25,6 +25,46 @@ export default function RegisterPage() {
     "Voter Card",
   ];
 
+  // Indian states
+  const indianStates = [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Lakshadweep",
+    "Puducherry",
+  ];
+
   // Form fields
   const [formData, setFormData] = useState({
     fullName: "",
@@ -85,9 +125,25 @@ export default function RegisterPage() {
       if (
         !formData.fullName ||
         !formData.emailAddress ||
-        !formData.mobileNumber
+        !formData.fathersName ||
+        !formData.mobileNumber ||
+        !formData.guardianMobileNumber ||
+        !formData.permanentAddress ||
+        !formData.city ||
+        !formData.state
       ) {
         setError("Please fill all required fields in personal information");
+        return;
+      }
+
+      // Validate mobile number format
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(formData.mobileNumber)) {
+        setError("Please enter a valid 10-digit mobile number");
+        return;
+      }
+      if (!mobileRegex.test(formData.guardianMobileNumber)) {
+        setError("Please enter a valid 10-digit guardian mobile number");
         return;
       }
     }
@@ -128,8 +184,8 @@ export default function RegisterPage() {
         permanentAddress: formData.permanentAddress,
         city: formData.city,
         state: formData.state,
-        mobileNumber: formData.mobileNumber,
-        guardianMobileNumber: formData.guardianMobileNumber,
+        mobileNumber: `+91${formData.mobileNumber}`,
+        guardianMobileNumber: `+91${formData.guardianMobileNumber}`,
         validIdType: formData.validIdType,
         validIdPhoto: formData.validIdPhoto,
         companyName: formData.companyName,
@@ -314,6 +370,7 @@ export default function RegisterPage() {
                   }}
                 ></div>
               </div>
+
             </div>
 
             {/* Error message */}
@@ -417,16 +474,22 @@ export default function RegisterPage() {
                         >
                           Mobile Number *
                         </label>
-                        <input
-                          id="mobileNumber"
-                          name="mobileNumber"
-                          type="tel"
-                          required
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your mobile number"
-                          value={formData.mobileNumber}
-                          onChange={handleChange}
-                        />
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-3 text-gray-700 dark:text-gray-300">
+                            +91
+                          </span>
+                          <input
+                            id="mobileNumber"
+                            name="mobileNumber"
+                            type="tel"
+                            required
+                            className="block w-full flex-1 pl-1 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                            placeholder="Enter your 10-digit number"
+                            pattern="\d{10}"
+                            value={formData.mobileNumber}
+                            onChange={handleChange}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -437,17 +500,24 @@ export default function RegisterPage() {
                           htmlFor="guardianMobileNumber"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          Guardian Mobile Number
+                          Guardian Mobile Number *
                         </label>
-                        <input
-                          id="guardianMobileNumber"
-                          name="guardianMobileNumber"
-                          type="tel"
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter guardian's mobile number"
-                          value={formData.guardianMobileNumber}
-                          onChange={handleChange}
-                        />
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-3 text-gray-700 dark:text-gray-300">
+                            +91
+                          </span>
+                          <input
+                            id="guardianMobileNumber"
+                            name="guardianMobileNumber"
+                            type="tel"
+                            required
+                            className="block w-full flex-1 pl-1 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                            placeholder="Enter guardian's 10-digit number"
+                            pattern="\d{10}"
+                            value={formData.guardianMobileNumber}
+                            onChange={handleChange}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -500,17 +570,23 @@ export default function RegisterPage() {
                           htmlFor="state"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          State
+                          State *
                         </label>
-                        <input
+                        <select
                           id="state"
                           name="state"
-                          type="text"
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your state"
+                          required
+                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white focus:outline-none focus:ring-0 sm:text-sm"
                           value={formData.state}
                           onChange={handleChange}
-                        />
+                        >
+                          <option value="">Select State</option>
+                          {indianStates.map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
