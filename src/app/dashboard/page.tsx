@@ -850,7 +850,7 @@ export default function UserProfilePage() {
                   {notices.map((notice) => (
                     <div
                       key={notice._id}
-                      className="bg-white/70 dark:bg-gray-800/70 rounded-lg border-l-4 border-pink-500 border-t border-r border-b border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-all duration-200"
+                      className="bg-white/70 dark:bg-gray-800/70 rounded-lg border-l-4 border-pink-500 border-t border-r border-b  dark:border-gray-700 p-5 hover:shadow-md transition-all duration-200"
                     >
                       <div className="flex justify-between items-start">
                         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
