@@ -30,6 +30,7 @@ import {
   CheckCircle,
   Bed,
 } from "lucide-react";
+import AdminRoomChange from "@/components/AdminRoomChange";
 
 interface UserData {
   _id: string;
@@ -84,6 +85,7 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -105,7 +107,7 @@ export default function UserDetailPage() {
     };
 
     fetchUserData();
-  }, [id]);
+  }, [id, refreshTrigger]);
 
   const handleDeleteUser = async () => {
     if (!confirm("Are you sure you want to delete this user?")) {
@@ -130,6 +132,10 @@ export default function UserDetailPage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleRoomChanged = () => {
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   if (loading) {
@@ -501,6 +507,23 @@ export default function UserDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Room Change Component if user has a room assigned */}
+      {user.isActive && (
+        <div className="mb-8">
+          <AdminRoomChange
+            userId={user._id}
+            currentRoomId={
+              user.roomId
+                ? typeof user.roomId === "object"
+                  ? user.roomId._id
+                  : (user.roomId as string)
+                : undefined
+            }
+            onRoomChanged={handleRoomChanged}
+          />
+        </div>
+      )}
 
       {/* Documents Section */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden mb-8">

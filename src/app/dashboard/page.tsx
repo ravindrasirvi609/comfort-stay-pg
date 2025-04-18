@@ -375,56 +375,14 @@ export default function UserProfilePage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-4 flex space-x-3">
-              {user?.isOnNoticePeriod ? (
-                <>
-                  <button
-                    onClick={() => setIsNoticePeriodDialogOpen(true)}
-                    className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-800/40"
-                    disabled={isSubmitting}
-                  >
-                    <FaCalendarTimes className="mr-2" />
-                    Update Last Date
-                  </button>
-                  <button
-                    onClick={handleWithdrawNoticePeriod}
-                    className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-800/40"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin h-4 w-4 mr-2 border-2 border-green-700 border-t-transparent rounded-full"></div>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 11l3 3L22 4"
-                          ></path>
-                        </svg>
-                        Stay Longer
-                      </>
-                    )}
-                  </button>
-                </>
-              ) : (
+            <div className="flex flex-wrap gap-3 mt-4">
+              {!user?.isOnNoticePeriod && (
                 <button
                   onClick={() => setIsNoticePeriodDialogOpen(true)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-800/40"
-                  disabled={isSubmitting}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   <FaSignOutAlt className="mr-2" />
-                  Submit Notice Period
+                  Submit Notice
                 </button>
               )}
             </div>

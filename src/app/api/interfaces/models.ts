@@ -119,3 +119,21 @@ export interface Payment {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/**
+ * Room Change Request interface
+ */
+export interface IRoomChangeRequest {
+  _id?: string;
+  userId: Schema.Types.ObjectId | IUser;
+  oldRoomId: Schema.Types.ObjectId | IRoom;
+  newRoomId: Schema.Types.ObjectId | IRoom;
+  oldBedNumber: number;
+  newBedNumber: number;
+  status: "Completed" | "Cancelled";
+  requestedAt: Date;
+  completedAt?: Date;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
