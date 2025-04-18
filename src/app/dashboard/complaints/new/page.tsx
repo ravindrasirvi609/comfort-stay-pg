@@ -38,7 +38,7 @@ export default function NewComplaintPage() {
       const response = await axios.post("/api/complaints", formData);
 
       if (response.data.success) {
-        router.push("/dashboard/complaints");
+        router.push("/dashboard");
       } else {
         setError(response.data.message || "Failed to submit complaint");
       }
