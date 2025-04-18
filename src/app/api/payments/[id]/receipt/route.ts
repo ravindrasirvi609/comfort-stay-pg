@@ -2,8 +2,19 @@ import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
-import User from "@/app/api/models/User";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+
+let chromium: any;
+try {
+  chromium = require("chrome-aws-lambda");
+} catch (error) {
+  console.warn("chrome-aws-lambda not available, will use local puppeteer");
+  chromium = {
+    args: [],
+    executablePath: undefined, // Will use the locally installed Chromium
+    headless: true,
+  };
+}
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
@@ -373,13 +384,13 @@ export async function GET(request: Request, context: unknown) {
             
             <div class="footer">
               <p>This is a computer-generated receipt and does not require a signature.</p>
-              <p>For any queries, please contact: admin@comfortstay.com</p>
-              <p>© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
-            </div>
-            
-            <div class="receipt-logo">
-              <!-- Logo would go here in a real implementation -->
-            </div>
+    // Generate PDF with puppeteer
+    const browser = await puppeteer.launch({
+      args: (chromium.args || []).concat(["--no-sandbox", "--disable-setuid-sandbox"]),
+      defaultViewport: chromium.defaultViewport,
+      executablePath: chromium.executablePath ? await chromium.executablePath : undefined,
+      headless: chromium.headless !== false,
+    });
           </div>
         </body>
       </html>
@@ -387,7 +398,10 @@ export async function GET(request: Request, context: unknown) {
 
     // Generate PDF with puppeteer
     const browser = await puppeteer.launch({
-      headless: true,
+      args: chromium.args.concat(["--no-sandbox", "--disable-setuid-sandbox"]),
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     });
     const page = await browser.newPage();
 
