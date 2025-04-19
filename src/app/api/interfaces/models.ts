@@ -92,11 +92,19 @@ export interface IComplaint {
   userId: Schema.Types.ObjectId | IUser;
   title: string;
   description: string;
+  category:
+    | "Maintenance"
+    | "Housekeeping"
+    | "Food"
+    | "Security"
+    | "Billing"
+    | "Other";
+  priority: "Low" | "Medium" | "High" | "Urgent";
   status: "Open" | "In Progress" | "Resolved" | "Closed";
-  priority: "Low" | "Medium" | "High";
-  category: string;
-  adminResponse?: string;
-  isDeleted?: boolean;
+  assignedTo?: string;
+  resolution?: string;
+  resolvedAt?: Date;
+  isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -133,6 +141,35 @@ export interface IRoomChangeRequest {
   status: "Completed" | "Cancelled";
   requestedAt: Date;
   completedAt?: Date;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * Notification model interface
+ */
+export interface INotification {
+  _id?: string;
+  userId: Schema.Types.ObjectId | IUser;
+  title: string;
+  message: string;
+  type: "Payment" | "Complaint" | "RoomChange" | "System" | "Email" | "Other";
+  relatedId?: Schema.Types.ObjectId;
+  relatedModel?:
+    | "Payment"
+    | "Complaint"
+    | "RoomChangeRequest"
+    | "User"
+    | "Room";
+  isRead: boolean;
+  isEmailSent: boolean;
+  emailDetails?: {
+    to: string;
+    subject: string;
+    sentAt: Date;
+    success: boolean;
+  };
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;

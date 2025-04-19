@@ -1,4 +1,7 @@
 import { Resend } from "resend";
+import { connectToDatabase } from "./db";
+import { Notification } from "../api/models";
+import mongoose from "mongoose";
 
 // Create a Resend instance
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -7,12 +10,37 @@ interface EmailData {
   to: string;
   subject: string;
   html: string;
+  userId?: string | mongoose.Types.ObjectId;
+  saveNotification?: boolean;
+  notificationType?:
+    | "Payment"
+    | "Complaint"
+    | "RoomChange"
+    | "System"
+    | "Email"
+    | "Other";
+  relatedId?: string | mongoose.Types.ObjectId;
+  relatedModel?:
+    | "Payment"
+    | "Complaint"
+    | "RoomChangeRequest"
+    | "User"
+    | "Room";
 }
 
 /**
  * Send an email using Resend
  */
-export async function sendEmail({ to, subject, html }: EmailData) {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  userId,
+  saveNotification = true,
+  notificationType = "Email",
+  relatedId,
+  relatedModel,
+}: EmailData) {
   try {
     const data = await resend.emails.send({
       from:
@@ -23,9 +51,68 @@ export async function sendEmail({ to, subject, html }: EmailData) {
       html,
     });
 
+    // Save notification if userId is provided and saveNotification is true
+    if (userId && saveNotification) {
+      try {
+        await connectToDatabase();
+
+        // Create a new notification
+        await Notification.create({
+          userId,
+          title: subject,
+          message: `Email sent: ${subject}`,
+          type: notificationType,
+          isRead: false,
+          isEmailSent: true,
+          emailDetails: {
+            to,
+            subject,
+            sentAt: new Date(),
+            success: true,
+          },
+          relatedId: relatedId || null,
+          relatedModel: relatedModel || null,
+          isActive: true,
+        });
+      } catch (notificationError) {
+        console.error("Error saving notification:", notificationError);
+        // Continue even if notification saving fails
+      }
+    }
+
     return { success: true, data };
   } catch (error) {
     console.error("Error sending email:", error);
+
+    // Save failed notification if userId is provided and saveNotification is true
+    if (userId && saveNotification) {
+      try {
+        await connectToDatabase();
+
+        // Create a new notification for failed email
+        await Notification.create({
+          userId,
+          title: `Failed to send: ${subject}`,
+          message: `Email failed to send: ${subject}`,
+          type: notificationType,
+          isRead: false,
+          isEmailSent: false,
+          emailDetails: {
+            to,
+            subject,
+            sentAt: new Date(),
+            success: false,
+          },
+          relatedId: relatedId || null,
+          relatedModel: relatedModel || null,
+          isActive: true,
+        });
+      } catch (notificationError) {
+        console.error("Error saving notification:", notificationError);
+        // Continue even if notification saving fails
+      }
+    }
+
     return { success: false, error };
   }
 }
@@ -35,7 +122,8 @@ export async function sendEmail({ to, subject, html }: EmailData) {
  */
 export async function sendRegistrationConfirmationEmail(
   name: string,
-  email: string
+  email: string,
+  userId?: string | mongoose.Types.ObjectId
 ) {
   const subject = "Registration Received - Comfort Stay PG";
 
@@ -111,7 +199,7 @@ export async function sendRegistrationConfirmationEmail(
     </div>
   `;
 
-  return sendEmail({ to: email, subject, html });
+  return sendEmail({ to: email, subject, html, userId });
 }
 
 /**
@@ -121,7 +209,8 @@ export async function sendWelcomeEmail(
   name: string,
   email: string,
   pgId: string,
-  password: string
+  password: string,
+  userId?: string | mongoose.Types.ObjectId
 ) {
   const subject = "Welcome to Comfort Stay PG - Your Login Credentials";
 
@@ -180,7 +269,7 @@ export async function sendWelcomeEmail(
     </div>
   `;
 
-  return sendEmail({ to: email, subject, html });
+  return sendEmail({ to: email, subject, html, userId });
 }
 
 /**
@@ -190,7 +279,8 @@ export async function sendResetCredentialsEmail(
   name: string,
   email: string,
   pgId: string,
-  password: string
+  password: string,
+  userId?: string | mongoose.Types.ObjectId
 ) {
   const subject = "Comfort Stay PG - Your Reset Login Credentials";
 
@@ -237,7 +327,7 @@ export async function sendResetCredentialsEmail(
     </div>
   `;
 
-  return sendEmail({ to: email, subject, html });
+  return sendEmail({ to: email, subject, html, userId });
 }
 
 /**
@@ -246,7 +336,8 @@ export async function sendResetCredentialsEmail(
 export async function sendRejectionEmail(
   name: string,
   email: string,
-  reason: string = ""
+  reason: string = "",
+  userId?: string | mongoose.Types.ObjectId
 ) {
   const subject = "Comfort Stay PG - Registration Status Update";
 
@@ -293,5 +384,5 @@ export async function sendRejectionEmail(
     </div>
   `;
 
-  return sendEmail({ to: email, subject, html });
+  return sendEmail({ to: email, subject, html, userId });
 }
