@@ -2,19 +2,8 @@ import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
-import puppeteer from "puppeteer-core";
-
-let chromium: any;
-try {
-  chromium = require("chrome-aws-lambda");
-} catch (error) {
-  console.warn("chrome-aws-lambda not available, will use local puppeteer");
-  chromium = {
-    args: [],
-    executablePath: undefined, // Will use the locally installed Chromium
-    headless: true,
-  };
-}
+// Use the full puppeteer package instead of puppeteer-core
+import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
@@ -384,13 +373,7 @@ export async function GET(request: Request, context: unknown) {
             
             <div class="footer">
               <p>This is a computer-generated receipt and does not require a signature.</p>
-    // Generate PDF with puppeteer
-    const browser = await puppeteer.launch({
-      args: (chromium.args || []).concat(["--no-sandbox", "--disable-setuid-sandbox"]),
-      defaultViewport: chromium.defaultViewport,
-      executablePath: chromium.executablePath ? await chromium.executablePath : undefined,
-      headless: chromium.headless !== false,
-    });
+            </div>
           </div>
         </body>
       </html>
@@ -398,12 +381,21 @@ export async function GET(request: Request, context: unknown) {
 
     // Generate PDF with puppeteer
     const browser = await puppeteer.launch({
-      args: chromium.args.concat(["--no-sandbox", "--disable-setuid-sandbox"]),
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+      args: [
+        "--disable-gpu",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--disable-extensions",
+        "--no-first-run",
+        "--window-size=1280,720",
+      ],
+      headless: true, // Run in headless mode
     });
     const page = await browser.newPage();
+    // Set to ignore HTTPS errors on the page context
+    await page.setBypassCSP(true);
 
     // Set content and wait until network is idle
     await page.setContent(receiptHtml, { waitUntil: "networkidle0" });
