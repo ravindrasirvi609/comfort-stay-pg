@@ -7,8 +7,13 @@ import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
 
-// Initialize chromium
+// Initialize chromium with specific configuration for serverless environments
 const chromium = require("@sparticuz/chromium");
+
+// Configure @sparticuz/chromium to always download from a specific URL if needed
+// This URL can be updated if needed to match the latest compatible chromium version
+const CHROMIUM_DOWNLOAD_URL =
+  "https://github.com/Sparticuz/chromium/releases/download/v114.0.0/chromium-v114.0.0-pack.tar";
 
 // Set Node.js runtime for file operations
 export const runtime = "nodejs";
@@ -384,22 +389,38 @@ export async function GET(request: Request, context: unknown) {
     // Generate PDF with puppeteer
     let executablePath;
 
-    // Set up Chromium options for both local and serverless environments
     try {
-      // For serverless environments
+      // Load font for proper rendering
       await chromium.font(
         "https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf"
       );
-      executablePath = await chromium.executablePath;
+
+      // Explicitly pass the download URL to executablePath for serverless environments
+      executablePath = await chromium.executablePath(CHROMIUM_DOWNLOAD_URL);
+
+      console.log("Chromium executable path:", executablePath);
     } catch (error) {
-      console.warn("Error setting up chromium:", error);
+      console.error("Error setting up chromium:", error);
+      return NextResponse.json(
+        { success: false, message: "Error preparing PDF generator" },
+        { status: 500 }
+      );
     }
 
+    // Configure Puppeteer with optimized settings for serverless environments
     const browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--disable-setuid-sandbox",
+        "--no-sandbox",
+        "--no-zygote",
+        "--single-process",
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: executablePath,
-      headless: chromium.headless,
+      headless: true,
     });
     const page = await browser.newPage();
 
