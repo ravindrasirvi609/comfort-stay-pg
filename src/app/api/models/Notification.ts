@@ -5,7 +5,7 @@ const NotificationSchema = new Schema<INotification>(
   {
     // User relationship
     userId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.Mixed, // Changed from ObjectId to Mixed to support string IDs
       ref: "User",
       required: true,
     },
@@ -27,7 +27,7 @@ const NotificationSchema = new Schema<INotification>(
 
     // Optional related entities
     relatedId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.Mixed, // Changed to support both ObjectId and string
       refPath: "relatedModel",
     },
     relatedModel: {

@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get("unreadOnly") === "true";
     const type = searchParams.get("type");
 
-    // Build query
+    // Build query - use the exact user ID value from the session
+    // This handles both ObjectId and string IDs
     const query: Record<string, any> = {
       userId: user._id,
       isActive: true,
@@ -42,33 +43,50 @@ export async function GET(request: NextRequest) {
       query.type = type;
     }
 
-    // Get total count
-    const total = await Notification.countDocuments(query);
+    try {
+      // Get total count
+      const total = await Notification.countDocuments(query);
 
-    // Get notifications
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      // Get notifications
+      const notifications = await Notification.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
-    // Get unread count
-    const unreadCount = await Notification.countDocuments({
-      userId: user._id,
-      isActive: true,
-      isRead: false,
-    });
+      // Get unread count
+      const unreadCount = await Notification.countDocuments({
+        userId: user._id,
+        isActive: true,
+        isRead: false,
+      });
 
-    return NextResponse.json({
-      success: true,
-      notifications,
-      pagination: {
-        total,
-        page,
-        pageSize: limit,
-        totalPages: Math.ceil(total / limit),
-      },
-      unreadCount,
-    });
+      return NextResponse.json({
+        success: true,
+        notifications,
+        pagination: {
+          total,
+          page,
+          pageSize: limit,
+          totalPages: Math.ceil(total / limit),
+        },
+        unreadCount,
+      });
+    } catch (queryError: any) {
+      console.error("Notification query error:", queryError);
+
+      // Log user ID for debugging
+      console.log("User ID type:", typeof user._id);
+      console.log("User ID value:", user._id);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Error processing notification query",
+          error: queryError.message,
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Get notifications error:", error);
     return NextResponse.json(

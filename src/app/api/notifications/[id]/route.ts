@@ -25,24 +25,42 @@ export async function GET(
     // Connect to the database
     await connectToDatabase();
 
-    // Find the notification
-    const notification = await Notification.findOne({
-      _id: id,
-      userId: user._id, // Ensure user can only see their own notification
-      isActive: true,
-    });
+    try {
+      // Find the notification
+      const notification = await Notification.findOne({
+        _id: id,
+        userId: user._id, // Use the ID directly from the user object
+        isActive: true,
+      });
 
-    if (!notification) {
+      if (!notification) {
+        return NextResponse.json(
+          { success: false, message: "Notification not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        notification,
+      });
+    } catch (queryError: any) {
+      console.error("Notification query error:", queryError);
+
+      // Log for debugging
+      console.log("User ID type:", typeof user._id);
+      console.log("User ID value:", user._id);
+      console.log("Notification ID:", id);
+
       return NextResponse.json(
-        { success: false, message: "Notification not found" },
-        { status: 404 }
+        {
+          success: false,
+          message: "Error finding notification",
+          error: queryError.message,
+        },
+        { status: 500 }
       );
     }
-
-    return NextResponse.json({
-      success: true,
-      notification,
-    });
   } catch (error) {
     console.error("Get notification error:", error);
     return NextResponse.json(
@@ -74,36 +92,53 @@ export async function DELETE(
     // Connect to the database
     await connectToDatabase();
 
-    // Delete the notification
-    const result = await Notification.findOneAndUpdate(
-      {
-        _id: id,
-        userId: user._id, // Ensure user can only delete their own notification
-        isActive: true,
-      },
-      { isActive: false },
-      { new: true }
-    );
+    try {
+      // Delete the notification
+      const result = await Notification.findOneAndUpdate(
+        {
+          _id: id,
+          userId: user._id, // Use the ID directly from the user object
+          isActive: true,
+        },
+        { isActive: false },
+        { new: true }
+      );
 
-    if (!result) {
+      if (!result) {
+        return NextResponse.json(
+          { success: false, message: "Notification not found" },
+          { status: 404 }
+        );
+      }
+
+      // Get unread count after deletion
+      const unreadCount = await Notification.countDocuments({
+        userId: user._id,
+        isActive: true,
+        isRead: false,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Notification deleted successfully",
+        unreadCount,
+      });
+    } catch (queryError: any) {
+      console.error("Notification delete error:", queryError);
+
+      // Log for debugging
+      console.log("User ID type:", typeof user._id);
+      console.log("User ID value:", user._id);
+
       return NextResponse.json(
-        { success: false, message: "Notification not found" },
-        { status: 404 }
+        {
+          success: false,
+          message: "Error deleting notification",
+          error: queryError.message,
+        },
+        { status: 500 }
       );
     }
-
-    // Get unread count after deletion
-    const unreadCount = await Notification.countDocuments({
-      userId: user._id,
-      isActive: true,
-      isRead: false,
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Notification deleted successfully",
-      unreadCount,
-    });
   } catch (error) {
     console.error("Delete notification error:", error);
     return NextResponse.json(
