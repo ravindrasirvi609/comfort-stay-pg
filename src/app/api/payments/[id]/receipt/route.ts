@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
-// Use the full puppeteer package instead of puppeteer-core
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core"; // Switch back to puppeteer-core
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
+
+// Initialize chromium
+const chromium = require("@sparticuz/chromium");
 
 // Set Node.js runtime for file operations
 export const runtime = "nodejs";
@@ -380,20 +382,27 @@ export async function GET(request: Request, context: unknown) {
     `;
 
     // Generate PDF with puppeteer
+    let executablePath;
+
+    // Set up Chromium options for both local and serverless environments
+    try {
+      // For serverless environments
+      await chromium.font(
+        "https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf"
+      );
+      executablePath = await chromium.executablePath;
+    } catch (error) {
+      console.warn("Error setting up chromium:", error);
+    }
+
     const browser = await puppeteer.launch({
-      args: [
-        "--disable-gpu",
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--disable-extensions",
-        "--no-first-run",
-        "--window-size=1280,720",
-      ],
-      headless: true, // Run in headless mode
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: executablePath,
+      headless: chromium.headless,
     });
     const page = await browser.newPage();
+
     // Set to ignore HTTPS errors on the page context
     await page.setBypassCSP(true);
 
