@@ -1,15 +1,16 @@
 "use client";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useState } from "react";
 
 const images = [
   {
-    src: "/gallery/twin-room.jpg",
+    src: "/gallery/2sharing.jpg",
     alt: "Twin Sharing Room",
     category: "rooms",
   },
   {
-    src: "/gallery/private-room.jpg",
+    src: "/gallery/3sharing.jpg",
     alt: "Private Room",
     category: "rooms",
   },
@@ -29,7 +30,7 @@ const images = [
     category: "dining",
   },
   {
-    src: "/gallery/study-room.jpg",
+    src: "/gallery/3sharing1.jpg",
     alt: "Study Room",
     category: "common",
   },
@@ -127,12 +128,16 @@ const Gallery = () => {
                 className="card overflow-hidden aspect-square"
               >
                 <div className="w-full h-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group relative">
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover"
+                    width={300}
+                    height={300}
+                  />
                   <div className="absolute inset-0 bg-pink-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span className="text-white font-medium">{image.alt}</span>
                   </div>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    {image.alt}
-                  </span>
                 </div>
               </motion.div>
             ))}
