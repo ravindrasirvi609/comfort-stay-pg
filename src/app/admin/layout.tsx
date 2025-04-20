@@ -245,7 +245,7 @@ export default function AdminLayout({
 
           {/* User profile */}
           <div className="p-4 border-t border-white/20 dark:border-gray-700/30">
-            <div className="group block w-full flex items-center space-x-3">
+            <div className="group w-full flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
                   A
