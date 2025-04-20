@@ -4,7 +4,7 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Room from "@/app/api/models/Room";
 
 // Get all rooms
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Check if user is authenticated
     const { isAuth, user } = await isAuthenticated();
@@ -18,8 +18,23 @@ export async function GET() {
 
     await connectToDatabase();
 
+    // Get query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const includeResidents = searchParams.get("includeResidents") === "true";
+
     // Get all rooms
-    const rooms = await Room.find({ isActive: true }).sort({ roomNumber: 1 });
+    let query = Room.find({ isActive: true });
+
+    // Include resident info if requested
+    if (includeResidents) {
+      query = query.populate({
+        path: "residents",
+        select: "_id isOnNoticePeriod",
+      });
+    }
+
+    // Execute the query
+    const rooms = await query.sort({ floor: 1, roomNumber: 1 });
 
     return NextResponse.json({
       success: true,

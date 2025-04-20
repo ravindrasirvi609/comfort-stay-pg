@@ -21,6 +21,8 @@ interface User {
   phone: string;
   bedNumber: number;
   moveInDate: string;
+  isOnNoticePeriod: boolean;
+  lastStayingDate?: string;
 }
 
 interface Bed {
@@ -109,6 +111,62 @@ export default function RoomDetailPage() {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const renderBed = (bedNumber: number) => {
+    const assignment = room?.beds.find((a) => a.bedNumber === bedNumber);
+
+    // Check if the resident is on notice period
+    const isOnNoticePeriod = assignment?.resident?.isOnNoticePeriod;
+
+    return (
+      <div
+        key={`bed-${bedNumber}`}
+        className={`border rounded-lg p-4 ${
+          assignment?.isOccupied
+            ? isOnNoticePeriod
+              ? "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-800" // Notice period styling
+              : "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-800"
+            : "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-800"
+        }`}
+      >
+        <div className="font-semibold mb-2 flex justify-between items-center">
+          <span>Bed #{bedNumber}</span>
+          {isOnNoticePeriod && (
+            <span className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200 text-xs px-2 py-1 rounded-full">
+              On Notice
+            </span>
+          )}
+        </div>
+
+        {assignment?.isOccupied && assignment.resident ? (
+          <div>
+            <Link
+              href={`/admin/users/${assignment.resident._id}`}
+              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+            >
+              {assignment.resident.name}
+            </Link>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              {assignment.resident.email}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              PG ID: {assignment.resident.pgId}
+            </div>
+            {isOnNoticePeriod && assignment.resident.lastStayingDate && (
+              <div className="text-sm text-orange-600 dark:text-orange-400 mt-2">
+                Leaving on:{" "}
+                {new Date(
+                  assignment.resident.lastStayingDate
+                ).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-green-600 dark:text-green-400">Available</div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -230,88 +288,7 @@ export default function RoomDetailPage() {
               </h2>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {room.beds &&
-                  room.beds.map((bed) => (
-                    <div
-                      key={`bed-${bed.bedNumber}`}
-                      className={`backdrop-blur-sm p-4 rounded-xl border ${
-                        bed.isOccupied
-                          ? "bg-blue-50/60 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40"
-                          : "bg-green-50/60 dark:bg-green-900/20 border-green-200 dark:border-green-800/40"
-                      }`}
-                    >
-                      <div className="flex items-center mb-3">
-                        <FaBed
-                          className={`h-5 w-5 ${bed.isOccupied ? "text-blue-500" : "text-green-500"} mr-2`}
-                        />
-                        <h3 className="text-lg font-medium">
-                          Bed #{bed.bedNumber} -
-                          <span
-                            className={`ml-1 ${bed.isOccupied ? "text-blue-600 dark:text-blue-400" : "text-green-600 dark:text-green-400"}`}
-                          >
-                            {bed.isOccupied ? "Occupied" : "Available"}
-                          </span>
-                        </h3>
-                      </div>
-
-                      {bed.isOccupied && bed.resident && (
-                        <div className="pl-7">
-                          <div className="space-y-2">
-                            <div className="flex items-center">
-                              <FaUser className="h-4 w-4 text-gray-500 mr-2" />
-                              <p className="text-gray-800 dark:text-gray-200 font-medium">
-                                {bed.resident.name}
-                              </p>
-                            </div>
-                            <div className="flex items-center">
-                              <FaIdCard className="h-4 w-4 text-gray-500 mr-2" />
-                              <p className="text-gray-600 dark:text-gray-400">
-                                {bed.resident.pgId}
-                              </p>
-                            </div>
-                            <div className="flex items-center">
-                              <FaPhoneAlt className="h-4 w-4 text-gray-500 mr-2" />
-                              <p className="text-gray-600 dark:text-gray-400">
-                                {bed.resident.phone}
-                              </p>
-                            </div>
-                            <div className="flex items-center">
-                              <FaEnvelope className="h-4 w-4 text-gray-500 mr-2" />
-                              <p className="text-gray-600 dark:text-gray-400 text-sm truncate">
-                                {bed.resident.email}
-                              </p>
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                              Move-in date:{" "}
-                              {formatDate(bed.resident.moveInDate)}
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            <Link
-                              href={`/admin/users/${bed.resident._id}`}
-                              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                            >
-                              View resident details →
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-
-                      {!bed.isOccupied && (
-                        <div className="pl-7 py-2">
-                          <p className="text-gray-500 dark:text-gray-400">
-                            No resident assigned
-                          </p>
-                          <Link
-                            href={`/admin/residents/assign?roomId=${room._id}&bedNumber=${bed.bedNumber}`}
-                            className="inline-block mt-2 text-sm text-green-600 dark:text-green-400 hover:underline"
-                          >
-                            Assign resident →
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                {room.beds && room.beds.map((bed) => renderBed(bed.bedNumber))}
               </div>
 
               <div className="flex gap-4 mt-8">

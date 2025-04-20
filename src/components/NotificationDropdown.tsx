@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, Mail, CheckCircle, AlertCircle, Clock, X } from "lucide-react";
+import {
+  Bell,
+  Mail,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  X,
+  CalendarX,
+} from "lucide-react";
 import axios from "axios";
 import { formatDistanceToNow } from "date-fns";
 
@@ -14,7 +22,8 @@ interface Notification {
     | "System"
     | "Email"
     | "Contact"
-    | "Other";
+    | "Other"
+    | "NoticePeriod";
   isRead: boolean;
   createdAt: string;
 }
@@ -176,6 +185,12 @@ export default function NotificationDropdown({
         return (
           <span className="text-amber-500">
             <Mail size={16} />
+          </span>
+        );
+      case "NoticePeriod":
+        return (
+          <span className="text-orange-500">
+            <CalendarX size={16} />
           </span>
         );
       default:

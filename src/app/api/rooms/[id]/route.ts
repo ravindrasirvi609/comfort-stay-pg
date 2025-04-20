@@ -12,6 +12,8 @@ interface Resident {
   phone: string;
   bedNumber: number;
   moveInDate?: string;
+  isOnNoticePeriod: boolean;
+  lastStayingDate: string;
 }
 
 // Get a single room
@@ -36,7 +38,8 @@ export async function GET(
     // Find room by ID and populate residents virtual
     const room = await Room.findById(params.id).populate({
       path: "residents",
-      select: "_id name email pgId phone bedNumber moveInDate",
+      select:
+        "name email pgId phone _id moveInDate bedNumber isOnNoticePeriod lastStayingDate",
     });
 
     if (!room) {

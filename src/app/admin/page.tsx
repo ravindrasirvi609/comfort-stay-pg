@@ -45,6 +45,7 @@ import {
   RiCurrencyLine,
 } from "react-icons/ri";
 import { Inter } from "next/font/google";
+import NoticeUsersList from "@/components/admin/NoticeUsersList";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -854,6 +855,14 @@ export default function AdminDashboard() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Users on Notice Period Section */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+          Users on Notice Period
+        </h2>
+        <NoticeUsersList />
       </div>
 
       {/* Data Tables */}

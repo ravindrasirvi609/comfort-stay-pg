@@ -21,7 +21,15 @@ const NotificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ["Payment", "Complaint", "RoomChange", "System", "Email", "Other"],
+      enum: [
+        "Payment",
+        "Complaint",
+        "RoomChange",
+        "System",
+        "Email",
+        "Other",
+        "NoticePeriod",
+      ],
       default: "System",
     },
 

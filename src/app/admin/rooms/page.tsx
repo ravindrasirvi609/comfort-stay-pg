@@ -16,6 +16,11 @@ interface Room {
   amenities: string[];
   isActive: boolean;
   createdAt: string;
+  residents?: {
+    _id: string;
+    isOnNoticePeriod: boolean;
+  }[];
+  hasResidentsOnNotice?: boolean;
 }
 
 export default function RoomsPage() {
@@ -34,7 +39,7 @@ export default function RoomsPage() {
     const fetchRooms = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("/api/rooms");
+        const response = await axios.get("/api/rooms?includeResidents=true");
         const roomsData = response.data.rooms || [];
 
         console.log("API Response:", roomsData);
@@ -46,12 +51,17 @@ export default function RoomsPage() {
           return;
         }
 
-        // Make sure all rooms have a floor value, add 'unknown' for rooms without one
+        // Process rooms to check for residents on notice
         const processedRooms = roomsData.map((room: Room) => {
-          if (!room.floor) {
-            return { ...room, floor: "unknown" };
-          }
-          return room;
+          const hasResidentsOnNotice = room.residents?.some(
+            (resident) => resident.isOnNoticePeriod
+          );
+
+          return {
+            ...room,
+            hasResidentsOnNotice,
+            floor: room.floor || "unknown",
+          };
         });
 
         console.log("Processed Rooms:", processedRooms);
@@ -160,7 +170,9 @@ export default function RoomsPage() {
             room.status === "available"
               ? "bg-green-50 dark:bg-green-900/20"
               : room.status === "occupied"
-                ? "bg-blue-50 dark:bg-blue-900/20"
+                ? room.hasResidentsOnNotice
+                  ? "bg-gradient-to-br from-blue-50 to-orange-50 dark:from-blue-900/20 dark:to-orange-900/20"
+                  : "bg-blue-50 dark:bg-blue-900/20"
                 : "bg-yellow-50 dark:bg-yellow-900/20"
           }`}
       >
@@ -179,6 +191,11 @@ export default function RoomsPage() {
           >
             {room.status}
           </span>
+          {room.hasResidentsOnNotice && (
+            <span className="px-2 py-0.5 rounded-full text-xs ml-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+              Notice
+            </span>
+          )}
         </div>
 
         <div className="mt-2 text-xs text-center">
@@ -187,7 +204,11 @@ export default function RoomsPage() {
 
         <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 mt-1">
           <div
-            className="h-1 bg-gradient-to-r from-pink-500 to-purple-600"
+            className={`h-1 ${
+              room.hasResidentsOnNotice
+                ? "bg-gradient-to-r from-blue-500 to-orange-500"
+                : "bg-gradient-to-r from-pink-500 to-purple-600"
+            }`}
             style={{
               width: `${(room.currentOccupancy / room.capacity) * 100}%`,
             }}
