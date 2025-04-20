@@ -6,6 +6,7 @@ import puppeteer from "puppeteer-core"; // Switch back to puppeteer-core
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
+import Room from "@/app/api/models/Room"; // Adjust the path as needed
 
 // Initialize chromium with specific configuration for serverless environments
 const chromium = require("@sparticuz/chromium");
@@ -49,6 +50,11 @@ interface PopulatedPayment {
 // For Next.js 15.3.0, we need to use this specific signature
 export async function GET(request: Request, context: unknown) {
   try {
+    await connectToDatabase();
+
+    // Important: Register the Room model before using it
+    Room; // Just reference it to ensure it's registered
+
     // Extract the payment ID from URL
     const url = new URL(request.url);
     const pathParts = url.pathname.split("/");
@@ -63,8 +69,6 @@ export async function GET(request: Request, context: unknown) {
         { status: 401 }
       );
     }
-
-    await connectToDatabase();
 
     // Get payment details
     const paymentDoc = await Payment.findById(id)
@@ -473,7 +477,7 @@ export async function GET(request: Request, context: unknown) {
   } catch (error) {
     console.error("[API] Receipt generation error:", error);
     return NextResponse.json(
-      { success: false, message: "Error generating receipt" },
+      { success: false, message: "Failed to generate receipt" },
       { status: 500 }
     );
   }
