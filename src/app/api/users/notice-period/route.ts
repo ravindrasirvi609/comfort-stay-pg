@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated } from "@/app/lib/auth";
-import { User } from "@/app/api/models";
+import User from "@/app/api/models/User";
+import Notification from "@/app/api/models/Notification";
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,6 +58,18 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+
+      // Create notification for admin when user withdraws notice period
+      await Notification.create({
+        userId: "admin_id_123456789", // Admin ID
+        title: "Notice Period Withdrawn",
+        message: `${currentUser.name || "A resident"} has withdrawn their notice period.`,
+        type: "NoticePeriod",
+        isRead: false,
+        isActive: true,
+        relatedId: currentUser._id,
+        relatedModel: "User",
+      });
 
       return NextResponse.json({
         success: true,
@@ -121,6 +134,20 @@ export async function POST(request: NextRequest) {
     const message = currentUser.isOnNoticePeriod
       ? "Notice period updated successfully"
       : "Notice period submitted successfully";
+
+    // Create notification for admin when user submits or updates notice period
+    await Notification.create({
+      userId: "admin_id_123456789", // Admin ID
+      title: currentUser.isOnNoticePeriod
+        ? "Notice Period Updated"
+        : "New Notice Period",
+      message: `${currentUser.name || "A resident"} has ${currentUser.isOnNoticePeriod ? "updated their" : "submitted a"} notice period with last staying date: ${selectedDate.toLocaleDateString()}`,
+      type: "NoticePeriod",
+      isRead: false,
+      isActive: true,
+      relatedId: currentUser._id,
+      relatedModel: "User",
+    });
 
     return NextResponse.json({
       success: true,

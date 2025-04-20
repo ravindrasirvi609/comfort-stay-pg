@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import { User } from "@/app/api/models";
+import { User, Notification } from "@/app/api/models";
+import { sendRegistrationConfirmationEmail } from "@/app/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,12 +76,26 @@ export async function POST(request: NextRequest) {
       profileImage,
     });
 
-    await newUser.save();
+    const savedUser = await newUser.save();
 
-    // Send confirmation email to the user
-    // Note: Email will be sent only when admin approves the registration
+    // Send confirmation email to user
+    await sendRegistrationConfirmationEmail(
+      fullName,
+      emailAddress,
+      savedUser._id
+    );
 
-    // TODO: Send notification to admin about new registration request
+    // Create notification for admin
+    await Notification.create({
+      userId: "admin_id_123456789", // Admin ID
+      title: "New User Registration",
+      message: `${fullName} has submitted a new registration request from ${city}, ${state}. Email: ${emailAddress}`,
+      type: "System",
+      isRead: false,
+      isActive: true,
+      relatedId: savedUser._id,
+      relatedModel: "User",
+    });
 
     return NextResponse.json({
       success: true,

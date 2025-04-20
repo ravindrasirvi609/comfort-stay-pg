@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Complaint from "@/app/api/models/Complaint";
 import User from "@/app/api/models/User";
+import Notification from "@/app/api/models/Notification";
 
 // Get all complaints
 export async function GET() {
@@ -87,6 +88,18 @@ export async function POST(request: NextRequest) {
     });
 
     await newComplaint.save();
+
+    // Create notification for admin
+    await Notification.create({
+      userId: 'admin_id_123456789', // Admin ID
+      title: 'New Complaint Submitted',
+      message: `${user.name || 'A user'} has submitted a new complaint: "${title}"`,
+      type: 'Complaint',
+      isRead: false,
+      isActive: true,
+      relatedId: newComplaint._id,
+      relatedModel: 'Complaint'
+    });
 
     return NextResponse.json({
       success: true,
