@@ -172,6 +172,17 @@ const Footer = () => {
             />{" "}
             in Pune
           </p>
+          <p className="mt-2">
+            Developed and maintained by{" "}
+            <Link
+              href="https://ravindrachoudhary.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-pink-500 hover:text-pink-600 dark:text-pink-300 dark:hover:text-pink-200 transition-colors"
+            >
+              Ravindra Sirvi
+            </Link>
+          </p>
         </div>
       </div>
     </footer>
