@@ -184,7 +184,10 @@ const Footer = () => {
               <p className="text-gray-600 dark:text-pink-100/70 mb-3 sm:mb-4 text-sm">
                 Subscribe to our newsletter for updates and special offers.
               </p>
-              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row">
+              <form
+                onSubmit={handleSubscribe}
+                className="flex flex-col sm:flex-row"
+              >
                 <input
                   type="email"
                   placeholder="Your email address"
