@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 import {
   Facebook,
   Twitter,
@@ -10,16 +13,49 @@ import {
   Mail,
   ArrowUp,
   Heart,
+  Loader2,
 } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post("/api/subscribers", { email });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setEmail("");
+      } else {
+        toast.error(response.data.message || "Failed to subscribe");
+      }
+    } catch (error: any) {
+      console.error("Subscription error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to subscribe. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -148,16 +184,28 @@ const Footer = () => {
               <p className="text-gray-600 dark:text-pink-100/70 mb-4 text-sm">
                 Subscribe to our newsletter for updates and special offers.
               </p>
-              <div className="flex">
+              <form onSubmit={handleSubscribe} className="flex">
                 <input
                   type="email"
                   placeholder="Your email address"
                   className="rounded-l-lg py-2 px-3 bg-white dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800/50 focus:outline-none focus:ring-2 focus:ring-pink-300 dark:focus:ring-pink-500 flex-grow text-sm"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
                 />
-                <button className="btn-primary rounded-l-none text-sm py-2">
-                  Subscribe
+                <button
+                  type="submit"
+                  className="btn-primary rounded-l-none text-sm py-2 px-4 flex items-center justify-center min-w-[100px]"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    "Subscribe"
+                  )}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -174,14 +222,14 @@ const Footer = () => {
           </p>
           <p className="mt-2">
             Developed and maintained by{" "}
-            <Link
+            <a
               href="https://ravindrachoudhary.in"
               target="_blank"
               rel="noopener noreferrer"
               className="text-pink-500 hover:text-pink-600 dark:text-pink-300 dark:hover:text-pink-200 transition-colors"
             >
               Ravindra Sirvi
-            </Link>
+            </a>
           </p>
         </div>
       </div>

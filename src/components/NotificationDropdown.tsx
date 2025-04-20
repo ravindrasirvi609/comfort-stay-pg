@@ -7,7 +7,14 @@ interface Notification {
   _id: string;
   title: string;
   message: string;
-  type: "Payment" | "Complaint" | "RoomChange" | "System" | "Email" | "Other";
+  type:
+    | "Payment"
+    | "Complaint"
+    | "RoomChange"
+    | "System"
+    | "Email"
+    | "Contact"
+    | "Other";
   isRead: boolean;
   createdAt: string;
 }
@@ -162,6 +169,12 @@ export default function NotificationDropdown({
       case "Email":
         return (
           <span className="text-blue-500">
+            <Mail size={16} />
+          </span>
+        );
+      case "Contact":
+        return (
+          <span className="text-amber-500">
             <Mail size={16} />
           </span>
         );

@@ -174,3 +174,47 @@ export interface INotification {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+/**
+ * Contact Inquiry interface
+ */
+export interface IContactInquiry {
+  _id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  respondedTo: boolean;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * Visit Request interface
+ */
+export interface IVisitRequest {
+  _id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  preferredDate: Date;
+  preferredTime: string;
+  message?: string;
+  status: "Pending" | "Scheduled" | "Completed" | "Cancelled";
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * Subscriber interface
+ */
+export interface ISubscriber {
+  _id?: string;
+  email: string;
+  subscriptionDate: Date;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

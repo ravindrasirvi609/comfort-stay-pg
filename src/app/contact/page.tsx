@@ -1,4 +1,5 @@
 import Contact from "@/components/Contact";
+import VisitForm from "@/components/VisitForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -300,122 +301,7 @@ export default function ContactPage() {
               accommodation.
             </p>
 
-            <form className="space-y-6 max-w-3xl mx-auto">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="accommodation"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Preferred Accommodation
-                </label>
-                <select
-                  id="accommodation"
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                >
-                  <option>2 Sharing Room</option>
-                  <option>3 Sharing Room</option>
-                </select>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    htmlFor="visit-date"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Preferred Visit Date
-                  </label>
-                  <input
-                    type="date"
-                    id="visit-date"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="visit-time"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Preferred Time
-                  </label>
-                  <select
-                    id="visit-time"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  >
-                    <option>9:00 AM - 11:00 AM</option>
-                    <option>11:00 AM - 1:00 PM</option>
-                    <option>2:00 PM - 4:00 PM</option>
-                    <option>4:00 PM - 6:00 PM</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Additional Information or Requirements
-                </label>
-                <textarea
-                  id="message"
-                  rows={4}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                ></textarea>
-              </div>
-
-              <div className="text-center">
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-medium px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  Submit Request
-                </button>
-              </div>
-            </form>
+            <VisitForm />
           </div>
         </div>
       </section>

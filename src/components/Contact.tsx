@@ -2,6 +2,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Phone, Mail, MapPin, Send } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,10 +13,36 @@ const Contact = () => {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
+    setLoading(true);
+
+    try {
+      const response = await axios.post("/api/contact-inquiries", formData);
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          message: "",
+        });
+      } else {
+        toast.error(response.data.message || "Failed to submit inquiry");
+      }
+    } catch (error: any) {
+      console.error("Contact submission error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to submit your inquiry. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (
@@ -130,6 +158,7 @@ const Contact = () => {
                     className="input-field"
                     placeholder="Your name"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -145,6 +174,7 @@ const Contact = () => {
                     className="input-field"
                     placeholder="Your email address"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -160,6 +190,7 @@ const Contact = () => {
                     className="input-field"
                     placeholder="Your phone number"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -175,6 +206,7 @@ const Contact = () => {
                     className="input-field"
                     placeholder="Your message or inquiry"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <motion.button
@@ -182,9 +214,19 @@ const Contact = () => {
                   whileTap={{ scale: 0.95 }}
                   type="submit"
                   className="w-full bg-pink-600 hover:bg-pink-700 transition-colors text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                  disabled={loading}
                 >
-                  Send Message
-                  <Send size={18} />
+                  {loading ? (
+                    <>
+                      <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      Send Message
+                      <Send size={18} />
+                    </>
+                  )}
                 </motion.button>
               </form>
             </div>
