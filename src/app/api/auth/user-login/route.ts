@@ -8,21 +8,21 @@ export async function POST(request: NextRequest) {
   try {
     await connectToDatabase();
 
-    const { pgId, password } = await request.json();
+    const { email, password } = await request.json();
 
-    console.log("[Login] Attempting login with PG ID:", pgId);
+    console.log("[Login] Attempting login with email:", email);
 
     // Check if all fields are provided
-    if (!pgId || !password) {
+    if (!email || !password) {
       return NextResponse.json(
         { success: false, message: "Please provide all required fields" },
         { status: 400 }
       );
     }
 
-    // Find user by pgId with case-insensitive search
+    // Find user by email with case-insensitive search
     const user = await User.findOne({
-      pgId: { $regex: new RegExp(`^${pgId}$`, "i") },
+      email: { $regex: new RegExp(`^${email}$`, "i") },
     });
 
     console.log("[Login] User found:", user ? "Yes" : "No");

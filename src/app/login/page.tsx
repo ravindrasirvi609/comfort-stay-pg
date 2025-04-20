@@ -16,7 +16,7 @@ export default function LoginPage() {
 
   // User login form state
   const [userForm, setUserForm] = useState({
-    pgId: "",
+    email: "",
     password: "",
   });
 
@@ -201,19 +201,19 @@ export default function LoginPage() {
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
                 <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
                   <label
-                    htmlFor="pgId"
+                    htmlFor="email"
                     className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                   >
-                    PG ID
+                    Email
                   </label>
                   <input
-                    id="pgId"
-                    name="pgId"
-                    type="text"
+                    id="email"
+                    name="email"
+                    type="email"
                     required
                     className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                    placeholder="Enter your PG ID"
-                    value={userForm.pgId}
+                    placeholder="Enter your email"
+                    value={userForm.email}
                     onChange={handleUserChange}
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -223,11 +223,8 @@ export default function LoginPage() {
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clipRule="evenodd"
-                      />
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                     </svg>
                   </div>
                 </div>

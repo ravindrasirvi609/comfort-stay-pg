@@ -231,9 +231,12 @@ export async function sendWelcomeEmail(
         <p style="color: #555; line-height: 1.6; font-size: 16px;">We're thrilled to inform you that your registration has been approved! You can now access our resident portal with the following credentials:</p>
         
         <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #FF4D8B;">
-          <p style="margin: 0 0 10px; color: #444; font-size: 16px;"><strong>Login ID (PG ID):</strong> ${pgId}</p>
+          <p style="margin: 0 0 10px; color: #444; font-size: 16px;"><strong>Your Email (Login ID):</strong> ${email}</p>
+          <p style="margin: 0 0 10px; color: #444; font-size: 16px;"><strong>Your PG ID (for reference only):</strong> ${pgId}</p>
           <p style="margin: 0; color: #444; font-size: 16px;"><strong>Password:</strong> ${password}</p>
         </div>
+        
+        <p style="color: #555; line-height: 1.6; font-size: 16px;"><strong>Important:</strong> Please use your email address as your login ID when signing in to the portal.</p>
         
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="background: linear-gradient(to right, #FF4D8B, #B64FAA); color: white; text-decoration: none; padding: 12px 25px; border-radius: 50px; font-weight: 600; display: inline-block;">Login to Your Account</a>
@@ -301,9 +304,12 @@ export async function sendResetCredentialsEmail(
         <p style="color: #555; line-height: 1.6; font-size: 16px;">Your login credentials have been reset. Here are your new login details:</p>
         
         <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #FF4D8B;">
-          <p style="margin: 0 0 10px; color: #444; font-size: 16px;"><strong>Login ID (PG ID):</strong> ${pgId}</p>
+          <p style="margin: 0 0 10px; color: #444; font-size: 16px;"><strong>Your Email (Login ID):</strong> ${email}</p>
+          <p style="margin: 0 0 10px; color: #444; font-size: 16px;"><strong>Your PG ID (for reference only):</strong> ${pgId}</p>
           <p style="margin: 0; color: #444; font-size: 16px;"><strong>New Password:</strong> ${password}</p>
         </div>
+        
+        <p style="color: #555; line-height: 1.6; font-size: 16px;"><strong>Important:</strong> Please use your email address as your login ID when signing in to the portal.</p>
         
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="background: linear-gradient(to right, #FF4D8B, #B64FAA); color: white; text-decoration: none; padding: 12px 25px; border-radius: 50px; font-weight: 600; display: inline-block;">Login to Your Account</a>
