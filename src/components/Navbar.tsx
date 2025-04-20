@@ -117,8 +117,8 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <div className="flex items-center gap-1">
                   <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    href={user?.role === "admin" ? "/admin" : "/dashboard"}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-pink-50/50 dark:bg-pink-900/20 hover:bg-pink-100/80 dark:hover:bg-pink-800/30"
                   >
                     <div className="relative">
                       <div className="h-8 w-8 rounded-full bg-pink-100 dark:bg-pink-800/30 flex items-center justify-center overflow-hidden border-2 border-pink-200 dark:border-pink-700">
@@ -137,7 +137,7 @@ export default function Navbar() {
                       <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-gray-900"></div>
                     </div>
                     <span className="text-gray-700 dark:text-gray-200">
-                      {user?.name || "User"}
+                      {user?.name?.split(" ")[0] || "User"}
                     </span>
                   </Link>
                   <button
@@ -216,7 +216,7 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href={user?.role === "admin" ? "/admin" : "/dashboard"}
                     className="col-span-2 px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center gap-2 text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -233,7 +233,7 @@ export default function Navbar() {
                         <User className="h-3 w-3 text-pink-600 dark:text-pink-400" />
                       )}
                     </div>
-                    {user?.name || "Dashboard"}
+                    {user?.name?.split(" ")[0] || "Dashboard"}
                   </Link>
                   <button
                     onClick={(e) => {

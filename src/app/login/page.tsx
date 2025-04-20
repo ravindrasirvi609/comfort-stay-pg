@@ -8,7 +8,7 @@ import useAuth from "../../hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, login } = useAuth();
   const [activeTab, setActiveTab] = useState("user");
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +64,7 @@ export default function LoginPage() {
       const response = await axios.post("/api/auth/user-login", userForm);
 
       if (response.data.success) {
-        router.push("/dashboard");
+        login(response.data.user);
       } else {
         setError(response.data.message || "Login failed");
       }
@@ -91,8 +91,8 @@ export default function LoginPage() {
       const response = await axios.post("/api/auth/admin-login", adminForm);
 
       if (response.data.success) {
-        console.log("Admin login successful, redirecting to /admin");
-        window.location.href = "/admin";
+        console.log("Admin login successful");
+        login(response.data.user);
       } else {
         setError(response.data.message || "Login failed");
       }

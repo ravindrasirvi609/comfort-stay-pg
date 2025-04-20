@@ -40,6 +40,16 @@ export default function useAuth() {
     checkAuthStatus();
   }, []);
 
+  const login = async (userData: User) => {
+    setUser(userData);
+    // Redirect based on user role
+    if (userData.role === "admin") {
+      window.location.href = "/admin";
+    } else {
+      window.location.href = "/dashboard";
+    }
+  };
+
   const logout = async () => {
     try {
       await axios.post("/api/auth/logout");
@@ -57,6 +67,7 @@ export default function useAuth() {
     error,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
+    login,
     logout,
   };
 }
