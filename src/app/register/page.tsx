@@ -248,15 +248,15 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-pink-100 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden relative">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-pink-300 dark:bg-pink-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
-        <div className="absolute top-40 right-40 w-72 h-72 bg-purple-300 dark:bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-blue-300 dark:bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen w-full bg-gradient-to-br from-pink-100 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center py-6 px-2 sm:p-4 md:p-6 lg:p-8 overflow-hidden relative">
+      {/* Background decorative elements - optimized for different screen sizes */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-10 sm:top-20 left-5 sm:left-20 w-32 sm:w-64 h-32 sm:h-64 bg-pink-300 dark:bg-pink-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+        <div className="absolute top-20 sm:top-40 right-10 sm:right-40 w-40 sm:w-72 h-40 sm:h-72 bg-purple-300 dark:bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-10 sm:bottom-20 left-1/4 w-48 sm:w-80 h-48 sm:h-80 bg-blue-300 dark:bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="max-w-4xl w-full backdrop-blur-lg bg-white/40 dark:bg-gray-800/50 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-2xl overflow-hidden p-8 z-10 hover:shadow-pink-200/20 dark:hover:shadow-pink-700/20 transition-all duration-300">
+      <div className="max-w-4xl w-full backdrop-blur-lg bg-white/40 dark:bg-gray-800/50 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-2xl overflow-hidden p-4 sm:p-6 md:p-8 z-10 hover:shadow-pink-200/20 dark:hover:shadow-pink-700/20 transition-all duration-300">
         {success ? (
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -275,24 +275,24 @@ export default function RegisterPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
               Registration Request Submitted!
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-6">
               Thank you for registering with ComfortStay PG. Your request has
               been submitted for admin approval. Once approved, you will receive
               your login credentials via email.
             </p>
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:space-x-4">
               <Link
                 href="/login"
-                className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium"
+                className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium text-sm sm:text-base"
               >
                 Go to Login
               </Link>
               <Link
                 href="/"
-                className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all duration-300 font-medium"
+                className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all duration-300 font-medium text-sm sm:text-base"
               >
                 Back to Home
               </Link>
@@ -300,22 +300,22 @@ export default function RegisterPage() {
           </div>
         ) : (
           <>
-            <div className="text-center mb-8">
+            <div className="text-center mb-6 sm:mb-8">
               <div className="flex justify-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
                   CS
                 </div>
               </div>
-              <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
                 New Resident Registration
               </h2>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 Create your account to request residence at ComfortStay PG
               </p>
             </div>
 
-            {/* Progress bar */}
-            <div className="mb-8">
+            {/* Progress bar - now more responsive for mobile */}
+            <div className="mb-6 sm:mb-8">
               <div className="flex justify-between mb-2">
                 {Array.from({ length: totalSteps }).map((_, index) => (
                   <div
@@ -329,7 +329,7 @@ export default function RegisterPage() {
                     }`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mb-1 ${
                         index + 1 === currentStep
                           ? "bg-pink-100 dark:bg-pink-900 text-pink-600 dark:text-pink-400 border-2 border-pink-500"
                           : index + 1 < currentStep
@@ -340,7 +340,7 @@ export default function RegisterPage() {
                       {index + 1 < currentStep ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
+                          className="h-5 w-5 sm:h-6 sm:w-6"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -356,8 +356,8 @@ export default function RegisterPage() {
                         index + 1
                       )}
                     </div>
-                    <span className="text-xs font-medium">
-                      {index === 0 ? "Personal Info" : "Identity Verification"}
+                    <span className="text-[10px] sm:text-xs font-medium">
+                      {index === 0 ? "Personal Info" : "Identity"}
                     </span>
                   </div>
                 ))}
@@ -370,18 +370,17 @@ export default function RegisterPage() {
                   }}
                 ></div>
               </div>
-
             </div>
 
-            {/* Error message */}
+            {/* Error message - optimized for mobile */}
             {error && (
               <div
-                className="mb-6 bg-red-100/80 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl relative flex items-center"
+                className="mb-4 sm:mb-6 bg-red-100/80 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-3 sm:px-4 py-2 sm:py-3 rounded-xl relative flex items-center"
                 role="alert"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
+                  className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 flex-shrink-0"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -391,7 +390,7 @@ export default function RegisterPage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span className="block sm:inline text-sm">{error}</span>
+                <span className="block text-xs sm:text-sm">{error}</span>
               </div>
             )}
 
@@ -596,89 +595,19 @@ export default function RegisterPage() {
               {/* Step 2: Identity Verification */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                        <label
-                          htmlFor="validIdType"
-                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                        >
-                          Valid ID Type *
-                        </label>
-                        <select
-                          id="validIdType"
-                          name="validIdType"
-                          required
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white focus:outline-none focus:ring-0 sm:text-sm"
-                          value={formData.validIdType}
-                          onChange={handleChange}
-                        >
-                          {validIdTypes.map((type) => (
-                            <option key={type} value={type}>
-                              {type}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                        <label
-                          htmlFor="companyName"
-                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                        >
-                          Company Name
-                        </label>
-                        <input
-                          id="companyName"
-                          name="companyName"
-                          type="text"
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your company name"
-                          value={formData.companyName}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                        <label
-                          htmlFor="companyAddress"
-                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                        >
-                          Company Address
-                        </label>
-                        <textarea
-                          id="companyAddress"
-                          name="companyAddress"
-                          rows={3}
-                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your company address"
-                          value={formData.companyAddress}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         ID Document Upload *
                       </label>
-                      <div className="bg-white/30 dark:bg-gray-800/30 rounded-xl p-4 backdrop-blur-sm">
+                      <div className="bg-white/30 dark:bg-gray-800/30 rounded-xl p-3 sm:p-4 backdrop-blur-sm">
                         <ImageUpload
                           onImageUploaded={(url) =>
                             handleImageUploaded("validIdPhoto", url)
                           }
                           folder="applicants/id_documents"
                           maxSizeMB={5}
-                          className={`${formData.validIdPhoto ? "border-green-500" : ""}`}
+                          className={`${formData.validIdPhoto ? "border-green-500" : ""} max-w-full h-auto`}
                         />
                         {formData.validIdPhoto && (
                           <p className="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center">
@@ -706,14 +635,14 @@ export default function RegisterPage() {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Passport Size Photo *
                       </label>
-                      <div className="bg-white/30 dark:bg-gray-800/30 rounded-xl p-4 backdrop-blur-sm">
+                      <div className="bg-white/30 dark:bg-gray-800/30 rounded-xl p-3 sm:p-4 backdrop-blur-sm">
                         <ImageUpload
                           onImageUploaded={(url) =>
                             handleImageUploaded("profileImage", url)
                           }
                           folder="applicants/profile"
                           maxSizeMB={2}
-                          className={`${formData.profileImage ? "border-green-500" : ""}`}
+                          className={`${formData.profileImage ? "border-green-500" : ""} max-w-full h-auto`}
                         />
                         {formData.profileImage && (
                           <p className="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center">
@@ -770,17 +699,17 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Navigation buttons */}
-              <div className="flex justify-between mt-8">
+              {/* Navigation buttons - improved for mobile */}
+              <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0 mt-8">
                 {currentStep > 1 ? (
                   <button
                     type="button"
                     onClick={prevStep}
-                    className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all duration-300 font-medium flex items-center"
+                    className="px-5 py-2.5 sm:px-6 sm:py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all duration-300 font-medium flex items-center justify-center sm:justify-start text-sm"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-1"
+                      className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -800,12 +729,12 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium flex items-center"
+                    className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium flex items-center justify-center sm:justify-start text-sm"
                   >
                     Next
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 ml-1"
+                      className="h-4 w-4 sm:h-5 sm:w-5 ml-1 sm:ml-2"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -820,7 +749,7 @@ export default function RegisterPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium flex items-center ${
+                    className={`px-5 py-2.5 sm:px-6 sm:py-3 w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium flex items-center justify-center text-sm ${
                       loading ? "opacity-70 cursor-not-allowed" : ""
                     }`}
                   >
@@ -853,7 +782,7 @@ export default function RegisterPage() {
                         Submit Registration
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 ml-1"
+                          className="h-4 w-4 sm:h-5 sm:w-5 ml-1 sm:ml-2"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >

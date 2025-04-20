@@ -112,7 +112,7 @@ export default function ImageUpload({
   }, []);
 
   return (
-    <div className={className}>
+    <div className={`w-full ${className}`}>
       <input
         type="file"
         ref={fileInputRef}
@@ -125,26 +125,27 @@ export default function ImageUpload({
         <div className="relative rounded-md overflow-hidden">
           <Image
             src={previewUrl}
-            alt="Profile preview"
-            className="w-full h-48 object-cover rounded-md"
+            alt="Preview image"
+            className="w-full h-36 sm:h-48 object-cover rounded-md"
             width={300}
             height={192}
-            style={{ width: "100%", height: "12rem" }}
+            style={{ width: "100%", height: "auto", maxHeight: "12rem" }}
           />
           <button
             type="button"
             onClick={removeImage}
-            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-all"
+            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-all shadow-md"
             disabled={isUploading}
+            aria-label="Remove image"
           >
             <XCircle size={20} />
           </button>
 
           {uploadProgress !== null && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 px-3 py-2">
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 backdrop-blur-sm px-3 py-2">
+              <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2.5">
                 <div
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                  className="bg-blue-600 h-1.5 sm:h-2.5 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
@@ -160,34 +161,34 @@ export default function ImageUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-md p-4 text-center cursor-pointer transition-all ${
+          className={`border-2 border-dashed rounded-md p-3 sm:p-4 text-center cursor-pointer transition-all min-h-[100px] sm:min-h-[140px] flex items-center justify-center ${
             isDragging
-              ? "border-blue-500 bg-blue-50"
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
               : error
-                ? "border-red-300 bg-red-50"
-                : "border-gray-300 hover:border-gray-400"
+                ? "border-red-300 bg-red-50 dark:bg-red-900/20"
+                : "border-gray-300 hover:border-gray-400 dark:border-gray-700 dark:hover:border-gray-600"
           }`}
         >
-          <div className="flex flex-col items-center justify-center py-4">
+          <div className="flex flex-col items-center justify-center py-2 sm:py-4">
             {error ? (
               <>
-                <XCircle className="w-10 h-10 text-red-500 mb-2" />
-                <p className="text-sm text-red-500">{error}</p>
-                <p className="text-xs text-gray-500 mt-2">Click to try again</p>
+                <XCircle className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 mb-1 sm:mb-2" />
+                <p className="text-xs sm:text-sm text-red-500">{error}</p>
+                <p className="text-xs text-gray-500 mt-1 sm:mt-2">Click to try again</p>
               </>
             ) : (
               <>
                 {isDragging ? (
-                  <Upload className="w-10 h-10 text-blue-500 mb-2" />
+                  <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 mb-1 sm:mb-2" />
                 ) : (
-                  <ImageIcon className="w-10 h-10 text-gray-400 mb-2" />
+                  <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 dark:text-gray-500 mb-1 sm:mb-2" />
                 )}
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   {isDragging
                     ? "Drop your image here"
                     : "Click to upload or drag and drop"}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-1">
                   Image only (max {maxSizeMB}MB)
                 </p>
               </>
