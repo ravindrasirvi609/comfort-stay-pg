@@ -5,6 +5,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { FaSpinner } from "react-icons/fa";
 
 interface Resident {
   _id: string;
@@ -135,8 +136,8 @@ export default function ResidentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="flex justify-center items-center h-screen">
+        <FaSpinner className="animate-spin text-4xl text-pink-600" />
       </div>
     );
   }

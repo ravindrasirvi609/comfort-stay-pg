@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
+import { FaSpinner } from "react-icons/fa";
 
 interface User {
   _id: string;
@@ -110,11 +111,8 @@ export default function ComplaintsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="relative">
-          <div className="h-24 w-24 rounded-full border-t-4 border-b-4 border-pink-500 animate-spin"></div>
-          <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-4 border-b-4 border-purple-500 animate-spin animate-pulse"></div>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <FaSpinner className="animate-spin text-4xl text-pink-600" />
       </div>
     );
   }

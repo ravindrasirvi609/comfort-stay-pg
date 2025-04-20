@@ -10,6 +10,7 @@ import {
   RiMailSettingsLine,
   RiNotification4Line,
 } from "react-icons/ri";
+import { FaSpinner } from "react-icons/fa";
 
 interface PGDetails {
   name: string;
@@ -264,8 +265,8 @@ export default function SettingsPage() {
 
       {/* Loading State */}
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-pink-500"></div>
+        <div className="flex justify-center items-center h-screen">
+          <FaSpinner className="animate-spin text-4xl text-pink-600" />
         </div>
       ) : (
         <>

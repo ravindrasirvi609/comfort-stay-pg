@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { FaSpinner } from "react-icons/fa";
 
 interface ContactInquiry {
   _id: string;
@@ -150,8 +151,8 @@ export default function ContactInquiries() {
 
       {/* Inquiries list */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+        <div className="flex justify-center items-center h-screen">
+          <FaSpinner className="animate-spin text-4xl text-pink-600" />
         </div>
       ) : inquiries.length === 0 ? (
         <div className="text-center py-10 bg-gray-50 dark:bg-gray-800 rounded-lg">
