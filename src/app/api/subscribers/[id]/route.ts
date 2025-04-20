@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import Subscriber from "@/app/api/models/Subscriber";
-import { connect } from "http2";
 import { connectToDatabase } from "@/app/lib/db";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const id = params.id;
+    const id = (await params).id;
     const body = await request.json();
 
     // Find and update the subscriber
@@ -49,12 +48,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const id = params.id;
+    const id = (await params).id;
 
     // Instead of permanently deleting, mark as inactive
     const subscriber = await Subscriber.findByIdAndUpdate(

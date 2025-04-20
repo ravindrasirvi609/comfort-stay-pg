@@ -4,12 +4,12 @@ import { connectToDatabase } from "@/app/lib/db";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const id = params.id;
+    const id = (await params).id;
     const body = await request.json();
 
     // Find and update the inquiry
@@ -45,12 +45,12 @@ export async function PATCH(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const id = params.id;
+    const id = (await params).id;
 
     // Find the inquiry by ID
     const inquiry = await ContactInquiry.findById(id);
