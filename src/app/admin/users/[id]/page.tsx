@@ -38,7 +38,6 @@ interface UserData {
   name: string;
   email: string;
   phone: string;
-  gender?: string;
   address?: string;
   createdAt: string;
   updatedAt: string;
@@ -298,18 +297,6 @@ export default function UserDetailPage() {
                         </p>
                         <p className="text-base font-medium text-gray-900 dark:text-white">
                           {user.phone || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <User className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Gender
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.gender || "Not specified"}
                         </p>
                       </div>
                     </div>

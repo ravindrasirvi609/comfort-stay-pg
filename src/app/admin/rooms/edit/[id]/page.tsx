@@ -4,22 +4,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter, useParams } from "next/navigation";
 
-// Interface for Room data structure - used for documentation purposes
-// eslint-disable-next-line no-unused-vars
-interface RoomData {
-  _id: string;
-  roomNumber: string;
-  status: string;
-  type: string;
-  price: number;
-  capacity: number;
-  currentOccupancy: number;
-  floor: string;
-  amenities: string[];
-  isActive: boolean;
-  createdAt: string;
-}
-
 export default function EditRoomPage() {
   const router = useRouter();
   const params = useParams();
@@ -31,10 +15,8 @@ export default function EditRoomPage() {
   const [formData, setFormData] = useState({
     roomNumber: "",
     status: "",
-    type: "",
     price: 0,
     capacity: 0,
-    floor: "",
     amenities: "",
     isActive: true,
   });
@@ -51,10 +33,8 @@ export default function EditRoomPage() {
           setFormData({
             roomNumber: room.roomNumber,
             status: room.status,
-            type: room.type,
             price: room.price,
             capacity: room.capacity,
-            floor: room.floor,
             amenities: room.amenities.join(", "),
             isActive: room.isActive,
           });
@@ -207,46 +187,6 @@ export default function EditRoomPage() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/50 dark:bg-gray-800/50"
                   required
                 />
-              </div>
-
-              {/* Floor */}
-              <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Floor
-                </label>
-                <select
-                  name="floor"
-                  value={formData.floor}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/50 dark:bg-gray-800/50"
-                  required
-                >
-                  <option value="">Select Floor</option>
-                  <option value="ground">Ground Floor</option>
-                  <option value="first">First Floor</option>
-                  <option value="second">Second Floor</option>
-                  <option value="third">Third Floor</option>
-                </select>
-              </div>
-
-              {/* Room Type */}
-              <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Room Type
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/50 dark:bg-gray-800/50"
-                  required
-                >
-                  <option value="">Select Type</option>
-                  <option value="single">Single</option>
-                  <option value="double">Double</option>
-                  <option value="triple">Triple</option>
-                  <option value="quad">Quad</option>
-                </select>
               </div>
 
               {/* Room Status */}

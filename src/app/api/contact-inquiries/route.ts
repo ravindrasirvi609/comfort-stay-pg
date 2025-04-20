@@ -39,8 +39,24 @@ export async function POST(request: NextRequest) {
         type: "Contact",
         relatedId: newInquiry._id,
         relatedModel: "ContactInquiry",
+        isRead: false,
+        isActive: true,
       });
     });
+
+    // Also create a notification for the hardcoded admin ID
+    notificationPromises.push(
+      Notification.create({
+        userId: "admin_id_123456789", // Hardcoded admin ID
+        title: "New Contact Inquiry",
+        message: `${name} has submitted a new contact inquiry.`,
+        type: "Contact",
+        relatedId: newInquiry._id,
+        relatedModel: "ContactInquiry",
+        isRead: false,
+        isActive: true,
+      })
+    );
 
     await Promise.all(notificationPromises);
 

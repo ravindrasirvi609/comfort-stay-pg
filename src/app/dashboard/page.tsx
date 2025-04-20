@@ -41,7 +41,6 @@ interface User {
     | null;
   moveInDate: string;
   bedNumber?: number;
-  gender?: string;
   guardianMobileNumber?: string;
   fathersName?: string;
   permanentAddress?: string;
