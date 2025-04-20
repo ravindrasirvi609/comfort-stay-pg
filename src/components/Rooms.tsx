@@ -7,7 +7,7 @@ const rooms = [
   {
     type: "Triple Sharing",
     capacity: "3 Girls",
-    price: "₹9,500/month",
+    price: "₹8,500/month",
     features: [
       "Brand new room (Opened Feb 2025)",
       "Spacious living area",
@@ -22,7 +22,7 @@ const rooms = [
   {
     type: "Twin Sharing",
     capacity: "2 Girls",
-    price: "₹12,000/month",
+    price: "₹9,000/month",
     features: [
       "Brand new room (Opened Feb 2025)",
       "Premium twin beds",
