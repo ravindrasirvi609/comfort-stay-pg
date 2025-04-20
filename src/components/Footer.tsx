@@ -59,27 +59,27 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-b from-transparent to-pink-50/50 dark:from-transparent dark:to-pink-950/20 pt-20">
-      <div className="container mx-auto px-4">
+    <footer className="bg-gradient-to-b from-transparent to-pink-50/50 dark:from-transparent dark:to-pink-950/20 pt-16 sm:pt-20">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Back to top button */}
-        <div className="flex justify-center -mt-12 mb-10">
+        <div className="flex justify-center -mt-10 sm:-mt-12 mb-8 sm:mb-10">
           <button
             onClick={scrollToTop}
-            className="bg-white dark:bg-pink-900/60 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transform hover:translate-y-[-5px] transition-all duration-300 group"
+            className="bg-white dark:bg-pink-900/60 w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg flex items-center justify-center transform hover:translate-y-[-5px] transition-all duration-300 group"
             aria-label="Back to top"
           >
             <ArrowUp
-              size={20}
+              size={18}
               className="text-pink-500 dark:text-pink-300 group-hover:scale-110 transition-transform duration-300"
             />
           </button>
         </div>
 
-        <div className="glass-effect rounded-2xl p-8 md:p-10 mb-6 shadow-soft">
-          <div className="grid md:grid-cols-4 gap-8">
+        <div className="glass-effect rounded-xl sm:rounded-2xl p-5 sm:p-8 md:p-10 mb-5 sm:mb-6 shadow-soft">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* About Section */}
             <div>
-              <h3 className="text-xl font-bold mb-4 text-pink-500 dark:text-pink-300">
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
                 Comfort Stay
               </h3>
               <p className="text-gray-600 dark:text-pink-100/70 mb-4 text-sm leading-relaxed">
@@ -87,34 +87,34 @@ const Footer = () => {
                 comfort, security, and modern amenities in a safe and welcoming
                 environment.
               </p>
-              <div className="flex items-center space-x-4 mt-4">
+              <div className="flex items-center space-x-3 sm:space-x-4 mt-4">
                 <a
                   href="#"
-                  className="w-9 h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
                   aria-label="Facebook"
                 >
                   <Facebook
-                    size={18}
+                    size={16}
                     className="text-pink-500 dark:text-pink-300"
                   />
                 </a>
                 <a
                   href="#"
-                  className="w-9 h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
                   aria-label="Twitter"
                 >
                   <Twitter
-                    size={18}
+                    size={16}
                     className="text-pink-500 dark:text-pink-300"
                   />
                 </a>
                 <a
                   href="#"
-                  className="w-9 h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
                   aria-label="Instagram"
                 >
                   <Instagram
-                    size={18}
+                    size={16}
                     className="text-pink-500 dark:text-pink-300"
                   />
                 </a>
@@ -123,7 +123,7 @@ const Footer = () => {
 
             {/* Quick Links */}
             <div>
-              <h3 className="text-xl font-bold mb-4 text-pink-500 dark:text-pink-300">
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
                 Quick Links
               </h3>
               <ul className="space-y-2">
@@ -149,11 +149,11 @@ const Footer = () => {
             </div>
 
             {/* Contact Info */}
-            <div>
-              <h3 className="text-xl font-bold mb-4 text-pink-500 dark:text-pink-300">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
                 Contact Info
               </h3>
-              <ul className="space-y-4 text-gray-600 dark:text-pink-100/70">
+              <ul className="space-y-3 sm:space-y-4 text-gray-600 dark:text-pink-100/70">
                 <li className="flex items-start gap-3">
                   <MapPin
                     size={18}
@@ -177,18 +177,18 @@ const Footer = () => {
             </div>
 
             {/* Newsletter */}
-            <div>
-              <h3 className="text-xl font-bold mb-4 text-pink-500 dark:text-pink-300">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
                 Subscribe
               </h3>
-              <p className="text-gray-600 dark:text-pink-100/70 mb-4 text-sm">
+              <p className="text-gray-600 dark:text-pink-100/70 mb-3 sm:mb-4 text-sm">
                 Subscribe to our newsletter for updates and special offers.
               </p>
-              <form onSubmit={handleSubscribe} className="flex">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row">
                 <input
                   type="email"
                   placeholder="Your email address"
-                  className="rounded-l-lg py-2 px-3 bg-white dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800/50 focus:outline-none focus:ring-2 focus:ring-pink-300 dark:focus:ring-pink-500 flex-grow text-sm"
+                  className="rounded-lg sm:rounded-r-none py-2 px-3 bg-white dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800/50 focus:outline-none focus:ring-2 focus:ring-pink-300 dark:focus:ring-pink-500 w-full text-sm"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -196,7 +196,7 @@ const Footer = () => {
                 />
                 <button
                   type="submit"
-                  className="btn-primary rounded-l-none text-sm py-2 px-4 flex items-center justify-center min-w-[100px]"
+                  className="btn-primary mt-2 sm:mt-0 sm:rounded-l-none text-sm py-2 px-4 flex items-center justify-center min-w-[100px]"
                   disabled={loading}
                 >
                   {loading ? (
@@ -211,7 +211,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="py-6 text-center text-gray-500 dark:text-pink-100/40 text-xs">
+        <div className="py-5 sm:py-6 text-center text-gray-500 dark:text-pink-100/40 text-xs">
           <p>
             &copy; {currentYear} Comfort Stay PG. All rights reserved. Made with{" "}
             <Heart
