@@ -51,6 +51,13 @@
     .btn:hover {
       background-color: #ff7ea8;
     }
+    .debug-info {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #eee;
+      font-size: 0.8rem;
+      color: #999;
+    }
   </style>
 </head>
 <body>
@@ -60,6 +67,43 @@
     <p>It seems you're not connected to the internet. Please check your connection and try again.</p>
     <p>Comfort Stay PG is best experienced with an internet connection, but we've saved some pages for you to browse offline.</p>
     <a href="/" class="btn">Try Again</a>
+    
+    <div class="debug-info">
+      <p>This is the offline page served by the service worker.</p>
+      <div id="pwa-status"></div>
+    </div>
   </div>
+  
+  <script>
+    // Check service worker status
+    const pwaStatusEl = document.getElementById('pwa-status');
+    
+    if ('serviceWorker' in navigator) {
+      if (navigator.serviceWorker.controller) {
+        pwaStatusEl.innerHTML = 'Service Worker is active.';
+      } else {
+        pwaStatusEl.innerHTML = 'Service Worker is not controlling this page.';
+      }
+      
+      // Check registration
+      navigator.serviceWorker.getRegistration().then(registration => {
+        if (registration) {
+          pwaStatusEl.innerHTML += '<br>Service Worker scope: ' + registration.scope;
+        } else {
+          pwaStatusEl.innerHTML += '<br>No service worker registered.';
+        }
+      });
+    } else {
+      pwaStatusEl.innerHTML = 'Service Workers are not supported in this browser.';
+    }
+    
+    // Listen for online status changes
+    window.addEventListener('online', () => {
+      pwaStatusEl.innerHTML += '<br>Back online! Reloading in 3 seconds...';
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    });
+  </script>
 </body>
 </html> 

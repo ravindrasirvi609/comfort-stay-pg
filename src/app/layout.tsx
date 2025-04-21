@@ -64,7 +64,9 @@ export default function RootLayout({
             <PWAInstallPromptWrapper />
           </div>
         </Providers>
-        <Script src="/sw-register.js" strategy="lazyOnload" />
+
+        {/* PWA Scripts - Use Next.js Script component for proper loading */}
+        <Script src="/pwa.js" strategy="afterInteractive" id="pwa-script" />
       </body>
     </html>
   );

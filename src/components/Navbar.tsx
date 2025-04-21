@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ModeToggle from "./ModeToggle";
 import NotificationSubscription from "./NotificationSubscription";
+import PWAInstallButton from "./PWAInstallButton";
 import useAuth from "../hooks/useAuth";
 import {
   MenuIcon,
@@ -127,6 +128,7 @@ export default function Navbar() {
             <div className="ml-2 flex space-x-1">
               {isAuthenticated ? (
                 <div className="flex items-center gap-1">
+                  <PWAInstallButton />
                   {isPWASupported && <NotificationSubscription />}
                   <Link
                     href={user?.role === "admin" ? "/admin" : "/dashboard"}
@@ -162,6 +164,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <>
+                  <PWAInstallButton />
                   {isPWASupported && <NotificationSubscription />}
                   <Link
                     href="/login"
@@ -188,6 +191,7 @@ export default function Navbar() {
 
           {/* Mobile Navigation Button */}
           <div className="flex md:hidden items-center gap-2">
+            <PWAInstallButton />
             <ModeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}

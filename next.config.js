@@ -9,6 +9,8 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   swcMinify: true,
+  // Enable debug mode to get more logs during build
+  debug: true,
   workboxOptions: {
     disableDevLogs: true,
   }
@@ -39,6 +41,33 @@ const nextConfig = {
         },
       ],
     },
+    // Add specific headers for PWA files
+    {
+      source: "/(sw|pwa|sw-register).js",
+      headers: [
+        {
+          key: "Cache-Control", 
+          value: "public, max-age=3600, must-revalidate"
+        },
+        {
+          key: "Content-Type",
+          value: "application/javascript; charset=utf-8"
+        }
+      ]
+    },
+    {
+      source: "/manifest.json",
+      headers: [
+        {
+          key: "Cache-Control", 
+          value: "public, max-age=3600, must-revalidate"
+        },
+        {
+          key: "Content-Type",
+          value: "application/manifest+json; charset=utf-8"
+        }
+      ]
+    }
   ],
 };
 

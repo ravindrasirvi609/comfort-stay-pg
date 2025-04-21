@@ -123,7 +123,12 @@ export const config = {
      * - favicon.ico (favicon file)
      * - images/ (static images)
      * - api/ (API routes)
+     * - sw.js (service worker)
+     * - pwa.js (PWA registration)
+     * - sw-register.js (service worker registration)
+     * - manifest.json (PWA manifest)
+     * - workbox-*.js (Workbox library files)
      */
-    "/((?!_next/static|_next/image|images/|favicon.ico|api/).*)",
+    "/((?!_next/static|_next/image|images/|favicon.ico|api/|sw.js|pwa.js|sw-register.js|manifest.json|workbox-).*)$",
   ],
 };
