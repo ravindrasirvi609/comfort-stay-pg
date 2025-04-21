@@ -1,74 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, readFile, mkdir } from "fs/promises";
-import path from "path";
-
-// Simple file-based storage for push subscriptions
-const SUBSCRIPTIONS_DIR = path.join(process.cwd(), "data");
-const SUBSCRIPTIONS_FILE = path.join(SUBSCRIPTIONS_DIR, "subscriptions.json");
-
-async function saveSubscription(subscription: any) {
-  try {
-    // Create directory if it doesn't exist
-    await mkdir(SUBSCRIPTIONS_DIR, { recursive: true });
-
-    // Read existing subscriptions or create empty array
-    let subscriptions = [];
-    try {
-      const data = await readFile(SUBSCRIPTIONS_FILE, "utf8");
-      subscriptions = JSON.parse(data);
-    } catch (err) {
-      // File doesn't exist yet, that's ok
-    }
-
-    // Check if this subscription already exists
-    const exists = subscriptions.some(
-      (sub: any) => sub.endpoint === subscription.endpoint
-    );
-
-    if (!exists) {
-      // Add with timestamp
-      subscriptions.push({
-        ...subscription,
-        createdAt: new Date().toISOString(),
-      });
-
-      // Save back to file
-      await writeFile(
-        SUBSCRIPTIONS_FILE,
-        JSON.stringify(subscriptions, null, 2)
-      );
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error saving subscription:", error);
-    return false;
-  }
-}
+import { connectToDatabase } from "@/app/lib/db";
+import PushSubscription from "@/app/api/models/PushSubscription";
 
 export async function POST(request: NextRequest) {
-  try {
-    const { subscription } = await request.json();
+  console.log("Subscribe API called");
 
-    if (!subscription) {
+  try {
+    const { subscription, segment } = await request.json();
+
+    if (!subscription || !subscription.endpoint) {
       return NextResponse.json(
-        { error: "Subscription data is required" },
+        { error: "Valid subscription object is required" },
         { status: 400 }
       );
     }
 
-    const success = await saveSubscription(subscription);
+    console.log("Received subscription:", subscription.endpoint);
 
-    if (success) {
-      return NextResponse.json({ success: true });
-    } else {
-      return NextResponse.json(
-        { error: "Failed to save subscription" },
-        { status: 500 }
-      );
+    // Connect to the database
+    await connectToDatabase();
+
+    // Check if this subscription already exists
+    const existingSubscription = await PushSubscription.findOne({
+      endpoint: subscription.endpoint,
+    });
+
+    if (existingSubscription) {
+      console.log("Subscription already exists, updating...");
+
+      // Update the existing subscription with any new data
+      existingSubscription.keys = subscription.keys;
+      if (segment) existingSubscription.segment = segment;
+      if (subscription.expirationTime)
+        existingSubscription.expirationTime = subscription.expirationTime;
+
+      await existingSubscription.save();
+
+      return NextResponse.json({
+        success: true,
+        message: "Subscription updated successfully",
+        isNew: false,
+      });
     }
-  } catch (error) {
+
+    // Create new subscription
+    const newSubscription = new PushSubscription({
+      endpoint: subscription.endpoint,
+      expirationTime: subscription.expirationTime || null,
+      keys: subscription.keys,
+      segment: segment || "default",
+      userAgent: request.headers.get("user-agent") || undefined,
+    });
+
+    // Save to database
+    await newSubscription.save();
+    console.log("New subscription saved to database");
+
+    // Show a confirmation notification if possible
+    return NextResponse.json({
+      success: true,
+      message: "Subscription added successfully",
+      isNew: true,
+    });
+  } catch (error: any) {
     console.error("Subscription error:", error);
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      return NextResponse.json({
+        success: true,
+        message: "Subscription already exists",
+        isNew: false,
+      });
+    }
+
+    return NextResponse.json(
+      { error: `Subscription error: ${error.message}` },
+      { status: 500 }
+    );
   }
 }

@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import path from "path";
+import { connectToDatabase } from "@/app/lib/db";
+import PushSubscription from "@/app/api/models/PushSubscription";
 import webpush from "web-push";
 
-// Simple file-based storage for push subscriptions
-const SUBSCRIPTIONS_FILE = path.join(
-  process.cwd(),
-  "data",
-  "subscriptions.json"
-);
-
 // Configure web-push with your VAPID keys
-// You'll need to generate these keys and store them in your environment variables
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY || "";
 
@@ -25,34 +17,13 @@ if (!publicVapidKey || !privateVapidKey) {
   );
 }
 
-async function getSubscriptions(segment?: string) {
-  try {
-    // Read existing subscriptions
-    let subscriptions = [];
-    try {
-      const data = await readFile(SUBSCRIPTIONS_FILE, "utf8");
-      subscriptions = JSON.parse(data);
-    } catch (err) {
-      // File doesn't exist, return empty array
-      return [];
-    }
-
-    // Filter by segment if provided
-    if (segment) {
-      return subscriptions.filter((sub: any) => sub.segment === segment);
-    }
-
-    return subscriptions;
-  } catch (error) {
-    console.error("Error getting subscriptions:", error);
-    throw error;
-  }
-}
-
 export async function POST(request: NextRequest) {
+  console.log("Notification send API called");
+
   // This endpoint should be protected by authentication in a real app
   try {
     const { title, body, url, segment } = await request.json();
+    console.log("Notification payload:", { title, body, url, segment });
 
     if (!title || !body) {
       return NextResponse.json(
@@ -61,35 +32,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get subscriptions
-    const subscriptions = await getSubscriptions(segment);
+    // Connect to the database
+    await connectToDatabase();
+
+    // Build query for subscriptions
+    const query = segment ? { segment } : {};
+
+    // Get subscriptions from database
+    const subscriptions = await PushSubscription.find(query);
+    console.log(`Found ${subscriptions.length} subscriptions`);
 
     if (!subscriptions.length) {
+      console.log("No subscriptions found");
+
       return NextResponse.json(
-        { message: "No subscriptions found" },
-        { status: 404 }
+        {
+          warning:
+            "No active subscriptions found. Please ensure users have enabled notifications.",
+          testMode: true,
+        },
+        { status: 200 }
       );
     }
 
     // Send notifications to all matching subscriptions
     const results = await Promise.allSettled(
-      subscriptions.map(async (sub: any) => {
+      subscriptions.map(async (subscription) => {
         try {
           const payload = JSON.stringify({
             title,
             body,
             url,
-            // You can add additional data here
             timestamp: new Date().toISOString(),
           });
 
-          await webpush.sendNotification(sub, payload);
-          return { success: true, endpoint: sub.endpoint };
+          await webpush.sendNotification(subscription, payload);
+          return {
+            success: true,
+            endpoint: subscription.endpoint,
+          };
         } catch (error: any) {
+          // Check for subscription expiration or invalid subscription
+          if (error.statusCode === 404 || error.statusCode === 410) {
+            // Remove expired subscription
+            console.log(
+              `Removing invalid subscription: ${subscription.endpoint}`
+            );
+            await PushSubscription.deleteOne({ _id: subscription._id });
+          }
+
           return {
             success: false,
-            endpoint: sub.endpoint,
+            endpoint: subscription.endpoint,
             error: error.message,
+            statusCode: error.statusCode,
           };
         }
       })
@@ -103,12 +99,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: `Sent ${succeeded} notifications, ${failed} failed`,
-      results,
+      results: results.map((r) =>
+        r.status === "fulfilled" ? r.value : r.reason
+      ),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending notifications:", error);
     return NextResponse.json(
-      { error: "Failed to send notifications" },
+      { error: "Failed to send notifications: " + error.message },
       { status: 500 }
     );
   }
