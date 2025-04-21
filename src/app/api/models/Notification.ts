@@ -29,6 +29,7 @@ const NotificationSchema = new Schema<INotification>(
         "Email",
         "Other",
         "NoticePeriod",
+        "Notice",
       ],
       default: "System",
     },
@@ -40,7 +41,14 @@ const NotificationSchema = new Schema<INotification>(
     },
     relatedModel: {
       type: String,
-      enum: ["Payment", "Complaint", "RoomChangeRequest", "User", "Room"],
+      enum: [
+        "Payment",
+        "Complaint",
+        "RoomChangeRequest",
+        "User",
+        "Room",
+        "Notice",
+      ],
     },
 
     // Status tracking

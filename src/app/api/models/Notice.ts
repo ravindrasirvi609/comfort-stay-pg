@@ -14,7 +14,7 @@ const NoticeSchema = new Schema({
     default: Date.now,
   },
   createdBy: {
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.Mixed,
     ref: "User",
     required: true,
   },

@@ -154,14 +154,23 @@ export interface INotification {
   userId: Schema.Types.ObjectId | IUser;
   title: string;
   message: string;
-  type: "Payment" | "Complaint" | "RoomChange" | "System" | "Email" | "Other";
+  type:
+    | "Payment"
+    | "Complaint"
+    | "RoomChange"
+    | "System"
+    | "Email"
+    | "Other"
+    | "NoticePeriod"
+    | "Notice";
   relatedId?: Schema.Types.ObjectId;
   relatedModel?:
     | "Payment"
     | "Complaint"
     | "RoomChangeRequest"
     | "User"
-    | "Room";
+    | "Room"
+    | "Notice";
   isRead: boolean;
   isEmailSent: boolean;
   emailDetails?: {

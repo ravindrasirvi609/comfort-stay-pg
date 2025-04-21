@@ -1,10 +1,12 @@
 import React from "react";
-import { FaCalendarTimes } from "react-icons/fa";
+import { FaCalendarTimes, FaBell } from "react-icons/fa";
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
     case "NoticePeriod":
       return <FaCalendarTimes className="h-5 w-5 text-orange-500" />;
+    case "Notice":
+      return <FaBell className="h-5 w-5 text-blue-500" />;
     default:
       return null;
   }

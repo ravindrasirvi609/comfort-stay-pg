@@ -853,6 +853,21 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </Link>
+
+            <Link
+              href="/admin/notices"
+              className="flex items-center p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-700 dark:text-blue-300"
+            >
+              <div className="h-10 w-10 flex items-center justify-center bg-blue-200 dark:bg-blue-800 rounded-full mr-3">
+                <FiBell className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+              </div>
+              <div>
+                <h3 className="font-medium">Manage Notices</h3>
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Create & manage announcements
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
