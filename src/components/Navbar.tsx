@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import ModeToggle from "./ModeToggle";
 import NotificationSubscription from "./NotificationSubscription";
 import PWAInstallButton from "./PWAInstallButton";
 import useAuth from "../hooks/useAuth";
@@ -18,7 +17,6 @@ import {
   Contact,
   Sparkles,
   LogIn,
-  PhoneCall,
   UserPlus,
   LogOut,
   User,
@@ -192,7 +190,6 @@ export default function Navbar() {
           {/* Mobile Navigation Button */}
           <div className="flex md:hidden items-center gap-2">
             <PWAInstallButton />
-            <ModeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-pink-100 dark:hover:bg-pink-900/20 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500"
@@ -290,18 +287,6 @@ export default function Navbar() {
                   >
                     <UserPlus className="w-4 h-4" />
                     Register
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className={`px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center justify-center gap-2 ${
-                      pathname === "/contact"
-                        ? "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-400 border border-gray-200 dark:border-gray-700"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <PhoneCall className="w-4 h-4 opacity-70" />
-                    Contact
                   </Link>
                 </>
               )}
