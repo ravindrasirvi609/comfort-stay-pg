@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import Script from "next/script";
+import PWAInstallPromptWrapper from "@/components/PWAInstallPromptWrapper";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -24,6 +26,7 @@ export const metadata: Metadata = {
     locale: "en_IN",
   },
   authors: [{ name: "Comfort Stay PG" }],
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
@@ -41,6 +44,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Comfort Stay PG" />
+      </head>
       <body className={poppins.className}>
         <Providers>
           <div className="min-h-screen bg-gradient-to-br from-[#fff5f8] via-[#fff8fb] to-[#fff2f6] dark:from-[#472e3e] dark:via-[#422937] dark:to-[#3e2534] overflow-x-hidden">
@@ -52,8 +61,10 @@ export default function RootLayout({
             <Navbar />
             <main className="container mx-auto px-4 py-8">{children}</main>
             <Footer />
+            <PWAInstallPromptWrapper />
           </div>
         </Providers>
+        <Script src="/sw-register.js" strategy="lazyOnload" />
       </body>
     </html>
   );
