@@ -8,7 +8,13 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-export default function PWAInstallButton() {
+interface PWAInstallButtonProps {
+  className?: string;
+}
+
+export default function PWAInstallButton({
+  className = "",
+}: PWAInstallButtonProps) {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -101,10 +107,13 @@ export default function PWAInstallButton() {
       <button
         onClick={handleInstallClick}
         disabled={isLoading && !isIOS}
-        className="flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition disabled:opacity-50"
+        className={`flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition disabled:opacity-50 ${className}`}
       >
         <Download size={16} />
-        <span>{isIOS ? "Install App" : "Download App"}</span>
+        <span className="hidden sm:inline">
+          {isIOS ? "Install App" : "Download App"}
+        </span>
+        <span className="sm:hidden">App</span>
       </button>
 
       {/* iOS Installation Instructions */}

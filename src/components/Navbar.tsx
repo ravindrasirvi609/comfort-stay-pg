@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import NotificationSubscription from "./NotificationSubscription";
-import PWAInstallButton from "./PWAInstallButton";
 import useAuth from "../hooks/useAuth";
 import {
   MenuIcon,
@@ -50,7 +48,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
-  const [isPWASupported, setIsPWASupported] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,15 +60,6 @@ export default function Navbar() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    // Check if push notifications are supported in browser and service worker is registered
-    setIsPWASupported(
-      "serviceWorker" in navigator &&
-        "PushManager" in window &&
-        "Notification" in window
-    );
   }, []);
 
   const handleLogout = async (e: React.MouseEvent) => {
@@ -126,8 +114,6 @@ export default function Navbar() {
             <div className="ml-2 flex space-x-1">
               {isAuthenticated ? (
                 <div className="flex items-center gap-1">
-                  <PWAInstallButton />
-                  {isPWASupported && <NotificationSubscription />}
                   <Link
                     href={user?.role === "admin" ? "/admin" : "/dashboard"}
                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-pink-50/50 dark:bg-pink-900/20 hover:bg-pink-100/80 dark:hover:bg-pink-800/30"
@@ -162,8 +148,6 @@ export default function Navbar() {
                 </div>
               ) : (
                 <>
-                  <PWAInstallButton />
-                  {isPWASupported && <NotificationSubscription />}
                   <Link
                     href="/login"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
@@ -189,7 +173,6 @@ export default function Navbar() {
 
           {/* Mobile Navigation Button */}
           <div className="flex md:hidden items-center gap-2">
-            <PWAInstallButton />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-pink-100 dark:hover:bg-pink-900/20 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500"
@@ -209,13 +192,6 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900 border-t dark:border-gray-800 shadow-lg">
-            {/* Show notification subscription button in mobile menu */}
-            {isPWASupported && (
-              <div className="p-2 flex justify-center">
-                <NotificationSubscription />
-              </div>
-            )}
-
             {navLinks.map((link) => (
               <Link
                 key={link.href}

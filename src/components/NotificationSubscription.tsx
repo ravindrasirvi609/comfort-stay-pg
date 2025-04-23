@@ -6,7 +6,13 @@ import { toast } from "react-hot-toast";
 
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
 
-export default function NotificationSubscription() {
+interface NotificationSubscriptionProps {
+  className?: string;
+}
+
+export default function NotificationSubscription({
+  className = "",
+}: NotificationSubscriptionProps) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -229,7 +235,7 @@ export default function NotificationSubscription() {
     <button
       onClick={handleToggleSubscription}
       disabled={isLoading}
-      className="flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition disabled:opacity-50"
+      className={`flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition disabled:opacity-50 ${className}`}
       title={isSubscribed ? "Disable notifications" : "Enable notifications"}
     >
       {isLoading ? (
@@ -238,11 +244,13 @@ export default function NotificationSubscription() {
         <>
           <BellOff size={16} />
           <span className="hidden sm:inline">Disable Notifications</span>
+          <span className="sm:hidden">Notifications Off</span>
         </>
       ) : (
         <>
           <Bell size={16} />
           <span className="hidden sm:inline">Enable Notifications</span>
+          <span className="sm:hidden">Notifications</span>
         </>
       )}
     </button>
