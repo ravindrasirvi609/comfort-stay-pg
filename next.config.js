@@ -11,6 +11,10 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   swcMinify: true,
   // Enable debug mode to get more logs during build
   debug: true,
+  // Add custom service worker for push notifications
+  sw: '/sw.js',
+  // Important: Import custom handlers for push notifications
+  importScripts: ['/sw-custom.js'],
   workboxOptions: {
     disableDevLogs: true,
   }

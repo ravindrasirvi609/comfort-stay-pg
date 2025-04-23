@@ -118,12 +118,53 @@ export default function NotificationSubscription() {
         setIsSubscribed(true);
         toast.success("Notifications enabled successfully!");
 
-        // Show a confirmation notification
-        registration.showNotification("Notifications Enabled", {
-          body: "You will now receive notifications from Comfort Stay PG",
-          icon: "/icons/icon-192x192.png",
-          badge: "/icons/maskable-icon.png",
-        });
+        // Show an immediate test notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          // First try a direct notification
+          try {
+            new Notification("Notifications Enabled", {
+              body: "You will now receive notifications from Comfort Stay PG",
+              icon: "/icons/icon-192x192.png",
+              badge: "/icons/maskable-icon.png",
+            });
+            console.log("Direct notification shown");
+          } catch (error) {
+            console.error("Direct notification failed:", error);
+          }
+
+          // Also try a service worker notification
+          try {
+            registration.showNotification("Notifications Enabled", {
+              body: "You will now receive notifications from Comfort Stay PG",
+              icon: "/icons/icon-192x192.png",
+              badge: "/icons/maskable-icon.png",
+            });
+            console.log("Service worker notification shown");
+          } catch (error) {
+            console.error("Service worker notification failed:", error);
+          }
+        }
+
+        // Send test push notification from the server
+        try {
+          const testResponse = await fetch("/api/notifications/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: "Test Notification",
+              body: "This is a test push notification",
+              url: "/",
+            }),
+          });
+          console.log(
+            "Server test notification result:",
+            await testResponse.json()
+          );
+        } catch (testError) {
+          console.error("Failed to send test notification:", testError);
+        }
       } catch (subscribeError) {
         console.error("Subscription error:", subscribeError);
         toast.error("Could not subscribe to notifications. Please try again.");
