@@ -12,29 +12,79 @@ const poppins = Poppins({
   subsets: ["latin"],
 });
 
+// Define metadataBase for correct URL resolving
+const siteUrl = "https://comfortstaypg.com";
+
 export const metadata: Metadata = {
-  title: "Comfort Stay PG - Premium Girls PG Accommodation in Hinjawadi, Pune",
+  // Add metadataBase
+  metadataBase: new URL(siteUrl),
+  title: {
+    default:
+      "Comfort Stay PG - Premium Girls PG Accommodation in Hinjawadi, Pune",
+    template: "%s | Comfort Stay PG", // Allows page titles to be dynamic like "About Us | Comfort Stay PG"
+  },
   description:
-    "Experience comfortable living at Comfort Stay PG, a premium girls' PG accommodation located in Hinjawadi Phase 1, Pune. Modern amenities, high-speed WiFi, and 24/7 security.",
-  keywords:
-    "Girls PG in Hinjawadi, PG in Pune, Comfort Stay PG, Girls Accommodation, Ladies PG, Women's Hostel, Hinjewadi Phase 1, Female PG, Working Women Accommodation",
+    "Experience comfortable and secure living at Comfort Stay PG, a premium girls' PG accommodation located in Hinjawadi Phase 1, Pune. Offering modern amenities, high-speed WiFi, healthy meals, and 24/7 security.", // Slightly refined description
+  keywords: [
+    // Using an array is slightly cleaner
+    "Girls PG in Hinjawadi",
+    "PG in Pune",
+    "Comfort Stay PG",
+    "Girls Accommodation",
+    "Ladies PG",
+    "Women's Hostel",
+    "Hinjewadi Phase 1",
+    "Female PG",
+    "Working Women Accommodation",
+    "Student Accommodation Pune",
+  ], // Added a relevant keyword
   openGraph: {
-    title: "Comfort Stay PG - Premium Girls PG Accommodation",
+    title: "Comfort Stay PG - Premium Girls PG in Hinjawadi, Pune", // Slightly more concise
     description:
-      "Experience comfortable living at Comfort Stay PG, located in Hinjawadi Phase 1, Pune.",
+      "Comfortable & secure girls' PG in Hinjawadi Phase 1, Pune with modern amenities.", // More concise
+    url: siteUrl, // Add the site URL
+    siteName: "Comfort Stay PG", // Add site name
+    // Add image - REMEMBER TO CREATE /public/og-image.png (1200x630 recommended)
+    images: [
+      {
+        url: "/og-image.png", // Path relative to /public folder
+        width: 1200,
+        height: 630,
+        alt: "Comfort Stay PG Hinjawadi Pune",
+      },
+    ],
     type: "website",
     locale: "en_IN",
   },
-  authors: [{ name: "Comfort Stay PG" }],
+  // Add Twitter specific tags for better card display
+  twitter: {
+    card: "summary_large_image",
+    title: "Comfort Stay PG - Premium Girls PG in Hinjawadi, Pune",
+    description:
+      "Comfortable & secure girls' PG in Hinjawadi Phase 1, Pune with modern amenities.",
+    // Use the same image as openGraph
+    images: ["/og-image.png"],
+  },
+  authors: [{ name: "Comfort Stay PG", url: siteUrl }], // Add URL to author if desired
   manifest: "/manifest.json",
+  // Add icons for favicon etc. (Ensure these files exist in /public)
+  icons: {
+    icon: "/favicon.ico", // Standard favicon
+    shortcut: "/favicon-16x16.png", // Example sizes
+    apple: "/apple-touch-icon.png", // Apple touch icon
+    // other: { // Example for other icons if needed
+    //   rel: 'other-icon',
+    //   url: '/other-icon.png',
+    // },
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: "#FF92B7",
+  maximumScale: 1, // Often good to allow scaling, consider changing userScalable
+  userScalable: false, // Maybe set to true for accessibility? Test usability.
+  themeColor: "#FF92B7", // Your brand color
 };
 
 export default function RootLayout({
@@ -44,11 +94,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      {/* <head> section is generally managed by Next.js metadata API,
+          custom tags like PWA links might still be needed here if not covered by manifest */}
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Comfort Stay PG" />
+        {/* If manifest.json handles icons, these might be redundant */}
+        {/* <link rel="apple-touch-icon" href="/icons/icon-192x192.png" /> */}
+        {/* <meta name="apple-mobile-web-app-capable" content="yes" /> */}
+        {/* <meta name="apple-mobile-web-app-status-bar-style" content="default" /> */}
+        {/* <meta name="apple-mobile-web-app-title" content="Comfort Stay PG" /> */}
       </head>
       <body className={poppins.className}>
         <Providers>
@@ -64,8 +117,6 @@ export default function RootLayout({
             <PWAInstallPromptWrapper />
           </div>
         </Providers>
-
-        {/* PWA Scripts - Use Next.js Script component for proper loading */}
         <Script src="/pwa.js" strategy="afterInteractive" id="pwa-script" />
       </body>
     </html>
