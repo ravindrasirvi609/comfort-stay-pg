@@ -595,6 +595,76 @@ export default function RegisterPage() {
               {/* Step 2: Identity Verification */}
               {currentStep === 2 && (
                 <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                        <label
+                          htmlFor="validIdType"
+                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                        >
+                          Valid ID Type *
+                        </label>
+                        <select
+                          id="validIdType"
+                          name="validIdType"
+                          required
+                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white focus:outline-none focus:ring-0 sm:text-sm"
+                          value={formData.validIdType}
+                          onChange={handleChange}
+                        >
+                          {validIdTypes.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                        <label
+                          htmlFor="companyName"
+                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                        >
+                          Company Name
+                        </label>
+                        <input
+                          id="companyName"
+                          name="companyName"
+                          type="text"
+                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                          placeholder="Enter your company name (if applicable)"
+                          value={formData.companyName}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="relative group md:col-span-2">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                        <label
+                          htmlFor="companyAddress"
+                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                        >
+                          Company Address
+                        </label>
+                        <textarea
+                          id="companyAddress"
+                          name="companyAddress"
+                          rows={2}
+                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                          placeholder="Enter your company address (if applicable)"
+                          value={formData.companyAddress}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
