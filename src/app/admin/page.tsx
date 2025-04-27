@@ -164,7 +164,7 @@ export default function AdminDashboard() {
         paymentsResponse,
         complaintsResponse,
       ] = await Promise.all([
-        axios.get("/api/users"),
+        axios.get("/api/users?onlyActiveConfirmed=true"),
         axios.get("/api/rooms"),
         axios.get("/api/payments"),
         axios.get("/api/complaints"),
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
       }
 
       // Calculate dashboard stats
-      const activeUsers = users.filter((u: User) => u.isActive).length;
+      const totalUsers = users.length; // Active and confirmed users count
       const occupiedRoomsCount = rooms.filter(
         (r: Room) => r.status === "occupied"
       ).length;
@@ -274,7 +274,7 @@ export default function AdminDashboard() {
       );
 
       setStats({
-        totalUsers: activeUsers,
+        totalUsers: totalUsers,
         totalRooms: rooms.length,
         occupiedRooms: occupiedRoomsCount,
         availableRooms: availableRoomsCount,
@@ -487,7 +487,7 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Total Users
+                  Active Confirmed Users
                 </p>
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
                   {stats.totalUsers}

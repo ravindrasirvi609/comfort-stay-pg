@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import NotificationSubscription from "./NotificationSubscription";
-import PWAInstallButton from "./PWAInstallButton";
 import {
   Facebook,
   Twitter,
@@ -22,7 +20,6 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isPWASupported, setIsPWASupported] = useState(false);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -30,15 +27,6 @@ const Footer = () => {
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    // Check if push notifications are supported in browser and service worker is registered
-    setIsPWASupported(
-      "serviceWorker" in navigator &&
-        "PushManager" in window &&
-        "Notification" in window
-    );
-  }, []);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,14 +213,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* PWA and Notification buttons */}
-        {isPWASupported && (
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-5">
-            <PWAInstallButton className="text-xs sm:text-sm py-1.5 px-3" />
-            <NotificationSubscription className="text-xs sm:text-sm py-1.5 px-3" />
-          </div>
-        )}
-
         {/* Copyright */}
         <div className="py-5 sm:py-6 text-center text-gray-500 dark:text-pink-100/40 text-xs">
           <p>
@@ -249,9 +229,9 @@ const Footer = () => {
               href="https://ravindrachoudhary.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-pink-500 hover:text-pink-600 dark:text-pink-300 dark:hover:text-pink-200 transition-colors"
+              className="underline hover:text-pink-500 dark:hover:text-pink-300 transition-colors"
             >
-              Ravindra Sirvi
+              Ravindra Choudhary
             </a>
           </p>
         </div>

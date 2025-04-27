@@ -4,8 +4,6 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
-import Script from "next/script";
-import PWAInstallPromptWrapper from "@/components/PWAInstallPromptWrapper";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -66,8 +64,6 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   authors: [{ name: "Comfort Stay PG", url: siteUrl }], // Add URL to author if desired
-  manifest: "/manifest.json",
-  // Add icons for favicon etc. (Ensure these files exist in /public)
   icons: {
     icon: "/favicon.ico", // Standard favicon
     shortcut: "/favicon-16x16.png", // Example sizes
@@ -114,10 +110,8 @@ export default function RootLayout({
             <Navbar />
             <main className="container mx-auto px-4 py-8">{children}</main>
             <Footer />
-            <PWAInstallPromptWrapper />
           </div>
         </Providers>
-        <Script src="/pwa.js" strategy="afterInteractive" id="pwa-script" />
       </body>
     </html>
   );

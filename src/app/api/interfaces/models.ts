@@ -227,19 +227,3 @@ export interface ISubscriber {
   createdAt?: Date;
   updatedAt?: Date;
 }
-
-/**
- * Push Subscription interface
- */
-export interface IPushSubscription {
-  endpoint: string;
-  expirationTime: number | null;
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
-  userAgent?: string;
-  segment?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}

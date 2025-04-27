@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const isOnNoticePeriod = searchParams.get("isOnNoticePeriod");
+    const onlyActiveConfirmed = searchParams.get("onlyActiveConfirmed");
 
     // Build the query
     let query: any = { isDeleted: { $ne: true } };
@@ -38,6 +39,12 @@ export async function GET(request: NextRequest) {
     // Add notice period filter if provided
     if (isOnNoticePeriod === "true") {
       query.isOnNoticePeriod = true;
+    }
+
+    // Filter active and confirmed users if requested
+    if (onlyActiveConfirmed === "true") {
+      query.isActive = true;
+      query.registrationStatus = "Approved";
     }
 
     // Fetch users
