@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -110,6 +112,8 @@ export default function RootLayout({
             <Navbar />
             <main className="container mx-auto px-4 py-8">{children}</main>
             <Footer />
+            <Analytics />
+            <SpeedInsights />
           </div>
         </Providers>
       </body>
