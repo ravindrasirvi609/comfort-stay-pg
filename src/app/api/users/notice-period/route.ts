@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate minimum date - 30 days for new notice, 10 days for extending existing notice
+    // Calculate minimum date - 20 days for new notice, 10 days for extending existing notice
     const today = new Date();
     const minimumDate = new Date(today);
 
@@ -97,18 +97,18 @@ export async function POST(request: NextRequest) {
       // If already on notice period, only need 10 days minimum notice
       minimumDate.setDate(today.getDate() + 10);
     } else {
-      // First time notice period needs 30 days minimum notice
-      minimumDate.setDate(today.getDate() + 30);
+      // First time notice period needs 20 days minimum notice
+      minimumDate.setDate(today.getDate() + 1); // Changed from 30 days to 1 day (next day)
     }
 
     const selectedDate = new Date(lastStayingDate);
 
     if (selectedDate < minimumDate) {
-      const daysRequired = currentUser.isOnNoticePeriod ? 10 : 30;
+      const daysRequired = currentUser.isOnNoticePeriod ? 10 : 1; // Changed from 30 to 1
       return NextResponse.json(
         {
           success: false,
-          message: `Last staying date must be at least ${daysRequired} days from today`,
+          message: `Last staying date must be at least ${daysRequired} day from today`,
         },
         { status: 400 }
       );

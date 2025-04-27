@@ -111,6 +111,11 @@ export default function UserProfilePage() {
     useState(false);
   const [lastStayingDate, setLastStayingDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [noticePeriodError, setNoticePeriodError] = useState("");
+  const [noticePeriodSuccess, setNoticePeriodSuccess] = useState("");
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
+  const [withdrawSuccess, setWithdrawSuccess] = useState("");
 
   useEffect(() => {
     // Fetch dashboard data
@@ -186,8 +191,12 @@ export default function UserProfilePage() {
   const handleNoticePeriodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Reset messages
+    setNoticePeriodError("");
+    setNoticePeriodSuccess("");
+
     if (!lastStayingDate) {
-      alert("Please select your last staying date");
+      setNoticePeriodError("Please select your last staying date");
       return;
     }
 
@@ -204,17 +213,28 @@ export default function UserProfilePage() {
           isOnNoticePeriod: true,
           lastStayingDate: lastStayingDate,
         });
-        setIsNoticePeriodDialogOpen(false);
-        alert("Your notice period has been submitted successfully");
+        setNoticePeriodSuccess(
+          response.data.message ||
+            "Your notice period has been submitted successfully"
+        );
+        // Close dialog after 2 seconds
+        setTimeout(() => {
+          setIsNoticePeriodDialogOpen(false);
+          setNoticePeriodSuccess("");
+        }, 2000);
       } else {
-        alert(response.data.message || "Failed to submit notice period");
+        setNoticePeriodError(
+          response.data.message || "Failed to submit notice period"
+        );
       }
     } catch (error: unknown) {
       console.error("Error submitting notice period:", error);
       if (axios.isAxiosError(error) && error.response) {
-        alert(error.response.data?.message || "Failed to submit notice period");
+        setNoticePeriodError(
+          error.response.data?.message || "Failed to submit notice period"
+        );
       } else {
-        alert("Failed to submit notice period");
+        setNoticePeriodError("Failed to submit notice period");
       }
     } finally {
       setIsSubmitting(false);
@@ -222,13 +242,9 @@ export default function UserProfilePage() {
   };
 
   const handleWithdrawNoticePeriod = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to withdraw your notice period? This will cancel your move-out process."
-      )
-    ) {
-      return;
-    }
+    // Reset messages
+    setWithdrawError("");
+    setWithdrawSuccess("");
 
     try {
       setIsSubmitting(true);
@@ -243,18 +259,28 @@ export default function UserProfilePage() {
           isOnNoticePeriod: false,
           lastStayingDate: undefined,
         });
-        alert("Your notice period has been withdrawn successfully");
+        setWithdrawSuccess(
+          response.data.message ||
+            "Your notice period has been withdrawn successfully"
+        );
+        // Close dialog after 2 seconds
+        setTimeout(() => {
+          setIsWithdrawDialogOpen(false);
+          setWithdrawSuccess("");
+        }, 2000);
       } else {
-        alert(response.data.message || "Failed to withdraw notice period");
+        setWithdrawError(
+          response.data.message || "Failed to withdraw notice period"
+        );
       }
     } catch (error: unknown) {
       console.error("Error withdrawing notice period:", error);
       if (axios.isAxiosError(error) && error.response) {
-        alert(
+        setWithdrawError(
           error.response.data?.message || "Failed to withdraw notice period"
         );
       } else {
-        alert("Failed to withdraw notice period");
+        setWithdrawError("Failed to withdraw notice period");
       }
     } finally {
       setIsSubmitting(false);
@@ -383,6 +409,15 @@ export default function UserProfilePage() {
                 >
                   <FaSignOutAlt className="mr-2" />
                   Submit Notice
+                </button>
+              )}
+              {user?.isOnNoticePeriod && (
+                <button
+                  onClick={() => setIsWithdrawDialogOpen(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  <FaCalendarAlt className="mr-2" />
+                  Withdraw Notice
                 </button>
               )}
             </div>
@@ -959,8 +994,20 @@ export default function UserProfilePage() {
                   Note: According to the PG policy, you need to provide
                   {user?.isOnNoticePeriod
                     ? " at least 5 days notice to change your last staying date."
-                    : " at least 30 days notice before leaving."}
+                    : " at least 20 days notice before leaving."}
                 </p>
+
+                {noticePeriodError && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                    {noticePeriodError}
+                  </div>
+                )}
+
+                {noticePeriodSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                    {noticePeriodSuccess}
+                  </div>
+                )}
 
                 <form onSubmit={handleNoticePeriodSubmit}>
                   <div className="mb-4">
@@ -1017,6 +1064,111 @@ export default function UserProfilePage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Withdraw Notice Period Dialog */}
+      {isWithdrawDialogOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black opacity-50"
+              onClick={() => setIsWithdrawDialogOpen(false)}
+            ></div>
+
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full p-6 overflow-hidden">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Withdraw Notice Period
+                </h3>
+                <button
+                  onClick={() => setIsWithdrawDialogOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                {withdrawError && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                    {withdrawError}
+                  </div>
+                )}
+
+                {withdrawSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                    {withdrawSuccess}
+                  </div>
+                )}
+
+                {!withdrawSuccess && (
+                  <>
+                    <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/30 rounded-lg">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-yellow-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                            Are you sure?
+                          </h3>
+                          <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                            <p>
+                              Withdrawing your notice period will cancel your
+                              move-out process. You will continue to be a
+                              resident without interruption.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 mt-6">
+                      <button
+                        type="button"
+                        onClick={() => setIsWithdrawDialogOpen(false)}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleWithdrawNoticePeriod}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Processing..." : "Confirm Withdrawal"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

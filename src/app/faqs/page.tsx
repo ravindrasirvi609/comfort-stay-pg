@@ -231,10 +231,10 @@ export default function FAQsPage() {
                 hours.
               </p>
               <a
-                href="mailto:info@comfortstay.in"
+                href="mailto:info@comfortstay.com"
                 className="text-lg font-medium text-pink-600 dark:text-pink-400 hover:underline"
               >
-                info@comfortstay.in
+                info@comfortstay.com
               </a>
             </div>
           </div>

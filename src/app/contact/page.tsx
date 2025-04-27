@@ -169,9 +169,9 @@ export default function ContactPage() {
                       Email
                     </h3>
                     <p className="text-gray-600 dark:text-gray-300">
-                      info@comfortstay.in
+                      info@comfortstay.com
                       <br />
-                      bookings@comfortstay.in
+                      bookings@comfortstay.com
                     </p>
                   </div>
                 </div>
