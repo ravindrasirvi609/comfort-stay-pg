@@ -35,12 +35,10 @@ export async function POST(request: NextRequest) {
       !guardianMobileNumber ||
       !validIdType ||
       !validIdPhoto ||
-      !companyName ||
-      !companyAddress ||
       !profileImage
     ) {
       return NextResponse.json(
-        { success: false, message: "All fields are required" },
+        { success: false, message: "All required fields must be filled" },
         { status: 400 }
       );
     }
@@ -71,8 +69,8 @@ export async function POST(request: NextRequest) {
       guardianMobileNumber,
       validIdType,
       validIdPhoto,
-      companyName,
-      companyAddress,
+      companyName: companyName || "",
+      companyAddress: companyAddress || "",
       profileImage,
     });
 

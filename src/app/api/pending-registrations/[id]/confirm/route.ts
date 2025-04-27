@@ -105,6 +105,21 @@ export async function POST(
       );
     }
 
+    // Recheck that the registration is still in 'Pending' status before proceeding
+    const currentStatus = await User.findById(pendingRegistration._id).select(
+      "registrationStatus"
+    );
+    if (currentStatus?.registrationStatus !== "Pending") {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "This registration has already been processed. Please refresh the page.",
+        },
+        { status: 409 }
+      );
+    }
+
     // Generate PG ID from the user's email address
     // Example: for john.doe@example.com, create PG-JD1234
     const email = pendingRegistration.email;
@@ -141,9 +156,13 @@ export async function POST(
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
-    // Start a MongoDB session for transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // Generate receipt number if needed
+    let receiptNumber;
+    if (paymentDetails && paymentDetails.amount) {
+      const timestamp = Date.now().toString();
+      const userIdShort = pendingRegistration._id.toString().slice(-5);
+      receiptNumber = `PG-${timestamp.slice(-8)}-${userIdShort}`;
+    }
 
     try {
       // Update the registration status to Approved and set room details
@@ -154,25 +173,19 @@ export async function POST(
       pendingRegistration.password = hashedPassword;
       pendingRegistration.approvalDate = new Date();
       pendingRegistration.pgId = pgId;
+      pendingRegistration.isActive = true;
 
-      await pendingRegistration.save({ session });
+      await pendingRegistration.save();
 
       // Increment room occupancy
       room.currentOccupancy += 1;
-      await room.save({ session });
+      await room.save();
 
       // If payment details are provided, create a payment record
       if (paymentDetails && paymentDetails.amount) {
-        // Generate unique receipt number (timestamp + user id last 5 chars)
-        const timestamp = Date.now().toString();
-        const userIdShort = pendingRegistration._id.toString().slice(-5);
-        const receiptNumber = `PG-${timestamp.slice(-8)}-${userIdShort}`;
-
-        // Create a single payment record with an array of months
-        const newPayment = new Payment({
+        await Payment.create({
           userId: pendingRegistration._id,
           amount: paymentDetails.amount,
-          // Make sure months is stored as an array
           months: Array.isArray(paymentDetails.months)
             ? paymentDetails.months
             : [paymentDetails.months],
@@ -180,25 +193,15 @@ export async function POST(
           paymentStatus: paymentDetails.paymentStatus || "Paid",
           paymentDate: new Date(),
           depositAmount: depositAmount || 0,
-          receiptNumber: receiptNumber, // Add receipt number to the payment record
+          receiptNumber: receiptNumber,
         });
 
-        console.log("Creating payment record with months:", newPayment.months);
-        await newPayment.save({ session });
-
-        // Store receipt number in a variable accessible outside this block
+        // Store receipt number for email
         pendingRegistration.lastReceiptNumber = receiptNumber;
       }
-
-      // Commit the transaction
-      await session.commitTransaction();
     } catch (error) {
-      // Abort transaction on error
-      await session.abortTransaction();
+      console.error("Operation error:", error);
       throw error;
-    } finally {
-      // End session
-      session.endSession();
     }
 
     // Send email with login credentials
@@ -250,8 +253,17 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error confirming registration:", error);
+
+    // More detailed error for MongoDB issues
+    let errorMessage = "Internal server error";
+    if (error instanceof mongoose.Error) {
+      errorMessage = `MongoDB error: ${error.message}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, message: errorMessage },
       { status: 500 }
     );
   }

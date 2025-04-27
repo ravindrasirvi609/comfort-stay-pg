@@ -161,6 +161,16 @@ export default function PendingRegistrationDetailsPage() {
       return;
     }
 
+    if (!formData.amount || Number(formData.amount) <= 0) {
+      setError("Please enter a valid payment amount");
+      return;
+    }
+
+    if (formData.months.length === 0) {
+      setError("Please select at least one month for payment");
+      return;
+    }
+
     try {
       setConfirmLoading(true);
       setError("");
@@ -186,17 +196,15 @@ export default function PendingRegistrationDetailsPage() {
         setConfirmSuccess(true);
         setShowConfirmDialog(false);
         // Refresh registration data to show updated registrationStatus
+        const selectedRoom = rooms.find((room) => room._id === formData.roomId);
         setRegistration((prev) =>
           prev
             ? {
                 ...prev,
                 registrationStatus: "Approved",
-                roomId: formData.roomId,
+                roomId: selectedRoom || formData.roomId,
                 checkInDate: formData.checkInDate,
                 pgId: response.data.pgId,
-                roomNumber:
-                  rooms.find((room) => room._id === formData.roomId)
-                    ?.roomNumber || null,
               }
             : null
         );
@@ -205,12 +213,31 @@ export default function PendingRegistrationDetailsPage() {
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.message ||
-            "An error occurred while confirming the registration"
-        );
+        console.error("Registration confirmation error:", err.response?.data);
+
+        // Handle specific error cases with more user-friendly messages
+        const statusCode = err.response?.status;
+        if (statusCode === 409) {
+          setError(
+            "This registration has already been processed. Please refresh the page."
+          );
+        } else if (statusCode === 404) {
+          setError(
+            "The registration or room could not be found. It may have been deleted."
+          );
+        } else if (err.response?.data?.message?.includes("MongoDB")) {
+          setError(
+            "A database error occurred. Please try again or contact the system administrator."
+          );
+        } else {
+          setError(
+            err.response?.data?.message ||
+              "An error occurred while confirming the registration"
+          );
+        }
       } else {
-        setError("An unexpected error occurred");
+        console.error("Unexpected error during confirmation:", err);
+        setError("An unexpected error occurred. Please try again later.");
       }
     } finally {
       setConfirmLoading(false);
@@ -728,192 +755,282 @@ export default function PendingRegistrationDetailsPage() {
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Confirm Registration
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-3xl p-6 overflow-y-auto max-h-[90vh]">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 border-b pb-2 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2 text-green-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Confirm Registration - {registration.name}
             </h3>
 
-            <form onSubmit={handleConfirm} className="space-y-4">
-              {/* Room field */}
-              <div>
-                <label
-                  htmlFor="room"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Room *
-                </label>
-                <select
-                  id="room"
-                  name="room"
-                  value={formData.roomId}
-                  onChange={handleRoomChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                >
-                  <option value="">Select a room</option>
-                  {rooms.map((room) => (
-                    <option key={room._id} value={room._id}>
-                      Room {room.roomNumber} - {room.type} (
-                      {room.currentOccupancy}/{room.capacity})
-                    </option>
-                  ))}
-                </select>
-                {formData.roomNumber && (
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Selected Room: {formData.roomNumber}
-                  </p>
-                )}
-              </div>
-
-              {/* Amount field */}
-              <div>
-                <label
-                  htmlFor="amount"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Amount (₹) *
-                </label>
-                <input
-                  type="number"
-                  id="amount"
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                  placeholder="Enter payment amount"
-                />
-              </div>
-
-              {/* Deposit Amount field */}
-              <div>
-                <label
-                  htmlFor="depositAmount"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Security Deposit (₹)
-                </label>
-                <input
-                  type="number"
-                  id="depositAmount"
-                  name="depositAmount"
-                  value={formData.depositAmount}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                  placeholder="Enter security deposit amount"
-                />
-              </div>
-
-              {/* Month field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Months *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border border-gray-300 dark:border-gray-700 rounded-md">
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() + i);
-                    const month = date.toLocaleString("default", {
-                      month: "long",
-                      year: "numeric",
-                    });
-                    return (
-                      <label
-                        key={month}
-                        className="flex items-center space-x-2"
-                      >
-                        <input
-                          type="checkbox"
-                          value={month}
-                          checked={formData.months.includes(month)}
-                          onChange={handleMonthChange}
-                          className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          {month}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Select the months for which payment is being made
+            <form onSubmit={handleConfirm} className="space-y-6">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+                <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Provide room assignment and payment details to approve this
+                  registration. All fields marked with * are required.
                 </p>
               </div>
 
-              {/* Payment Method field */}
-              <div>
-                <label
-                  htmlFor="paymentMethod"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Payment Method
-                </label>
-                <select
-                  id="paymentMethod"
-                  name="paymentMethod"
-                  value={formData.paymentMethod}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                >
-                  <option value="Cash">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Credit Card">Credit Card</option>
-                  <option value="Debit Card">Debit Card</option>
-                </select>
-              </div>
+              {/* Error message in dialog */}
+              {error && (
+                <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">{error}</span>
+                  </div>
+                </div>
+              )}
 
-              {/* Payment Status field */}
-              <div>
-                <label
-                  htmlFor="paymentStatus"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Payment Status
-                </label>
-                <select
-                  id="paymentStatus"
-                  name="paymentStatus"
-                  value={formData.paymentStatus}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                >
-                  <option value="Paid">Paid</option>
-                  <option value="Pending">Pending</option>
-                </select>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Room Assignment Section */}
+                <div className="md:col-span-2">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3 border-b border-gray-200 dark:border-gray-700 pb-1">
+                    Room Assignment
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Room field */}
+                    <div>
+                      <label
+                        htmlFor="room"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Room *
+                      </label>
+                      <select
+                        id="room"
+                        name="room"
+                        value={formData.roomId}
+                        onChange={handleRoomChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="">Select a room</option>
+                        {rooms.map((room) => (
+                          <option key={room._id} value={room._id}>
+                            Room {room.roomNumber} - {room.type} (
+                            {room.currentOccupancy}/{room.capacity})
+                          </option>
+                        ))}
+                      </select>
+                      {formData.roomNumber && (
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          Selected Room: {formData.roomNumber}
+                        </p>
+                      )}
+                    </div>
 
-              {/* Check-in Date field */}
-              <div>
-                <label
-                  htmlFor="checkInDate"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Check-in Date
-                </label>
-                <input
-                  type="date"
-                  id="checkInDate"
-                  name="checkInDate"
-                  value={formData.checkInDate}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                />
+                    {/* Check-in Date field */}
+                    <div>
+                      <label
+                        htmlFor="checkInDate"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Check-in Date *
+                      </label>
+                      <input
+                        type="date"
+                        id="checkInDate"
+                        name="checkInDate"
+                        value={formData.checkInDate}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Section */}
+                <div className="md:col-span-2">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3 border-b border-gray-200 dark:border-gray-700 pb-1">
+                    Payment Details
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Amount field */}
+                    <div>
+                      <label
+                        htmlFor="amount"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Amount (₹) *
+                      </label>
+                      <input
+                        type="number"
+                        id="amount"
+                        name="amount"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        placeholder="Enter payment amount"
+                      />
+                    </div>
+
+                    {/* Deposit Amount field */}
+                    <div>
+                      <label
+                        htmlFor="depositAmount"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Security Deposit (₹)
+                      </label>
+                      <input
+                        type="number"
+                        id="depositAmount"
+                        name="depositAmount"
+                        value={formData.depositAmount}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        placeholder="Enter security deposit amount"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {/* Payment Method field */}
+                    <div>
+                      <label
+                        htmlFor="paymentMethod"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Payment Method *
+                      </label>
+                      <select
+                        id="paymentMethod"
+                        name="paymentMethod"
+                        value={formData.paymentMethod}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                      </select>
+                    </div>
+
+                    {/* Payment Status field */}
+                    <div>
+                      <label
+                        htmlFor="paymentStatus"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Payment Status *
+                      </label>
+                      <select
+                        id="paymentStatus"
+                        name="paymentStatus"
+                        value={formData.paymentStatus}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Month field */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Months *
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border border-gray-300 dark:border-gray-700 rounded-md max-h-60 overflow-y-auto">
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const date = new Date();
+                      date.setMonth(date.getMonth() + i);
+                      const month = date.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      });
+                      return (
+                        <label
+                          key={month}
+                          className="flex items-center space-x-2 hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            value={month}
+                            checked={formData.months.includes(month)}
+                            onChange={handleMonthChange}
+                            className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {month}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Select the months for which payment is being made
+                  </p>
+                  {formData.months.length > 0 && (
+                    <div className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Selected: {formData.months.join(", ")}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={closeConfirmDialog}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={
-                    confirmLoading || !formData.roomId || !formData.amount
+                    confirmLoading ||
+                    !formData.roomId ||
+                    !formData.amount ||
+                    formData.months.length === 0
                   }
                   className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -942,7 +1059,23 @@ export default function PendingRegistrationDetailsPage() {
                       Processing...
                     </>
                   ) : (
-                    "Confirm Registration"
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Confirm Registration
+                    </>
                   )}
                 </button>
               </div>

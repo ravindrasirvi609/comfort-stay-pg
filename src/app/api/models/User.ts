@@ -68,11 +68,11 @@ const UserSchema = new Schema<IUser>(
     },
     companyName: {
       type: String,
-      required: true,
+      required: false,
     },
     companyAddress: {
       type: String,
-      required: true,
+      required: false,
     },
 
     // Document links
@@ -112,7 +112,7 @@ const UserSchema = new Schema<IUser>(
     // Status fields
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     // New fields for PG management
     depositFees: {

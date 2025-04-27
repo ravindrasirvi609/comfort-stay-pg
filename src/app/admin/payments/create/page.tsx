@@ -185,8 +185,6 @@ export default function CreatePaymentPage() {
         isDepositPayment,
       };
 
-      console.log("Sending payment data:", paymentData);
-
       const response = await axios.post("/api/payments", paymentData);
 
       if (response.data.success) {

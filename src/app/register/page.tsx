@@ -146,6 +146,13 @@ export default function RegisterPage() {
         setError("Please enter a valid 10-digit guardian mobile number");
         return;
       }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.emailAddress)) {
+        setError("Please enter a valid email address");
+        return;
+      }
     }
 
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
@@ -450,7 +457,7 @@ export default function RegisterPage() {
                           htmlFor="fathersName"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          Father&apos;s Name
+                          Father&apos;s Name *
                         </label>
                         <input
                           id="fathersName"
@@ -527,7 +534,7 @@ export default function RegisterPage() {
                           htmlFor="permanentAddress"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          Permanent Address
+                          Permanent Address *
                         </label>
                         <textarea
                           id="permanentAddress"
@@ -548,7 +555,7 @@ export default function RegisterPage() {
                           htmlFor="city"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          City
+                          City *
                         </label>
                         <input
                           id="city"
