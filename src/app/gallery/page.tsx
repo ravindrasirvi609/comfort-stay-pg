@@ -23,8 +23,8 @@ export default function GalleryPage() {
       </section>
 
       <Gallery />
-
-      <section className="py-12">
+      {/* TODO : This will Do later  */}
+      {/* <section className="py-12">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-white">
             Virtual Tour Experience
@@ -74,7 +74,7 @@ export default function GalleryPage() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="py-12">
         <div className="max-w-6xl mx-auto px-6">

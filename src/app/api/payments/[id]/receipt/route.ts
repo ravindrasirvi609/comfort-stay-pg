@@ -2,19 +2,11 @@ import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
-import puppeteer from "puppeteer-core"; // Switch back to puppeteer-core
+import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
 import Room from "@/app/api/models/Room"; // Adjust the path as needed
-
-// Initialize chromium with specific configuration for serverless environments
-const chromium = require("@sparticuz/chromium");
-
-// Configure @sparticuz/chromium to always download from a specific URL if needed
-// This URL can be updated if needed to match the latest compatible chromium version
-const CHROMIUM_DOWNLOAD_URL =
-  "https://github.com/Sparticuz/chromium/releases/download/v114.0.0/chromium-v114.0.0-pack.tar";
 
 // Set Node.js runtime for file operations
 export const runtime = "nodejs";
@@ -390,49 +382,16 @@ export async function GET(request: Request, context: unknown) {
       </html>
     `;
 
-    // Generate PDF with puppeteer
-    let executablePath;
-
-    try {
-      // Load font for proper rendering
-      await chromium.font(
-        "https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf"
-      );
-
-      // Explicitly pass the download URL to executablePath for serverless environments
-      executablePath = await chromium.executablePath(CHROMIUM_DOWNLOAD_URL);
-
-      console.log("Chromium executable path:", executablePath);
-    } catch (error) {
-      console.error("Error setting up chromium:", error);
-      return NextResponse.json(
-        { success: false, message: "Error preparing PDF generator" },
-        { status: 500 }
-      );
-    }
-
-    // Configure Puppeteer with optimized settings for serverless environments
-    const browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        "--disable-gpu",
-        "--disable-dev-shm-usage",
-        "--disable-setuid-sandbox",
-        "--no-sandbox",
-        "--no-zygote",
-        "--single-process",
-      ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: executablePath,
+    // Generate PDF with Playwright
+    const browser = await chromium.launch({
       headless: true,
     });
-    const page = await browser.newPage();
 
-    // Set to ignore HTTPS errors on the page context
-    await page.setBypassCSP(true);
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
-    // Set content and wait until network is idle
-    await page.setContent(receiptHtml, { waitUntil: "networkidle0" });
+    // Set content of the page
+    await page.setContent(receiptHtml, { waitUntil: "networkidle" });
 
     // Create temp file path
     const tempFilePath = path.join(
