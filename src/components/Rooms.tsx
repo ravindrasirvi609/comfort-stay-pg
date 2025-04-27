@@ -7,12 +7,12 @@ const rooms = [
   {
     type: "Triple Sharing",
     capacity: "3 Girls",
-    price: "₹8,500/month",
+    price: "₹8,000/month",
     features: [
       "Brand new room (Opened Feb 2025)",
       "Spacious living area",
       "Personal cupboard",
-      "Study table with chair",
+      "Pillow and bed sheet provided with furnished room",
       "High-speed WiFi",
       "Attached bathroom",
     ],
@@ -27,7 +27,7 @@ const rooms = [
       "Brand new room (Opened Feb 2025)",
       "Premium twin beds",
       "Larger cupboards",
-      "Dedicated study area",
+      "Pillow and bed sheet provided with furnished room",
       "High-speed WiFi",
       "Attached bathroom",
     ],
@@ -104,8 +104,6 @@ const Rooms = () => {
           <p className="text-center mt-8 text-sm text-gray-600 dark:text-gray-300">
             All room prices include meals, electricity, water, WiFi, and
             housekeeping services.
-            <br />
-            Security deposit: Refundable amount equal to one month&apos;s rent.
             <br />
             <span className="font-semibold">
               Limited rooms still available in our brand new building that

@@ -70,12 +70,12 @@ export default function FAQsPage() {
                 What are your food arrangements?
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                We provide nutritious, home-style vegetarian and non-vegetarian
-                meals three times a day. Our menu is diverse and rotates weekly
-                to ensure variety. We accommodate dietary restrictions and
-                special meal requirements when possible. Meals are prepared in a
-                hygienic kitchen by experienced staff, prioritizing both taste
-                and nutrition.
+                We provide nutritious, home-style vegetarian meals three times a
+                day. Our menu is diverse and rotates weekly to ensure variety.
+                We accommodate dietary restrictions and special meal
+                requirements when possible. Meals are prepared in a hygienic
+                kitchen by experienced staff, prioritizing both taste and
+                nutrition.
               </p>
             </div>
 
@@ -102,8 +102,7 @@ export default function FAQsPage() {
                 equivalent to two months&apos; rent is required at the time of
                 admission, which is refundable when you vacate (subject to our
                 terms and conditions). We accept various payment methods
-                including bank transfers, UPI, and credit/debit cards for your
-                convenience.
+                including bank transfers, UPI, and cash for your convenience.
               </p>
             </div>
 
