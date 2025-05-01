@@ -383,56 +383,62 @@ export async function GET(request: Request, context: unknown) {
     `;
 
     // Generate PDF with Playwright
-    const browser = await chromium.launch({
-      headless: true,
-    });
+    let browser;
+    try {
+      browser = await chromium.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"], // Required for Vercel
+      });
 
-    const context = await browser.newContext();
-    const page = await context.newPage();
+      const context = await browser.newContext();
+      const page = await context.newPage();
 
-    // Set content of the page
-    await page.setContent(receiptHtml, { waitUntil: "networkidle" });
+      // Set content of the page
+      await page.setContent(receiptHtml, { waitUntil: "networkidle" });
 
-    // Create temp file path
-    const tempFilePath = path.join(
-      tmpdir(),
-      `receipt-${payment.receiptNumber}.pdf`
-    );
+      // Create temp file path
+      const tempFilePath = path.join(
+        tmpdir(),
+        `receipt-${payment.receiptNumber}.pdf`
+      );
 
-    // Generate PDF
-    await page.pdf({
-      path: tempFilePath,
-      format: "A4",
-      printBackground: true,
-      margin: {
-        top: "20px",
-        right: "20px",
-        bottom: "20px",
-        left: "20px",
-      },
-    });
+      // Generate PDF
+      await page.pdf({
+        path: tempFilePath,
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "20px",
+          right: "20px",
+          bottom: "20px",
+          left: "20px",
+        },
+      });
 
-    await browser.close();
+      // Read the generated PDF
+      const pdfBuffer = fs.readFileSync(tempFilePath);
 
-    // Read the generated PDF
-    const pdfBuffer = fs.readFileSync(tempFilePath);
+      // Clean up
+      fs.unlinkSync(tempFilePath);
+      await browser.close();
 
-    // Delete the temp file
-    fs.unlinkSync(tempFilePath);
-
-    // Set response headers for PDF download
-    const headers = new Headers();
-    headers.set("Content-Type", "application/pdf");
-    headers.set(
-      "Content-Disposition",
-      `attachment; filename="receipt-${payment.receiptNumber}.pdf"`
-    );
-
-    // Return the PDF as response
-    return new NextResponse(pdfBuffer, {
-      status: 200,
-      headers,
-    });
+      // Return the PDF
+      return new NextResponse(pdfBuffer, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="receipt-${payment.receiptNumber}.pdf"`,
+        },
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      if (browser) {
+        await browser.close();
+      }
+      return NextResponse.json(
+        { success: false, message: "Failed to generate receipt" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("[API] Receipt generation error:", error);
     return NextResponse.json(
