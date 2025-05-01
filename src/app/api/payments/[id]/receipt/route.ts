@@ -6,9 +6,7 @@ import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
 import Room from "@/app/api/models/Room"; // Adjust the path as needed
-
-// For serverless environments
-import chromium from "chrome-aws-lambda";
+import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 
 // Set Node.js runtime for file operations
@@ -385,7 +383,7 @@ export async function GET(request: Request, context: unknown) {
       </html>
     `;
 
-    // Generate PDF with puppeteer/chrome-aws-lambda
+    // Generate PDF with puppeteer/chromium
     let browser = null;
     try {
       // Check if we're in development or production environment
@@ -396,10 +394,11 @@ export async function GET(request: Request, context: unknown) {
         const puppeteerLocal = require("puppeteer");
         browser = await puppeteerLocal.launch();
       } else {
-        // In production (Vercel), use chrome-aws-lambda
+        // In production (Vercel), use @sparticuz/chromium
         browser = await puppeteer.launch({
           args: chromium.args,
-          executablePath: await chromium.executablePath,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
           headless: chromium.headless,
         });
       }
