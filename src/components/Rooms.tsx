@@ -9,7 +9,7 @@ const rooms = [
     capacity: "3 Girls",
     price: "₹8,000/month",
     features: [
-      "Brand new room (Opened Feb 2025)",
+      "Brand new room",
       "Spacious living area",
       "Personal cupboard",
       "Pillow and bed sheet provided with furnished room",
@@ -24,7 +24,7 @@ const rooms = [
     capacity: "2 Girls",
     price: "₹9,500/month",
     features: [
-      "Brand new room (Opened Feb 2025)",
+      "Brand new room",
       "Premium twin beds",
       "Larger cupboards",
       "Pillow and bed sheet provided with furnished room",

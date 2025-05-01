@@ -226,15 +226,6 @@ export default function RoomDetailPage() {
               <div className="space-y-4">
                 <div className="backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-xl p-4 border border-white/20 dark:border-gray-700/30">
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Pricing
-                  </h3>
-                  <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
-                    ₹{room.price}/month
-                  </p>
-                </div>
-
-                <div className="backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-xl p-4 border border-white/20 dark:border-gray-700/30">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Occupancy
                   </h3>
                   <div className="flex justify-between mb-2">
