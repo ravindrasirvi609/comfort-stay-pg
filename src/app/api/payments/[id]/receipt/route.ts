@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
+import User from "@/app/api/models/User"; // Import the User model
+import Room from "@/app/api/models/Room";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
-import Room from "@/app/api/models/Room"; // Adjust the path as needed
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 
@@ -45,8 +46,10 @@ export async function GET(request: Request, context: unknown) {
   try {
     await connectToDatabase();
 
-    // Important: Register the Room model before using it
+    // Important: Register all models before using them
     Room; // Just reference it to ensure it's registered
+    User; // Ensure User model is registered
+    Payment; // Ensure Payment model is also registered
 
     // Extract the payment ID from URL
     const url = new URL(request.url);
