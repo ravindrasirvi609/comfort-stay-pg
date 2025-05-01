@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { connectToDatabase } from "@/app/lib/db";
 import Payment from "@/app/api/models/Payment";
-import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
 import Room from "@/app/api/models/Room"; // Adjust the path as needed
+
+// For serverless environments
+import chromium from "chrome-aws-lambda";
+import puppeteer from "puppeteer-core";
 
 // Set Node.js runtime for file operations
 export const runtime = "nodejs";
@@ -382,19 +385,27 @@ export async function GET(request: Request, context: unknown) {
       </html>
     `;
 
-    // Generate PDF with Playwright
-    let browser;
+    // Generate PDF with puppeteer/chrome-aws-lambda
+    let browser = null;
     try {
-      browser = await chromium.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"], // Required for Vercel
-      });
+      // Check if we're in development or production environment
+      const isDev = process.env.NODE_ENV === "development";
 
-      const context = await browser.newContext();
-      const page = await context.newPage();
+      if (isDev) {
+        // In development, we can use local Chrome
+        const puppeteerLocal = require("puppeteer");
+        browser = await puppeteerLocal.launch();
+      } else {
+        // In production (Vercel), use chrome-aws-lambda
+        browser = await puppeteer.launch({
+          args: chromium.args,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      }
 
-      // Set content of the page
-      await page.setContent(receiptHtml, { waitUntil: "networkidle" });
+      const page = await browser.newPage();
+      await page.setContent(receiptHtml, { waitUntil: "networkidle0" });
 
       // Create temp file path
       const tempFilePath = path.join(
@@ -435,14 +446,20 @@ export async function GET(request: Request, context: unknown) {
         await browser.close();
       }
       return NextResponse.json(
-        { success: false, message: "Failed to generate receipt" },
+        {
+          success: false,
+          message: `Failed to generate receipt: ${error instanceof Error ? error.message : "Unknown error"}`,
+        },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error("[API] Receipt generation error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to generate receipt" },
+      {
+        success: false,
+        message: `Failed to generate receipt: ${error instanceof Error ? error.message : "Unknown error"}`,
+      },
       { status: 500 }
     );
   }
