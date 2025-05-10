@@ -5,6 +5,7 @@ import { User, Payment, Room } from "@/app/api/models";
 import { sendEmail } from "@/app/lib/email";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 
 export async function POST(
   request: NextRequest,
@@ -156,12 +157,10 @@ export async function POST(
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
-    // Generate receipt number if needed
+    // Generate receipt number if payment is being made
     let receiptNumber;
     if (paymentDetails && paymentDetails.amount) {
-      const timestamp = Date.now().toString();
-      const userIdShort = pendingRegistration._id.toString().slice(-5);
-      receiptNumber = `PG-${timestamp.slice(-8)}-${userIdShort}`;
+      receiptNumber = await generateReceiptNumber();
     }
 
     try {

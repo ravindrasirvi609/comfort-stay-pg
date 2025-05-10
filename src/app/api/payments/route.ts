@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Payment from "@/app/api/models/Payment";
 import User from "@/app/api/models/User";
+import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 
 // Get all payments
 export async function GET(request: NextRequest) {
@@ -143,10 +144,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique receipt number (timestamp + user id last 5 chars)
-    const timestamp = Date.now().toString();
-    const userIdShort = userId.toString().slice(-5);
-    const receiptNumber = `PG-${timestamp.slice(-8)}-${userIdShort}`;
+    // Generate sequential receipt number (C00001, C00002, etc.)
+    const receiptNumber = await generateReceiptNumber();
 
     // Create new payment record
     const newPayment = new Payment({
@@ -167,6 +166,7 @@ export async function POST(request: NextRequest) {
     console.log("Saving payment with data:", {
       months: newPayment.months,
       paymentStatus: newPayment.paymentStatus,
+      receiptNumber: newPayment.receiptNumber,
     });
 
     await newPayment.save();

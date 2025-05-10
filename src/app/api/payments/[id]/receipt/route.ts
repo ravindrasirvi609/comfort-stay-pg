@@ -154,6 +154,13 @@ export async function GET(request: Request, context: unknown) {
               font-size: 14px;
               color: #777;
             }
+            .brand-address {
+              font-size: 11px;
+              color: #777;
+              margin-top: 5px;
+              max-width: 300px;
+              line-height: 1.4;
+            }
             .receipt-title {
               text-align: center;
               font-size: 24px;
@@ -273,6 +280,10 @@ export async function GET(request: Request, context: unknown) {
               <div class="brand">
                 <div class="brand-name">COMFORT STAY PG</div>
                 <div class="brand-slogan">Your Home Away From Home</div>
+                <div class="brand-address">
+                  Mukai Nagar, Phase 1, Hinjawadi Rajiv Gandhi Infotech Park, 
+                  Hinjawadi, Pune, Pimpri-Chinchwad, Maharashtra 411057
+                </div>
               </div>
               <div>
                 <div style="font-weight: bold;">Receipt #: ${payment.receiptNumber}</div>
@@ -290,7 +301,7 @@ export async function GET(request: Request, context: unknown) {
                   <div class="value">${payment.userId.name}</div>
                 </div>
                 <div class="receipt-detail">
-                  <div class="label">ID:</div>
+                  <div class="label">PG ID:</div>
                   <div class="value">${payment.userId.pgId}</div>
                 </div>
                 <div class="receipt-detail">
