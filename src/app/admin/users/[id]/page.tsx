@@ -445,7 +445,7 @@ export default function UserDetailPage() {
               </div>
             </div>
 
-            {user.roomId && (
+            {/* {user.roomId && (
               <div className="flex items-start">
                 <Building className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
                 <div>
@@ -459,7 +459,7 @@ export default function UserDetailPage() {
                   </p>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

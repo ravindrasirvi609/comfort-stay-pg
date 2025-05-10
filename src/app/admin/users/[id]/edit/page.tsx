@@ -152,13 +152,19 @@ export default function EditUserPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Create a data object without roomId and role
-    const dataToSubmit = { ...userData };
-    delete dataToSubmit.roomId;
-    delete dataToSubmit.role;
+    // Create a data object with all relevant fields
+    const dataToSubmit = {
+      ...userData,
+      // Ensure these fields are properly formatted
+      roomId:
+        typeof userData.roomId === "object" && userData.roomId?._id
+          ? userData.roomId._id
+          : userData.roomId,
+    };
 
     try {
       setIsSaving(true);
+      console.log("Submitting data:", dataToSubmit);
       const response = await axios.put(`/api/users/${id}`, dataToSubmit);
 
       if (response.data.success) {

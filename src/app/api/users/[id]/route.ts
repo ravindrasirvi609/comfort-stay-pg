@@ -85,9 +85,11 @@ export async function PUT(
     await connectToDatabase();
 
     const userData = await request.json();
+    console.log("Update request data:", JSON.stringify(userData));
 
-    // Find the user
-    const userToUpdate = await User.findById(params.id);
+    // Find the user with string ID conversion
+    const userId = params.id.toString();
+    const userToUpdate = await User.findById(userId);
 
     if (!userToUpdate) {
       return NextResponse.json(
@@ -110,9 +112,21 @@ export async function PUT(
         name,
         email,
         phone,
-        role,
+        fathersName,
+        permanentAddress,
+        city,
+        state,
+        guardianMobileNumber,
+        validIdType,
+        companyName,
+        companyAddress,
+        depositFees,
+        validIdPhoto,
+        profileImage,
         documents,
+        pgId,
         roomId,
+        bedNumber,
         moveInDate,
         moveOutDate,
         isActive,
@@ -121,9 +135,23 @@ export async function PUT(
       if (name) userToUpdate.name = name;
       if (email) userToUpdate.email = email;
       if (phone) userToUpdate.phone = phone;
-      if (role) userToUpdate.role = role;
+      if (fathersName) userToUpdate.fathersName = fathersName;
+      if (permanentAddress) userToUpdate.permanentAddress = permanentAddress;
+      if (city) userToUpdate.city = city;
+      if (state) userToUpdate.state = state;
+      if (guardianMobileNumber)
+        userToUpdate.guardianMobileNumber = guardianMobileNumber;
+      if (validIdType) userToUpdate.validIdType = validIdType;
+      if (companyName !== undefined) userToUpdate.companyName = companyName;
+      if (companyAddress !== undefined)
+        userToUpdate.companyAddress = companyAddress;
+      if (depositFees !== undefined) userToUpdate.depositFees = depositFees;
+      if (validIdPhoto) userToUpdate.validIdPhoto = validIdPhoto;
+      if (profileImage) userToUpdate.profileImage = profileImage;
       if (documents) userToUpdate.documents = documents;
+      if (pgId) userToUpdate.pgId = pgId;
       if (roomId !== undefined) userToUpdate.roomId = roomId;
+      if (bedNumber !== undefined) userToUpdate.bedNumber = bedNumber;
       if (moveInDate) userToUpdate.moveInDate = moveInDate;
       if (moveOutDate) userToUpdate.moveOutDate = moveOutDate;
       if (isActive !== undefined) userToUpdate.isActive = isActive;
@@ -132,23 +160,40 @@ export async function PUT(
     // Update timestamps
     userToUpdate.updatedAt = new Date();
 
-    // Save the updated user
-    await userToUpdate.save();
+    // Save the updated user and handle potential mongoose validation errors
+    try {
+      const savedUser = await userToUpdate.save();
+      console.log("User updated successfully:", savedUser._id);
 
-    return NextResponse.json({
-      success: true,
-      message: "User updated successfully",
-      user: {
-        _id: userToUpdate._id,
-        name: userToUpdate.name,
-        email: userToUpdate.email,
-        role: userToUpdate.role,
-      },
-    });
-  } catch (error) {
+      return NextResponse.json({
+        success: true,
+        message: "User updated successfully",
+        user: {
+          _id: savedUser._id,
+          name: savedUser.name,
+          email: savedUser.email,
+          role: savedUser.role,
+        },
+      });
+    } catch (saveError: any) {
+      console.error("Error saving user:", saveError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to save user data",
+          error: saveError.message,
+        },
+        { status: 400 }
+      );
+    }
+  } catch (error: any) {
     console.error("Update user error:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      {
+        success: false,
+        message: "Internal server error",
+        error: error.message,
+      },
       { status: 500 }
     );
   }

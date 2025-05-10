@@ -160,9 +160,13 @@ const Footer = () => {
                     className="text-pink-400 mt-1 flex-shrink-0"
                   />
                   <span className="text-sm">
-                    Comfort Stay PG, Hinjewadi Phase 1 Rd,
+                    Comfort Stay PG, Mukai Nagar,
                     <br />
-                    Mukai Nagar, Hinjawadi, Pune
+                    Hinjawadi Rajiv Gandhi Infotech Park,
+                    <br />
+                    Pune, Pimpri-Chinchwad,
+                    <br />
+                    Maharashtra 411057
                   </span>
                 </li>
                 <li className="flex items-center gap-3">

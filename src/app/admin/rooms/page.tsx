@@ -134,7 +134,7 @@ export default function RoomsPage() {
     }
 
     if (filterType !== "all") {
-      result = result.filter((room) => room.type === filterType);
+      result = result.filter((room) => String(room.capacity) === filterType);
     }
 
     if (filterFloor !== "all") {
@@ -177,7 +177,17 @@ export default function RoomsPage() {
           }`}
       >
         <div className="font-bold text-lg text-center">{room.roomNumber}</div>
-        <div className="text-xs text-center mt-1">{room.type}</div>
+        <div className="text-xs text-center mt-1">
+          {room.capacity === 1
+            ? "Single"
+            : room.capacity === 2
+              ? "Double"
+              : room.capacity === 3
+                ? "Triple"
+                : room.capacity === 4
+                  ? "Quad"
+                  : `${room.capacity} Person`}
+        </div>
         <div className="flex justify-center mt-2">
           <span
             className={`px-2 py-0.5 rounded-full text-xs
@@ -357,18 +367,18 @@ export default function RoomsPage() {
           {/* Type filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Room Type
+              Room Capacity
             </label>
             <select
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/50 dark:bg-gray-800/50"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
             >
-              <option value="all">All Types</option>
-              <option value="single">Single</option>
-              <option value="double">Double</option>
-              <option value="triple">Triple</option>
-              <option value="quad">Quad</option>
+              <option value="all">All Capacities</option>
+              <option value="1">Single (1 Person)</option>
+              <option value="2">Double (2 Person)</option>
+              <option value="3">Triple (3 Person)</option>
+              <option value="4">Quad (4 Person)</option>
             </select>
           </div>
 

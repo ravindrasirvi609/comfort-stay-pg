@@ -34,11 +34,11 @@ const Location = () => {
                     <div>
                       <p className="font-semibold">Address</p>
                       <p className="text-gray-600 dark:text-gray-300">
-                        Comfort Stay PG, Hinjewadi Phase 1 Rd,
+                        Hinjewadi Phase 1 Rd, Mukai Nagar, Phase 1,
                         <br />
-                        Mukai Nagar, Phase 1, Hinjawadi
+                        Hinjawadi Rajiv Gandhi Infotech Park,
                         <br />
-                        Rajiv Gandhi Infotech Park, Pune,
+                        Hinjawadi, Pune, Pimpri-Chinchwad,
                         <br />
                         Maharashtra 411057
                       </p>

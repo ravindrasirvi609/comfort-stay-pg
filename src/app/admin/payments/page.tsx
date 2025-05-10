@@ -603,12 +603,12 @@ export default function PaymentsPage() {
                         {payment.paymentMethod}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Link
+                        {/* <Link
                           href={`/admin/payments/${payment._id}`}
                           className="text-pink-600 hover:text-pink-900 dark:text-pink-400 dark:hover:text-pink-300 mr-4"
                         >
                           View
-                        </Link>
+                        </Link> */}
                         <a
                           href={`/api/payments/${payment._id}/receipt`}
                           target="_blank"

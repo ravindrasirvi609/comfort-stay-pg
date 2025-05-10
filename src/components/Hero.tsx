@@ -73,8 +73,9 @@ const Hero = () => {
             >
               <MapPin size={18} className="mr-2 text-pink-500" />
               <p className="text-sm md:text-base">
-                Hinjewadi Phase 1 Rd, Mukai Nagar, Rajiv Gandhi Infotech Park,
-                Pune, Maharashtra 411057
+                Comfort Stay PG, Hinjewadi Phase 1 Rd, Mukai Nagar, Phase 1,
+                Hinjawadi Rajiv Gandhi Infotech Park, Hinjawadi, Pune,
+                Pimpri-Chinchwad, Maharashtra 411057
               </p>
             </motion.div>
 
