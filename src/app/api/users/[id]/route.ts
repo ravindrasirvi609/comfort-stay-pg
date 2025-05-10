@@ -238,10 +238,6 @@ export async function DELETE(
       );
     }
 
-    // Start a transaction to handle user deactivation and room updates
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       // If user has a room assigned, update the room occupancy
       if (userToDelete.roomId) {
@@ -255,7 +251,7 @@ export async function DELETE(
         if (room) {
           // Decrease the room occupancy
           room.currentOccupancy = Math.max(0, room.currentOccupancy - 1);
-          await room.save({ session });
+          await room.save();
         }
 
         // Clear the room assignment from the user
@@ -267,25 +263,18 @@ export async function DELETE(
       userToDelete.isActive = false;
       userToDelete.isDeleted = true;
       userToDelete.moveOutDate = new Date();
-      await userToDelete.save({ session });
-
-      // Commit the transaction
-      await session.commitTransaction();
+      await userToDelete.save();
 
       return NextResponse.json({
         success: true,
         message: "User deactivated successfully",
       });
     } catch (error) {
-      // Abort the transaction on error
-      await session.abortTransaction();
-      console.error("User deactivation transaction error:", error);
+      console.error("Error during user deactivation:", error);
       return NextResponse.json(
         { success: false, message: "Failed to deactivate user" },
         { status: 500 }
       );
-    } finally {
-      session.endSession();
     }
   } catch (error) {
     console.error("Delete user error:", error);

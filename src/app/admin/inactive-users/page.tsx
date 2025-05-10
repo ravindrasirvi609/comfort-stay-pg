@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { useToast } from "@/hooks/useToast";
 
 interface Room {
@@ -39,6 +39,9 @@ interface InactiveUser {
   permanentAddress?: string;
   city?: string;
   state?: string;
+  isOnNoticePeriod?: boolean;
+  lastStayingDate?: string;
+  depositFees?: number;
 }
 
 export default function InactiveUsersPage() {
@@ -63,10 +66,34 @@ export default function InactiveUsersPage() {
   // Room assignment state
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
+
+  // Generate months array for month selection (current month and next month)
+  const availableMonths = [];
+  const today = new Date();
+  for (let i = 0; i <= 1; i++) {
+    const month = new Date(today.getFullYear(), today.getMonth() + i, 1);
+    const monthStr = month.toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
+    availableMonths.push(monthStr);
+  }
+
+  // Payment state
   const [formData, setFormData] = useState({
     roomId: "",
     roomNumber: "",
     checkInDate: format(new Date(), "yyyy-MM-dd"),
+    clearNoticePeriod: true,
+    // Payment related fields
+    collectDeposit: false,
+    depositAmount: 0,
+    collectRent: false,
+    rentAmount: 0,
+    selectedMonths: [availableMonths[0]],
+    paymentMethod: "Cash",
+    transactionId: "",
+    paymentRemarks: "",
   });
 
   // Fetch inactive users data
@@ -147,7 +174,9 @@ export default function InactiveUsersPage() {
 
   // Function to handle input changes
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -156,14 +185,60 @@ export default function InactiveUsersPage() {
     }));
   };
 
+  // Handle checkbox changes
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+  };
+
+  // Handle number input changes
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === "" ? 0 : Number(value),
+    }));
+  };
+
   // Function to handle room change
   const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRoom = rooms.find((room) => room._id === e.target.value);
+    let newRentAmount = formData.rentAmount;
+
+    // If a room with price is selected, update the rent amount
+    if (selectedRoom && selectedRoom.price > 0) {
+      newRentAmount = selectedRoom.price;
+    }
+
     setFormData((prev) => ({
       ...prev,
       roomId: e.target.value,
       roomNumber: selectedRoom ? selectedRoom.roomNumber : "",
+      rentAmount: newRentAmount,
     }));
+  };
+
+  // Handle month selection
+  const handleMonthSelection = (selectedMonth: string) => {
+    setFormData((prev) => {
+      // If already selected, remove it
+      if (prev.selectedMonths.includes(selectedMonth)) {
+        return {
+          ...prev,
+          selectedMonths: prev.selectedMonths.filter(
+            (m) => m !== selectedMonth
+          ),
+        };
+      }
+      // Otherwise add it
+      return {
+        ...prev,
+        selectedMonths: [...prev.selectedMonths, selectedMonth],
+      };
+    });
   };
 
   // Function to handle activation
@@ -175,26 +250,102 @@ export default function InactiveUsersPage() {
       setActivationLoading(selectedUser._id);
       setError("");
 
-      const response = await axios.put("/api/users/inactive", {
+      // Activate the user
+      const activationResponse = await axios.put("/api/users/inactive", {
         userId: selectedUser._id,
         roomId: formData.roomId || undefined,
         checkInDate: formData.checkInDate,
+        clearNoticePeriod: formData.clearNoticePeriod,
       });
 
-      if (response.data.success) {
-        setActivateSuccess(true);
-        // Update the users list by removing the activated user
-        setUsers(users.filter((u) => u._id !== selectedUser._id));
-
-        // Close modal after a short delay to show success state
-        setTimeout(() => {
-          setShowActivateModal(false);
-          toast.success("User activated successfully!");
-          setActivateSuccess(false);
-        }, 1500);
-      } else {
-        setError(response.data.message || "Failed to activate user");
+      if (!activationResponse.data.success) {
+        setError(activationResponse.data.message || "Failed to activate user");
+        setActivationLoading(null);
+        return;
       }
+
+      // Create payments if needed
+      let depositCreated = false;
+      let rentCreated = false;
+
+      // Handle deposit payment if selected
+      if (formData.collectDeposit && formData.depositAmount > 0) {
+        try {
+          const depositPaymentData = {
+            userId: selectedUser._id,
+            amount: formData.depositAmount,
+            months: [format(new Date(formData.checkInDate), "MMMM yyyy")],
+            paymentDate: formData.checkInDate,
+            dueDate: formData.checkInDate, // Same as payment date for deposit
+            paymentStatus: "Paid",
+            paymentMethod: formData.paymentMethod,
+            transactionId: formData.transactionId || undefined,
+            remarks: `Security deposit for returning user: ${selectedUser.name}`,
+            isDepositPayment: true,
+          };
+
+          const depositResponse = await axios.post(
+            "/api/payments",
+            depositPaymentData
+          );
+          depositCreated = depositResponse.data.success;
+        } catch (err) {
+          console.error("Error creating deposit payment:", err);
+          // Continue with activation even if payment creation fails
+        }
+      }
+
+      // Handle rent payment if selected
+      if (
+        formData.collectRent &&
+        formData.rentAmount > 0 &&
+        formData.selectedMonths.length > 0
+      ) {
+        try {
+          const rentPaymentData = {
+            userId: selectedUser._id,
+            amount: formData.rentAmount,
+            months: formData.selectedMonths,
+            paymentDate: formData.checkInDate,
+            dueDate: new Date(
+              new Date(formData.checkInDate).setDate(
+                new Date(formData.checkInDate).getDate() + 30
+              )
+            )
+              .toISOString()
+              .split("T")[0],
+            paymentStatus: "Paid",
+            paymentMethod: formData.paymentMethod,
+            transactionId: formData.transactionId || undefined,
+            remarks:
+              formData.paymentRemarks ||
+              `Rent payment for returning user: ${selectedUser.name}`,
+            isDepositPayment: false,
+          };
+
+          const rentResponse = await axios.post(
+            "/api/payments",
+            rentPaymentData
+          );
+          rentCreated = rentResponse.data.success;
+        } catch (err) {
+          console.error("Error creating rent payment:", err);
+          // Continue with activation even if payment creation fails
+        }
+      }
+
+      setActivateSuccess(true);
+      // Update the users list by removing the activated user
+      setUsers(users.filter((u) => u._id !== selectedUser._id));
+
+      // Close modal after a short delay to show success state
+      setTimeout(() => {
+        setShowActivateModal(false);
+        toast.success(
+          `User activated successfully! ${depositCreated ? "Deposit payment created. " : ""}${rentCreated ? "Rent payment created." : ""}`
+        );
+        setActivateSuccess(false);
+      }, 1500);
     } catch (err: any) {
       console.error("Error activating user:", err);
       setError(err.response?.data?.message || "Failed to activate user");
@@ -517,7 +668,7 @@ export default function InactiveUsersPage() {
       {/* Activation Dialog - styled to match the registration confirmation dialog */}
       {showActivateModal && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-3xl p-6 overflow-y-auto max-h-[90vh]">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 border-b pb-2 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -553,8 +704,8 @@ export default function InactiveUsersPage() {
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Provide room assignment details to activate this user. Room
-                  assignment is optional.
+                  Provide room assignment and payment details to activate this
+                  user.
                 </p>
               </div>
 
@@ -585,103 +736,404 @@ export default function InactiveUsersPage() {
                 </div>
               )}
 
-              {/* User info summary */}
+              {/* User details section */}
               <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3 border-b border-gray-200 dark:border-gray-700 pb-1">
                   User Information
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Full Name
+                    </p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {selectedUser.name}
+                    </p>
+                  </div>
+                  <div>
                     <p className="text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="font-medium">{selectedUser.email}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {selectedUser.email}
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-500 dark:text-gray-400">PG ID</p>
-                    <p className="font-medium">
+                    <p className="font-medium text-gray-900 dark:text-white">
                       {selectedUser.pgId || "Not assigned"}
                     </p>
                   </div>
                   {selectedUser.phone && (
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Phone</p>
-                      <p className="font-medium">{selectedUser.phone}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {selectedUser.phone}
+                      </p>
                     </div>
                   )}
-                  {selectedUser.city && selectedUser.state && (
+
+                  {/* Previous move-out date if available */}
+                  {selectedUser.moveOutDate && (
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">
-                        Location
+                        Previous Move-out Date
                       </p>
-                      <p className="font-medium">
-                        {selectedUser.city}, {selectedUser.state}
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {new Date(
+                          selectedUser.moveOutDate
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Notice period info if available */}
+                  {selectedUser.isOnNoticePeriod &&
+                    selectedUser.lastStayingDate && (
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Notice Period Until
+                        </p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {new Date(
+                            selectedUser.lastStayingDate
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+
+                  {/* Previous deposit information */}
+                  {selectedUser.depositFees && selectedUser.depositFees > 0 && (
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Previous Security Deposit
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        ₹{selectedUser.depositFees}
                       </p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Room selection */}
-              <div>
-                <label
-                  htmlFor="roomId"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Room Assignment
-                </label>
-                <select
-                  id="roomId"
-                  name="roomId"
-                  value={formData.roomId}
-                  onChange={handleRoomChange}
-                  className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm bg-white/70 dark:bg-gray-900/70 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Room (Optional)</option>
-                  {loadingRooms ? (
-                    <option disabled>Loading rooms...</option>
-                  ) : (
-                    rooms.map((room) => (
-                      <option key={room._id} value={room._id}>
-                        Room {room.roomNumber} - {room.type} (₹{room.price}
-                        /month) - {room.currentOccupancy}/{room.capacity}{" "}
-                        occupied
-                      </option>
-                    ))
-                  )}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Room Assignment Section */}
+                <div className="md:col-span-2">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3 border-b border-gray-200 dark:border-gray-700 pb-1">
+                    Room Assignment
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Room field */}
+                    <div>
+                      <label
+                        htmlFor="roomId"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Room (Optional)
+                      </label>
+                      <select
+                        id="roomId"
+                        name="roomId"
+                        value={formData.roomId}
+                        onChange={handleRoomChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="">Select Room (Optional)</option>
+                        {loadingRooms ? (
+                          <option disabled>Loading rooms...</option>
+                        ) : (
+                          rooms.map((room) => (
+                            <option key={room._id} value={room._id}>
+                              Room {room.roomNumber} - {room.type} (₹
+                              {room.price}/month) - {room.currentOccupancy}/
+                              {room.capacity} occupied
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      {formData.roomNumber && (
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          Selected Room: {formData.roomNumber}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Check-in Date field */}
+                    <div>
+                      <label
+                        htmlFor="checkInDate"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Check-in Date *
+                      </label>
+                      <input
+                        type="date"
+                        id="checkInDate"
+                        name="checkInDate"
+                        value={formData.checkInDate}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Check-in date */}
-              <div>
-                <label
-                  htmlFor="checkInDate"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Check-in Date
-                </label>
-                <input
-                  type="date"
-                  id="checkInDate"
-                  name="checkInDate"
-                  value={formData.checkInDate}
-                  onChange={handleInputChange}
-                  className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm bg-white/70 dark:bg-gray-900/70 text-gray-900 dark:text-white"
-                  required
-                />
+              {/* Payment Section */}
+              <div className="md:col-span-2">
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3 border-b border-gray-200 dark:border-gray-700 pb-1">
+                  Payment Details
+                </h4>
+
+                {/* Security Deposit Section */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id="collectDeposit"
+                      name="collectDeposit"
+                      checked={formData.collectDeposit}
+                      onChange={handleCheckboxChange}
+                      className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
+                    />
+                    <label
+                      htmlFor="collectDeposit"
+                      className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Collect Security Deposit
+                    </label>
+                  </div>
+
+                  {formData.collectDeposit && (
+                    <div className="ml-6 mt-2 p-4 bg-gray-50 dark:bg-gray-800/70 rounded-md">
+                      <div className="mb-3">
+                        <label
+                          htmlFor="depositAmount"
+                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        >
+                          Deposit Amount (₹)
+                        </label>
+                        <input
+                          type="number"
+                          id="depositAmount"
+                          name="depositAmount"
+                          value={formData.depositAmount || ""}
+                          onChange={handleNumberChange}
+                          min="0"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        />
+                      </div>
+
+                      {selectedUser.depositFees &&
+                        selectedUser.depositFees > 0 && (
+                          <div className="text-sm bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
+                            <p className="text-yellow-800 dark:text-yellow-200">
+                              This user previously had a security deposit of ₹
+                              {selectedUser.depositFees}. This will be replaced
+                              with the new amount.
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Rent Payment Section */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id="collectRent"
+                      name="collectRent"
+                      checked={formData.collectRent}
+                      onChange={handleCheckboxChange}
+                      className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
+                    />
+                    <label
+                      htmlFor="collectRent"
+                      className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Collect Rent Payment
+                    </label>
+                  </div>
+
+                  {formData.collectRent && (
+                    <div className="ml-6 mt-2 p-4 bg-gray-50 dark:bg-gray-800/70 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            htmlFor="rentAmount"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          >
+                            Rent Amount (₹)
+                          </label>
+                          <input
+                            type="number"
+                            id="rentAmount"
+                            name="rentAmount"
+                            value={formData.rentAmount || ""}
+                            onChange={handleNumberChange}
+                            min="0"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                          />
+                        </div>
+
+                        {/* Month selection */}
+                        <div>
+                          <label
+                            htmlFor="selectedMonths"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          >
+                            Months
+                          </label>
+                          <div className="border border-gray-300 dark:border-gray-700 rounded-md p-3">
+                            <div className="grid grid-cols-2 gap-2">
+                              {availableMonths.map((month) => (
+                                <div key={month} className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={`month-${month}`}
+                                    checked={formData.selectedMonths.includes(
+                                      month
+                                    )}
+                                    onChange={() => handleMonthSelection(month)}
+                                    className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
+                                  />
+                                  <label
+                                    htmlFor={`month-${month}`}
+                                    className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                                  >
+                                    {month}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment Method - only if collecting payment */}
+                {(formData.collectDeposit || formData.collectRent) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label
+                        htmlFor="paymentMethod"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Payment Method
+                      </label>
+                      <select
+                        id="paymentMethod"
+                        name="paymentMethod"
+                        value={formData.paymentMethod}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                      >
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Card">Card</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {formData.paymentMethod !== "Cash" && (
+                      <div>
+                        <label
+                          htmlFor="transactionId"
+                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        >
+                          Transaction ID
+                        </label>
+                        <input
+                          type="text"
+                          id="transactionId"
+                          name="transactionId"
+                          value={formData.transactionId}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                          placeholder="Enter transaction reference"
+                        />
+                      </div>
+                    )}
+
+                    {/* Remarks field */}
+                    <div className="md:col-span-2">
+                      <label
+                        htmlFor="paymentRemarks"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >
+                        Payment Remarks
+                      </label>
+                      <textarea
+                        id="paymentRemarks"
+                        name="paymentRemarks"
+                        value={formData.paymentRemarks}
+                        onChange={handleInputChange}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
+                        placeholder="Add any additional notes for the payment"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Notice Period Handling */}
+              {selectedUser.isOnNoticePeriod && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-medium text-yellow-800 dark:text-yellow-300 mb-2 flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Notice Period Status
+                  </h4>
+                  <div className="mb-2">
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      This user is currently on notice period. Upon activation:
+                    </p>
+                  </div>
+                  <div className="mt-2">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        name="clearNoticePeriod"
+                        checked={formData.clearNoticePeriod}
+                        onChange={handleCheckboxChange}
+                        className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-700"
+                      />
+                      <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                        Clear notice period status and reset last staying date
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               {/* Action buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
                 <button
                   type="button"
                   onClick={closeActivateModal}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={activationLoading === selectedUser._id}
-                  className="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-70"
+                  className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-70"
                 >
                   {activationLoading === selectedUser._id ? (
                     <div className="flex items-center">
