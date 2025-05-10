@@ -937,11 +937,13 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mr-3">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user.name
+                              ? user.name.charAt(0).toUpperCase()
+                              : "?"}
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {user.name}
+                              {user.name || "Unknown User"}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               {user.email}
@@ -1039,10 +1041,10 @@ export default function AdminDashboard() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {payment.userId.name}
+                          {payment.userId?.name || "Unknown User"}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          ID: {payment.userId.pgId}
+                          ID: {payment.userId?.pgId || "N/A"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1143,10 +1145,10 @@ export default function AdminDashboard() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {complaint.userId.name}
+                          {complaint.userId?.name || "Unknown User"}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          ID: {complaint.userId.pgId}
+                          ID: {complaint.userId?.pgId || "N/A"}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -1236,11 +1238,13 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 mr-3">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user.name
+                              ? user.name.charAt(0).toUpperCase()
+                              : "?"}
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {user.name}
+                              {user.name || "Unknown User"}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               {user.email}
