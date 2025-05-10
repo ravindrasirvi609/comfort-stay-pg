@@ -19,9 +19,13 @@ import {
   FaCalendarTimes,
   FaSignOutAlt,
   FaDownload,
+  FaDoorClosed,
 } from "react-icons/fa";
 import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import ExitSurvey from "@/components/ExitSurvey";
 
 interface User {
   _id: string;
@@ -55,6 +59,7 @@ interface User {
   lastStayingDate?: string;
   isActive?: boolean;
   depositFees?: number;
+  moveOutDate?: string;
 }
 
 interface Payment {
@@ -116,6 +121,10 @@ export default function UserProfilePage() {
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [withdrawError, setWithdrawError] = useState("");
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
+  const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
+  const [isExitSurveyOpen, setIsExitSurveyOpen] = useState(false);
+  const [isCompleteCheckout, setIsCompleteCheckout] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch dashboard data
@@ -287,6 +296,72 @@ export default function UserProfilePage() {
     }
   };
 
+  // Handle checkout request
+  const handleCheckoutRequest = async () => {
+    if (!user?._id) return;
+
+    try {
+      setIsSubmitting(true);
+
+      // First we'll show the exit survey
+      setIsCheckoutDialogOpen(false);
+      setIsExitSurveyOpen(true);
+    } catch (error: any) {
+      console.error("Error starting checkout process:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to start checkout process"
+      );
+      setIsSubmitting(false);
+    }
+  };
+
+  // Complete the checkout with survey data
+  const handleCompleteSurvey = async (surveyData?: any) => {
+    if (!user?._id) return;
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await axios.post(`/api/users/${user._id}/checkout`, {
+        exitSurvey: surveyData,
+        skipSurvey: !surveyData,
+      });
+
+      if (response.data.success) {
+        toast.success("Checkout process completed. Thank you for your stay!");
+        setIsExitSurveyOpen(false);
+        setIsCompleteCheckout(true);
+
+        // Refresh the page after a short delay
+        setTimeout(() => {
+          router.refresh();
+        }, 2000);
+      } else {
+        toast.error(response.data.message || "Failed to complete checkout");
+      }
+    } catch (error: any) {
+      console.error("Error completing checkout:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to complete checkout"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle survey cancellation
+  const handleCancelSurvey = () => {
+    setIsExitSurveyOpen(false);
+    // Option to skip survey
+    if (
+      confirm(
+        "Are you sure you want to skip the exit survey? Your feedback helps us improve."
+      )
+    ) {
+      handleCompleteSurvey();
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center">
@@ -402,7 +477,7 @@ export default function UserProfilePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 mt-4">
-              {!user?.isOnNoticePeriod && (
+              {!user?.isOnNoticePeriod && !user?.moveOutDate && (
                 <button
                   onClick={() => setIsNoticePeriodDialogOpen(true)}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -411,14 +486,30 @@ export default function UserProfilePage() {
                   Submit Notice
                 </button>
               )}
-              {user?.isOnNoticePeriod && (
-                <button
-                  onClick={() => setIsWithdrawDialogOpen(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  <FaCalendarAlt className="mr-2" />
-                  Withdraw Notice
-                </button>
+              {user?.isOnNoticePeriod && !user?.moveOutDate && (
+                <>
+                  <button
+                    onClick={() => setIsWithdrawDialogOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <FaCalendarAlt className="mr-2" />
+                    Withdraw Notice
+                  </button>
+                  <button
+                    onClick={() => setIsCheckoutDialogOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    <FaDoorClosed className="mr-2" />
+                    Checkout Now
+                  </button>
+                </>
+              )}
+              {user?.moveOutDate && (
+                <div className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                  <FaDoorClosed className="mr-2" />
+                  Checked out on{" "}
+                  {new Date(user.moveOutDate).toLocaleDateString("en-IN")}
+                </div>
               )}
             </div>
           </div>
@@ -1169,6 +1260,179 @@ export default function UserProfilePage() {
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Checkout Confirmation Dialog */}
+      {isCheckoutDialogOpen && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              aria-hidden="true"
+            ></div>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
+                    <FaExclamationCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3
+                      className="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                      id="modal-title"
+                    >
+                      Confirm Checkout
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Are you sure you want to checkout? This will mark your
+                        stay as completed and you will need to return your key
+                        and complete the exit process with management.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                        You will also be asked to complete a short exit survey
+                        to help us improve our services.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleCheckoutRequest}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Processing..." : "Proceed to Checkout"}
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+                  onClick={() => setIsCheckoutDialogOpen(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Survey Dialog */}
+      {isExitSurveyOpen && user && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              aria-hidden="true"
+            ></div>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+              <ExitSurvey
+                userId={user._id}
+                onComplete={handleCompleteSurvey}
+                onCancel={handleCancelSurvey}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Checkout Complete Dialog */}
+      {isCompleteCheckout && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              aria-hidden="true"
+            ></div>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg
+                      className="h-6 w-6 text-green-600 dark:text-green-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3
+                      className="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                      id="modal-title"
+                    >
+                      Checkout Complete
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Thank you for your stay with us! Your checkout has been
+                        processed successfully.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                        Please make sure to return your keys to the management
+                        before leaving. We wish you all the best!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={() => {
+                    setIsCompleteCheckout(false);
+                    router.refresh();
+                  }}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

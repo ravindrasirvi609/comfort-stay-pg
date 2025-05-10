@@ -40,6 +40,34 @@ export interface IUser {
 }
 
 /**
+ * User Archive model interface
+ */
+export interface IUserArchive extends IUser {
+  archiveReason:
+    | "Completed Stay"
+    | "Early Departure"
+    | "Rule Violation"
+    | "Payment Issues"
+    | "Other";
+  archiveDate: Date;
+  exitSurveyCompleted: boolean;
+  stayDuration: number; // in days
+  exitFeedback?: {
+    overallExperience: number; // 1-5 stars
+    cleanliness: number; // 1-5 stars
+    facilities: number; // 1-5 stars
+    staff: number; // 1-5 stars
+    foodQuality: number; // 1-5 stars
+    valueForMoney: number; // 1-5 stars
+    wouldRecommend: boolean;
+    likedMost: string;
+    improvements: string;
+    exitReason: string;
+    otherComments: string;
+  };
+}
+
+/**
  * Room model interface
  */
 export interface IRoom {
@@ -162,7 +190,8 @@ export interface INotification {
     | "Email"
     | "Other"
     | "NoticePeriod"
-    | "Notice";
+    | "Notice"
+    | "Checkout";
   relatedId?: Schema.Types.ObjectId;
   relatedModel?:
     | "Payment"
@@ -170,7 +199,8 @@ export interface INotification {
     | "RoomChangeRequest"
     | "User"
     | "Room"
-    | "Notice";
+    | "Notice"
+    | "UserArchive";
   isRead: boolean;
   isEmailSent: boolean;
   emailDetails?: {
