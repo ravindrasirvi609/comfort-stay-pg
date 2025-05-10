@@ -75,7 +75,9 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     const {
+      building,
       roomNumber,
+      floor,
       type,
       price,
       capacity,
@@ -83,26 +85,48 @@ export async function POST(request: NextRequest) {
     } = await request.json();
 
     // Validate required fields
-    if (!roomNumber || !type || !price || !capacity) {
+    if (!building || !roomNumber || !floor || !type || !price || !capacity) {
       return NextResponse.json(
         { success: false, message: "Please provide all required fields" },
         { status: 400 }
       );
     }
 
-    // Check if room with this number already exists
-    const existingRoom = await Room.findOne({ roomNumber });
+    // Check if building is valid
+    if (building !== "A" && building !== "B") {
+      return NextResponse.json(
+        { success: false, message: "Building must be either A or B" },
+        { status: 400 }
+      );
+    }
+
+    // Check if floor is valid (1-6)
+    if (floor < 1 || floor > 6) {
+      return NextResponse.json(
+        { success: false, message: "Floor must be between 1 and 6" },
+        { status: 400 }
+      );
+    }
+
+    // Check if room with this number already exists in this building and floor
+    const existingRoom = await Room.findOne({ building, floor, roomNumber });
 
     if (existingRoom) {
       return NextResponse.json(
-        { success: false, message: "Room with this number already exists" },
+        {
+          success: false,
+          message:
+            "Room with this number already exists in this building and floor",
+        },
         { status: 400 }
       );
     }
 
     // Create new room
     const newRoom = new Room({
+      building,
       roomNumber,
+      floor,
       type,
       price,
       capacity,

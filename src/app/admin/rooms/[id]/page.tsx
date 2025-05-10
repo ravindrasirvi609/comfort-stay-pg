@@ -33,13 +33,14 @@ interface Bed {
 
 interface Room {
   _id: string;
+  building: "A" | "B";
   roomNumber: string;
   status: string;
   type: string;
   price: number;
   capacity: number;
   currentOccupancy: number;
-  floor: string;
+  floor: number;
   amenities: string[];
   isActive: boolean;
   createdAt: string;
@@ -197,7 +198,7 @@ export default function RoomDetailPage() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                Room {room.roomNumber}
+                Building {room.building} - Room {room.roomNumber}
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-400">
                 Floor: {room.floor} | Type:{" "}

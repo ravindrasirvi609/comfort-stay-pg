@@ -108,6 +108,7 @@ export async function PUT(
     await connectToDatabase();
 
     const {
+      building,
       roomNumber,
       floor,
       type,
@@ -128,22 +129,53 @@ export async function PUT(
       );
     }
 
-    // If room number is changed, check if the new number already exists
-    if (roomNumber && roomNumber !== roomToUpdate.roomNumber) {
-      const existingRoom = await Room.findOne({ roomNumber });
+    // If building, floor, or room number is changed, check if the combination already exists
+    if (
+      (building && building !== roomToUpdate.building) ||
+      (floor && floor !== roomToUpdate.floor) ||
+      (roomNumber && roomNumber !== roomToUpdate.roomNumber)
+    ) {
+      const query = {
+        building: building || roomToUpdate.building,
+        floor: floor || roomToUpdate.floor,
+        roomNumber: roomNumber || roomToUpdate.roomNumber,
+      };
 
-      if (existingRoom) {
+      const existingRoom = await Room.findOne(query);
+
+      if (existingRoom && existingRoom._id.toString() !== params.id) {
         return NextResponse.json(
-          { success: false, message: "Room with this number already exists" },
+          {
+            success: false,
+            message: "Room with this building, floor and number already exists",
+          },
           { status: 400 }
         );
       }
-
-      roomToUpdate.roomNumber = roomNumber;
     }
 
     // Update fields if provided
-    if (floor) roomToUpdate.floor = floor;
+    if (building) {
+      if (building !== "A" && building !== "B") {
+        return NextResponse.json(
+          { success: false, message: "Building must be either A or B" },
+          { status: 400 }
+        );
+      }
+      roomToUpdate.building = building;
+    }
+
+    if (floor) {
+      if (floor < 1 || floor > 6) {
+        return NextResponse.json(
+          { success: false, message: "Floor must be between 1 and 6" },
+          { status: 400 }
+        );
+      }
+      roomToUpdate.floor = floor;
+    }
+
+    if (roomNumber) roomToUpdate.roomNumber = roomNumber;
     if (type) roomToUpdate.type = type;
     if (price) roomToUpdate.price = price;
     if (capacity !== undefined) {

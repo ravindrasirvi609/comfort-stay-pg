@@ -14,7 +14,9 @@ export default function EditRoomPage() {
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
+    building: "",
     roomNumber: "",
+    floor: 0,
     status: "",
     price: 0,
     capacity: 0,
@@ -32,7 +34,9 @@ export default function EditRoomPage() {
         if (response.data.success && response.data.room) {
           const room = response.data.room;
           setFormData({
+            building: room.building || "A",
             roomNumber: room.roomNumber,
+            floor: room.floor || 1,
             status: room.status,
             price: room.price,
             capacity: room.capacity,
@@ -175,6 +179,46 @@ export default function EditRoomPage() {
         <div className="p-6">
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Building */}
+              <div className="col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Building
+                </label>
+                <select
+                  name="building"
+                  value={formData.building}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/50 dark:bg-gray-800/50"
+                  required
+                >
+                  <option value="">Select Building</option>
+                  <option value="A">Building A</option>
+                  <option value="B">Building B</option>
+                </select>
+              </div>
+
+              {/* Floor */}
+              <div className="col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Floor
+                </label>
+                <select
+                  name="floor"
+                  value={formData.floor}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/50 dark:bg-gray-800/50"
+                  required
+                >
+                  <option value="">Select Floor</option>
+                  <option value="1">1st Floor</option>
+                  <option value="2">2nd Floor</option>
+                  <option value="3">3rd Floor</option>
+                  <option value="4">4th Floor</option>
+                  <option value="5">5th Floor</option>
+                  <option value="6">6th Floor</option>
+                </select>
+              </div>
+
               {/* Room Number */}
               <div className="col-span-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

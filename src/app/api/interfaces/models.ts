@@ -72,6 +72,7 @@ export interface IUserArchive extends IUser {
  */
 export interface IRoom {
   _id?: string;
+  building: "A" | "B";
   roomNumber: string;
   floor: number;
   type: "2-sharing" | "3-sharing";

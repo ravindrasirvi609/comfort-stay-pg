@@ -3,13 +3,19 @@ import { IRoom } from "../interfaces/models";
 
 const RoomSchema = new Schema<IRoom>(
   {
+    building: {
+      type: String,
+      enum: ["A", "B"],
+      required: [true, "Building identifier is required"],
+    },
     roomNumber: {
       type: String,
       required: true,
-      unique: true,
     },
     floor: {
       type: Number,
+      min: 1,
+      max: 6,
       required: true,
     },
     type: {
@@ -54,6 +60,12 @@ const RoomSchema = new Schema<IRoom>(
     toObject: { virtuals: true },
   }
 );
+
+// Create a compound index for building, floor, and roomNumber to ensure uniqueness
+RoomSchema.index({ building: 1, floor: 1, roomNumber: 1 }, { unique: true });
+
+// Create a compound index for building and floor
+RoomSchema.index({ building: 1, floor: 1 });
 
 // Virtual field to get all residents in this room
 RoomSchema.virtual("residents", {
