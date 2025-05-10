@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { FaCalendarTimes, FaExclamationTriangle, FaEye } from "react-icons/fa";
 
 interface User {
@@ -40,6 +40,28 @@ export default function NoticeUsersList() {
 
     fetchUsersOnNotice();
   }, []);
+
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "Not specified";
+
+    const date = new Date(dateString);
+    return isValid(date) ? format(date, "dd MMM yyyy") : "Invalid date";
+  };
+
+  // Helper function to safely calculate days remaining
+  const calculateDaysRemaining = (dateString: string | null | undefined) => {
+    if (!dateString) return 0;
+
+    const lastDate = new Date(dateString);
+
+    if (!isValid(lastDate)) return 0;
+
+    const today = new Date();
+    return Math.ceil(
+      (lastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+  };
 
   if (loading) {
     return (
@@ -121,10 +143,8 @@ export default function NoticeUsersList() {
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {users.map((user) => {
-              const lastDate = new Date(user.lastStayingDate);
-              const today = new Date();
-              const daysRemaining = Math.ceil(
-                (lastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+              const daysRemaining = calculateDaysRemaining(
+                user.lastStayingDate
               );
 
               return (
@@ -151,7 +171,7 @@ export default function NoticeUsersList() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {format(new Date(user.lastStayingDate), "dd MMM yyyy")}
+                    {safeFormatDate(user.lastStayingDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
