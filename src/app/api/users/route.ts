@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
+import Room from "@/app/api/models/Room";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {

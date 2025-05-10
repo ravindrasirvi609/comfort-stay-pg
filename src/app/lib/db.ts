@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+// Import models to ensure they are registered
+import "./models";
 
 // Get MongoDB URI from environment or throw error if missing
 const MONGODB_URI = process.env.MONGODB_URI;
