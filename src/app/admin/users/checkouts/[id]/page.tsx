@@ -65,14 +65,12 @@ interface Room {
   price: number;
 }
 
-export default function UserArchiveDetail({
-  params,
-}: {
-  params: { id: string } | Promise<{ id: string }>;
-}) {
-  // Properly unwrap the params object using React.use()
-  const resolvedParams = params instanceof Promise ? use(params) : params;
-  const userId = resolvedParams.id;
+interface PageProps {
+  params: { id: string };
+}
+
+export default function UserArchiveDetail({ params }: PageProps) {
+  const userId = params.id;
 
   const router = useRouter();
   const [archive, setArchive] = useState<UserArchive | null>(null);
