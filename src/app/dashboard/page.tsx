@@ -939,7 +939,7 @@ export default function UserProfilePage() {
                         </div>
                       </div>
 
-                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                      {/* <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                         <Link
                           href={`/dashboard/complaints/${complaint._id}`}
                           className="text-pink-600 hover:text-pink-700 dark:text-pink-500 dark:hover:text-pink-400 text-sm font-medium flex items-center"
@@ -947,7 +947,7 @@ export default function UserProfilePage() {
                           View Details
                           <FaChevronRight className="ml-1 text-xs" />
                         </Link>
-                      </div>
+                      </div> */}
                     </div>
                   ))}
                 </div>
