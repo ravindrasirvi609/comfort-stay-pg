@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
   ArrowLeft,
@@ -65,12 +65,9 @@ interface Room {
   price: number;
 }
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default function UserArchiveDetail({ params }: PageProps) {
-  const userId = params.id;
+export default function UserArchiveDetail() {
+  const params = useParams();
+  const userId = params.id as string;
 
   const router = useRouter();
   const [archive, setArchive] = useState<UserArchive | null>(null);
