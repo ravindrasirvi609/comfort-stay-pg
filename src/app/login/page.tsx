@@ -501,8 +501,8 @@ export default function LoginPage() {
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">
               <p>Admin credentials for testing:</p>
-              <p>Email: comfortstaypg@gmail.com</p>
-              <p>Password: Comfort@189</p>
+              {/* <p>Email: comfortstaypg@gmail.com</p>
+              <p>Password: Comfort@189</p> */}
             </div>
           </form>
         )}
