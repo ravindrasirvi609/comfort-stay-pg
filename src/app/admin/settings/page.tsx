@@ -58,7 +58,7 @@ export default function SettingsPage() {
     state: "",
     pincode: "",
     contactEmail: "",
-    contactPhone: "",
+    contactPhone: "9922538989",
     description: "",
     rules: [""],
     features: {
