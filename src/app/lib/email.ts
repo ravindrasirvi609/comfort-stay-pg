@@ -128,52 +128,129 @@ export async function sendRegistrationConfirmationEmail(
   const subject = "Registration Received - Comfort Stay PG";
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <!-- Header -->
-      <div style="background-color: #1a365d; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Comfort Stay PG</h1>
-      </div>
-      
-      <!-- Main Content -->
-      <div style="background-color: white; padding: 30px 25px;">
-        <h2 style="color: #1a365d; margin-top: 0; font-size: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Registration Confirmation</h2>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Dear ${name},</p>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Thank you for registering with Comfort Stay PG. We appreciate your interest in our accommodation services.</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #1a365d; margin: 20px 0;">
-          <p style="margin: 0; color: #333; font-size: 15px;"><strong>Status:</strong> Your registration is currently under review</p>
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Our administrative team will assess your application shortly. Upon approval, you will receive your login credentials via email.</p>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">If you have any questions regarding your registration or our services, please contact our support team.</p>
-      </div>
-      
-      <!-- Features Section -->
-      <div style="background-color: #f8f9fa; padding: 20px 25px;">
-        <h3 style="color: #1a365d; font-size: 16px; margin-top: 0;">What to expect at Comfort Stay PG:</h3>
-        
-        <ul style="color: #333; line-height: 1.5; padding-left: 20px;">
-          <li style="margin-bottom: 8px;">Comfortable and well-maintained accommodation</li>
-          <li style="margin-bottom: 8px;">Nutritious and balanced meals</li>
-          <li style="margin-bottom: 8px;">24/7 security services</li>
-          <li style="margin-bottom: 8px;">Clean and hygienic environment</li>
-        </ul>
-      </div>
-      
-      <!-- Footer -->
-      <div style="background-color: #1a365d; color: white; padding: 20px; text-align: center; font-size: 12px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
-        <p style="margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
-        <div style="margin-bottom: 10px;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: white; text-decoration: none; margin: 0 10px;">Website</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: white; text-decoration: none; margin: 0 10px;">Contact Us</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="color: white; text-decoration: none; margin: 0 10px;">Login</a>
-        </div>
-        <p style="margin: 0;">123 PG Street, City, State, India - 123456</p>
-      </div>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+      <!--[if mso]>
+      <style type="text/css">
+        table {border-collapse: collapse;}
+        .button {padding: 12px 24px !important;}
+        .gradient-bg {background: #FF92B7 !important;}
+      </style>
+      <![endif]-->
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #fff5f8; color: #4a4a4a;">
+      <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 600;">Comfort Stay PG</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <h2 style="color: #FF92B7; font-size: 22px; margin: 0 0 20px; font-weight: 600;">Registration Received</h2>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Dear ${name},</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Thank you for registering with Comfort Stay PG. We're excited about your interest in our premium accommodation services!</p>
+              
+              <!-- Status Box -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffeef5; border-radius: 8px; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="font-size: 16px; margin: 0; font-weight: 500;">
+                      <span style="display: inline-block; width: 12px; height: 12px; background-color: #FFC0D6; border-radius: 50%; margin-right: 8px;"></span>
+                      Your registration is currently under review
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Our administrative team is reviewing your application and will process it shortly. Upon approval, we'll send you your login credentials via email.</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;">If you have any questions about your registration, feel free to contact our support team.</p>
+              
+              <!-- Features Section -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px 0 25px;">
+                <tr>
+                  <td>
+                    <h3 style="color: #d53f8c; font-size: 18px; margin: 0 0 15px;">What to expect at Comfort Stay PG:</h3>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td width="25" valign="top" style="padding-right: 10px; padding-bottom: 12px;">
+                          <div style="width: 8px; height: 8px; background-color: #FF92B7; border-radius: 50%; margin-top: 6px;"></div>
+                        </td>
+                        <td style="font-size: 15px; padding-bottom: 12px;">Modern and comfortable accommodation with all amenities</td>
+                      </tr>
+                      <tr>
+                        <td width="25" valign="top" style="padding-right: 10px; padding-bottom: 12px;">
+                          <div style="width: 8px; height: 8px; background-color: #FF92B7; border-radius: 50%; margin-top: 6px;"></div>
+                        </td>
+                        <td style="font-size: 15px; padding-bottom: 12px;">Nutritious and delicious meals served three times daily</td>
+                      </tr>
+                      <tr>
+                        <td width="25" valign="top" style="padding-right: 10px; padding-bottom: 12px;">
+                          <div style="width: 8px; height: 8px; background-color: #FF92B7; border-radius: 50%; margin-top: 6px;"></div>
+                        </td>
+                        <td style="font-size: 15px; padding-bottom: 12px;">High-speed WiFi and fully furnished rooms</td>
+                      </tr>
+                      <tr>
+                        <td width="25" valign="top" style="padding-right: 10px;">
+                          <div style="width: 8px; height: 8px; background-color: #FF92B7; border-radius: 50%; margin-top: 6px;"></div>
+                        </td>
+                        <td style="font-size: 15px;">24/7 security with biometric access for your safety</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 12px 24px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Contact Support</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #eee;">
+                    <p style="font-size: 14px; color: #666; margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
+                    <p style="font-size: 14px; color: #666; margin: 0 0 5px;">Hinjewadi Phase 1 Rd, Mukai Nagar, Pune, Maharashtra 411057</p>
+                    <p style="font-size: 14px; margin: 15px 0 0;">
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Website</a> |
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Contact</a> |
+                      <a href="tel:+919922538989" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">+91 9922 538 989</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
   `;
 
   return sendEmail({ to: email, subject, html, userId });
@@ -192,65 +269,138 @@ export async function sendWelcomeEmail(
   const subject = "Welcome to Comfort Stay PG - Your Login Credentials";
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <!-- Header -->
-      <div style="background-color: #1a365d; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Comfort Stay PG</h1>
-      </div>
-      
-      <!-- Main Content -->
-      <div style="background-color: white; padding: 30px 25px;">
-        <h2 style="color: #1a365d; margin-top: 0; font-size: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Welcome to Comfort Stay PG</h2>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Dear ${name},</p>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">We are pleased to inform you that your registration has been approved. Below are your login credentials for accessing our resident portal:</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #1a365d; margin: 20px 0;">
-          <p style="margin: 0 0 8px; color: #333; font-size: 15px;"><strong>Email (Login ID):</strong> ${email}</p>
-          <p style="margin: 0 0 8px; color: #333; font-size: 15px;"><strong>PG ID (for reference only):</strong> ${pgId}</p>
-          <p style="margin: 0; color: #333; font-size: 15px;"><strong>Password:</strong> ${password}</p>
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;"><strong>Important:</strong> Please use your email address as your login ID when signing in to the portal.</p>
-        
-        <div style="text-align: center; margin: 25px 0;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="background-color: #1a365d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; display: inline-block; font-size: 15px;">Login to Your Account</a>
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">For security purposes, we recommend changing your password after your first login.</p>
-      </div>
-      
-      <!-- Features Section -->
-      <div style="background-color: #f8f9fa; padding: 20px 25px;">
-        <h3 style="color: #1a365d; font-size: 16px; margin-top: 0;">What you can do with your account:</h3>
-        
-        <ul style="color: #333; line-height: 1.5; padding-left: 20px;">
-          <li style="margin-bottom: 8px;">View your room details and payment history</li>
-          <li style="margin-bottom: 8px;">Submit maintenance requests</li>
-          <li style="margin-bottom: 8px;">Access meal schedules and menus</li>
-          <li style="margin-bottom: 8px;">Communicate with management</li>
-        </ul>
-      </div>
-      
-      <!-- Footer -->
-      <div style="background-color: #1a365d; color: white; padding: 20px; text-align: center; font-size: 12px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
-        <p style="margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
-        <div style="margin-bottom: 10px;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: white; text-decoration: none; margin: 0 10px;">Website</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: white; text-decoration: none; margin: 0 10px;">Contact Us</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="color: white; text-decoration: none; margin: 0 10px;">Login</a>
-        </div>
-        <p style="margin: 0;">123 PG Street, City, State, India - 123456</p>
-      </div>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+      <!--[if mso]>
+      <style type="text/css">
+        table {border-collapse: collapse;}
+        .button {padding: 12px 24px !important;}
+        .gradient-bg {background: #FF92B7 !important;}
+      </style>
+      <![endif]-->
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #fff5f8; color: #4a4a4a;">
+      <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 600;">Welcome to Comfort Stay PG!</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Dear ${name},</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">We're thrilled to welcome you to Comfort Stay PG! Your registration has been approved, and we've created your account. Below are your login credentials to access our resident portal:</p>
+              
+              <!-- Credentials Box -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffeef5; border-radius: 8px; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">Email (Login ID):</strong> ${email}</p>
+                    <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">PG ID:</strong> ${pgId}</p>
+                    <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">Password:</strong> ${password}</p>
+                    <p style="font-size: 14px; color: #666; margin: 15px 0 0; font-style: italic;">For security, please change your password after your first login.</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;"><strong>Note:</strong> Please use your email address as your login ID when signing in.</p>
+              
+              <!-- CTA Button -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 12px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Login to Your Account</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Features Section -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px 0 10px;">
+                <tr>
+                  <td>
+                    <h3 style="color: #d53f8c; font-size: 18px; margin: 0 0 15px;">What you can do with your account:</h3>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: separate; border-spacing: 0 12px;">
+                      <tr>
+                        <td width="36" valign="top">
+                          <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #FF92B7 0%, #FFC0D6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center;">1</div>
+                        </td>
+                        <td style="font-size: 15px;">View your room details and payment history</td>
+                      </tr>
+                      <tr>
+                        <td width="36" valign="top">
+                          <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #FF92B7 0%, #FFC0D6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center;">2</div>
+                        </td>
+                        <td style="font-size: 15px;">Submit maintenance requests and track their status</td>
+                      </tr>
+                      <tr>
+                        <td width="36" valign="top">
+                          <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #FF92B7 0%, #FFC0D6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center;">3</div>
+                        </td>
+                        <td style="font-size: 15px;">Access meal schedules and daily menus</td>
+                      </tr>
+                      <tr>
+                        <td width="36" valign="top">
+                          <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #FF92B7 0%, #FFC0D6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center;">4</div>
+                        </td>
+                        <td style="font-size: 15px;">Communicate directly with management</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 25px 0 10px;">We're delighted to have you as part of our community! If you have any questions, please don't hesitate to reach out to us.</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0;">Warm Regards,<br>
+              <strong>The Comfort Stay PG Team</strong></p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #eee;">
+                    <p style="font-size: 14px; color: #666; margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
+                    <p style="font-size: 14px; color: #666; margin: 0 0 5px;">Hinjewadi Phase 1 Rd, Mukai Nagar, Pune, Maharashtra 411057</p>
+                    <p style="font-size: 14px; margin: 15px 0 0;">
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Website</a> |
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Contact</a> |
+                      <a href="tel:+919922538989" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">+91 9922 538 989</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
   `;
 
   return sendEmail({ to: email, subject, html, userId });
 }
 
 /**
- * Send email with reset credentials
+ * Send reset credentials email
  */
 export async function sendResetCredentialsEmail(
   name: string,
@@ -259,56 +409,112 @@ export async function sendResetCredentialsEmail(
   password: string,
   userId?: string | mongoose.Types.ObjectId
 ) {
-  const subject = "Comfort Stay PG - Your Reset Login Credentials";
+  const subject = "Your Comfort Stay PG Account Has Been Reset";
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <!-- Header -->
-      <div style="background-color: #1a365d; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Comfort Stay PG</h1>
-      </div>
-      
-      <!-- Main Content -->
-      <div style="background-color: white; padding: 30px 25px;">
-        <h2 style="color: #1a365d; margin-top: 0; font-size: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Password Reset Completed</h2>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Dear ${name},</p>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Your login credentials have been reset successfully. Please find your new login details below:</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #1a365d; margin: 20px 0;">
-          <p style="margin: 0 0 8px; color: #333; font-size: 15px;"><strong>Email (Login ID):</strong> ${email}</p>
-          <p style="margin: 0 0 8px; color: #333; font-size: 15px;"><strong>PG ID (for reference only):</strong> ${pgId}</p>
-          <p style="margin: 0; color: #333; font-size: 15px;"><strong>New Password:</strong> ${password}</p>
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;"><strong>Important:</strong> Please use your email address as your login ID when signing in to the portal.</p>
-        
-        <div style="text-align: center; margin: 25px 0;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="background-color: #1a365d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; display: inline-block; font-size: 15px;">Login to Your Account</a>
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">For security purposes, we strongly recommend changing your password after your first login.</p>
-      </div>
-      
-      <!-- Footer -->
-      <div style="background-color: #1a365d; color: white; padding: 20px; text-align: center; font-size: 12px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
-        <p style="margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
-        <div style="margin-bottom: 10px;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: white; text-decoration: none; margin: 0 10px;">Website</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: white; text-decoration: none; margin: 0 10px;">Contact Us</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="color: white; text-decoration: none; margin: 0 10px;">Login</a>
-        </div>
-        <p style="margin: 0;">123 PG Street, City, State, India - 123456</p>
-      </div>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+      <!--[if mso]>
+      <style type="text/css">
+        table {border-collapse: collapse;}
+        .button {padding: 12px 24px !important;}
+        .gradient-bg {background: #FF92B7 !important;}
+      </style>
+      <![endif]-->
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #fff5f8; color: #4a4a4a;">
+      <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 600;">Account Credentials Reset</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Dear ${name},</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Your account credentials have been reset as requested. Below are your new login details:</p>
+              
+              <!-- Credentials Box -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffeef5; border-radius: 8px; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">Email (Login ID):</strong> ${email}</p>
+                    <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">PG ID:</strong> ${pgId}</p>
+                    <p style="font-size: 15px; margin: 0;"><strong style="color: #d53f8c;">New Password:</strong> ${password}</p>
+                    <p style="font-size: 14px; color: #666; margin: 15px 0 0; font-style: italic;">For security, please change your password immediately after logging in.</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Security Notice -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fff8e1; border-radius: 8px; border-left: 4px solid #ffc107; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 15px 20px;">
+                    <p style="font-size: 15px; margin: 0; color: #856404;"><strong>Security Notice:</strong> If you did not request this password reset, please contact our support team immediately.</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- CTA Button -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 12px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Login with New Password</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 10px;">If you need any assistance, don't hesitate to reach out to our support team.</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0;">Warm Regards,<br>
+              <strong>The Comfort Stay PG Team</strong></p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #eee;">
+                    <p style="font-size: 14px; color: #666; margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
+                    <p style="font-size: 14px; color: #666; margin: 0 0 5px;">Hinjewadi Phase 1 Rd, Mukai Nagar, Pune, Maharashtra 411057</p>
+                    <p style="font-size: 14px; margin: 15px 0 0;">
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Website</a> |
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Contact</a> |
+                      <a href="tel:+919922538989" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">+91 9922 538 989</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
   `;
 
   return sendEmail({ to: email, subject, html, userId });
 }
 
 /**
- * Send email for rejected application
+ * Send rejection email
  */
 export async function sendRejectionEmail(
   name: string,
@@ -316,48 +522,104 @@ export async function sendRejectionEmail(
   reason: string = "",
   userId?: string | mongoose.Types.ObjectId
 ) {
-  const subject = "Comfort Stay PG - Registration Status Update";
+  const subject = "Application Status Update - Comfort Stay PG";
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <!-- Header -->
-      <div style="background-color: #1a365d; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Comfort Stay PG</h1>
-      </div>
-      
-      <!-- Main Content -->
-      <div style="background-color: white; padding: 30px 25px;">
-        <h2 style="color: #1a365d; margin-top: 0; font-size: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Registration Status Update</h2>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Dear ${name},</p>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Thank you for your interest in Comfort Stay PG. We have carefully reviewed your registration application.</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #1a365d; margin: 20px 0;">
-          <p style="margin: 0; color: #333; font-size: 15px;"><strong>Status:</strong> We regret to inform you that we are unable to approve your application at this time.</p>
-          ${reason ? `<p style="margin: 10px 0 0; color: #333; font-size: 15px;"><strong>Reason:</strong> ${reason}</p>` : ""}
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">We appreciate your understanding and encourage you to contact our support team if you have any questions or would like to discuss alternative options.</p>
-        
-        <div style="text-align: center; margin: 25px 0;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="background-color: #1a365d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; display: inline-block; font-size: 15px;">Contact Support</a>
-        </div>
-        
-        <p style="color: #333; line-height: 1.5; font-size: 15px;">Thank you for considering Comfort Stay PG.</p>
-      </div>
-      
-      <!-- Footer -->
-      <div style="background-color: #1a365d; color: white; padding: 20px; text-align: center; font-size: 12px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
-        <p style="margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
-        <div style="margin-bottom: 10px;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: white; text-decoration: none; margin: 0 10px;">Website</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: white; text-decoration: none; margin: 0 10px;">Contact Us</a> |
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" style="color: white; text-decoration: none; margin: 0 10px;">Login</a>
-        </div>
-        <p style="margin: 0;">123 PG Street, City, State, India - 123456</p>
-      </div>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+      <!--[if mso]>
+      <style type="text/css">
+        table {border-collapse: collapse;}
+        .button {padding: 12px 24px !important;}
+        .gradient-bg {background: #FF92B7 !important;}
+      </style>
+      <![endif]-->
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #fff5f8; color: #4a4a4a;">
+      <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 600;">Application Status Update</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Dear ${name},</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Thank you for your interest in Comfort Stay PG. We appreciate the time you took to submit your application.</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">After careful review of your application, we regret to inform you that we are unable to proceed with your registration at this time.</p>
+              
+              ${
+                reason
+                  ? `
+              <!-- Reason Box -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="font-size: 15px; margin: 0 0 5px;"><strong style="color: #d53f8c;">Reason:</strong></p>
+                    <p style="font-size: 15px; margin: 0; line-height: 1.5;">${reason}</p>
+                  </td>
+                </tr>
+              </table>
+              `
+                  : ""
+              }
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">This decision was made based on our current accommodation availability and specific requirements. We encourage you to consider alternative housing options that may better suit your needs.</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;">If you believe there's been an error or would like to discuss this further, please feel free to contact our support team.</p>
+              
+              <!-- CTA Button -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 12px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Contact Support</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0;">Warm Regards,<br>
+              <strong>The Comfort Stay PG Team</strong></p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #eee;">
+                    <p style="font-size: 14px; color: #666; margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
+                    <p style="font-size: 14px; color: #666; margin: 0 0 5px;">Hinjewadi Phase 1 Rd, Mukai Nagar, Pune, Maharashtra 411057</p>
+                    <p style="font-size: 14px; margin: 15px 0 0;">
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Website</a> |
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Contact</a> |
+                      <a href="tel:+919922538989" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">+91 9922 538 989</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
   `;
 
   return sendEmail({ to: email, subject, html, userId });
