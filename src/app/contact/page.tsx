@@ -108,9 +108,7 @@ export default function ContactPage() {
                       Visiting Hours
                     </h3>
                     <p className="text-gray-600 dark:text-gray-300">
-                      Monday - Saturday: 9:00 AM - 7:00 PM
-                      <br />
-                      Sunday: 10:00 AM - 5:00 PM
+                      Monday - Sunday: 10:00 AM - 10:00 PM
                     </p>
                   </div>
                 </div>

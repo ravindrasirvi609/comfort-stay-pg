@@ -127,11 +127,7 @@ const Contact = () => {
                 <div className="space-y-2">
                   <p className="flex justify-between">
                     <span>Monday - Saturday</span>
-                    <span>9:00 AM - 8:00 PM</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>Sunday</span>
-                    <span>10:00 AM - 6:00 PM</span>
+                    <span>10:00 AM - 10:00 PM</span>
                   </p>
                   <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
                     * For PG residents: 24/7 access with secure entry
