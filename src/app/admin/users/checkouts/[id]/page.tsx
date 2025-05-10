@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -68,8 +68,12 @@ interface Room {
 export default function UserArchiveDetail({
   params,
 }: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }) {
+  // Properly unwrap the params object using React.use()
+  const resolvedParams = params instanceof Promise ? use(params) : params;
+  const userId = resolvedParams.id;
+
   const router = useRouter();
   const [archive, setArchive] = useState<UserArchive | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,12 +96,12 @@ export default function UserArchiveDetail({
   useEffect(() => {
     fetchArchiveDetails();
     fetchAvailableRooms();
-  }, [params.id]);
+  }, [userId]);
 
   const fetchArchiveDetails = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/user-archives/${params.id}`);
+      const response = await axios.get(`/api/user-archives/${userId}`);
 
       if (response.data.success) {
         setArchive(response.data.archive);
@@ -132,7 +136,7 @@ export default function UserArchiveDetail({
     try {
       setActivating(true);
       const response = await axios.put(`/api/users/inactive`, {
-        userId: params.id,
+        userId: userId,
         roomId: selectedRoom,
         checkInDate: new Date(),
         // Add the payment details to match registration approval process
