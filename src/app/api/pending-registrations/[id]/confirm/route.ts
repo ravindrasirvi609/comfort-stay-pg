@@ -209,36 +209,152 @@ export async function POST(
         to: pendingRegistration.email,
         subject: "Your Registration is Approved - Comfort Stay PG",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #d53f8c;">Registration Approved - Comfort Stay PG</h2>
-            <p>Dear ${pendingRegistration.name},</p>
-            <p>Your registration has been approved. You can now login to your account using the following credentials:</p>
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p><strong>PG ID:</strong> ${pgId}</p>
-              <p><strong>Password:</strong> ${plainPassword}</p>
-            </div>
-            <p style="font-weight: bold;">Room Details:</p>
-            <p>You have been allocated Room Number: ${room.roomNumber}</p>
-            <p>Bed Number: ${selectedBedNumber}</p>
-            <p>Check-in Date: ${new Date(checkInDate).toLocaleDateString()}</p>
-            ${
-              paymentDetails
-                ? `
-            <p style="font-weight: bold;">Payment Information:</p>
-            <p>Amount: ₹${paymentDetails.amount}</p>
-            <p>Months: ${Array.isArray(paymentDetails.months) ? paymentDetails.months.join(", ") : paymentDetails.months}</p>
-            <p>Status: ${paymentDetails.paymentStatus || "Paid"}</p>
-            <p>Receipt Number: ${pendingRegistration.lastReceiptNumber}</p>
-            ${depositAmount ? `<p>Security Deposit: ₹${depositAmount}</p>` : ""}
-            `
-                : ""
-            }
-            <p>Please make sure to change your password after your first login for security reasons.</p>
-            <p>If you have any questions, please don't hesitate to contact us.</p>
-            <p>Welcome to Comfort Stay PG!</p>
-            <p>Best regards,<br>Comfort Stay PG Team</p>
-          </div>
-        `,
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Registration Approved - Comfort Stay PG</title>
+      <!--[if mso]>
+      <style type="text/css">
+        table {border-collapse: collapse;}
+        .button {padding: 14px 30px !important;}
+        .gradient-bg {background: #FF92B7 !important;}
+      </style>
+      <![endif]-->
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #fff5f8; color: #4a4a4a;">
+      <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 600;">Comfort Stay PG</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <h1 style="color: #FF92B7; font-size: 24px; margin: 0 0 20px; font-weight: 600;">Registration Approved!</h1>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Dear ${pendingRegistration.name},</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;">We're delighted to inform you that your registration has been approved. Welcome to the Comfort Stay PG family! You can now login to your account using the following credentials:</p>
+              
+              <!-- Credentials Box -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffeef5; border-radius: 8px; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">PG ID:</strong> ${pgId}</p>
+                    <p style="font-size: 15px; margin: 0;"><strong style="color: #d53f8c;">Password:</strong> ${plainPassword}</p>
+                    <p style="font-size: 14px; color: #666; margin: 15px 0 0; font-style: italic;">Please keep this information secure and change your password after your first login.</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Room Details -->
+              <h2 style="color: #d53f8c; font-size: 18px; margin: 0 0 15px; font-weight: 600;">Your Room Details</h2>
+              
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: separate; border-spacing: 0 8px; margin: 0 0 25px;">
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Room Number:</td>
+                  <td style="font-size: 15px; font-weight: 600;">${room.roomNumber}</td>
+                </tr>
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Bed Number:</td>
+                  <td style="font-size: 15px; font-weight: 600;">${selectedBedNumber}</td>
+                </tr>
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Check-in Date:</td>
+                  <td style="font-size: 15px; font-weight: 600;">${new Date(checkInDate).toLocaleDateString()}</td>
+                </tr>
+              </table>
+              
+              ${
+                paymentDetails
+                  ? `
+              <!-- Payment Information -->
+              <h2 style="color: #d53f8c; font-size: 18px; margin: 0 0 15px; font-weight: 600;">Payment Information</h2>
+              
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: separate; border-spacing: 0 8px; margin: 0 0 25px;">
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Amount:</td>
+                  <td style="font-size: 15px; font-weight: 600;">₹${paymentDetails.amount}</td>
+                </tr>
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Months:</td>
+                  <td style="font-size: 15px; font-weight: 600;">${Array.isArray(paymentDetails.months) ? paymentDetails.months.join(", ") : paymentDetails.months}</td>
+                </tr>
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Status:</td>
+                  <td style="font-size: 15px; font-weight: 600;">${paymentDetails.paymentStatus || "Paid"}</td>
+                </tr>
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Receipt Number:</td>
+                  <td style="font-size: 15px; font-weight: 600;">${pendingRegistration.lastReceiptNumber}</td>
+                </tr>
+                ${
+                  depositAmount
+                    ? `
+                <tr>
+                  <td width="140" style="font-size: 15px; color: #666;">Security Deposit:</td>
+                  <td style="font-size: 15px; font-weight: 600;">₹${depositAmount}</td>
+                </tr>
+                `
+                    : ""
+                }
+              </table>
+              `
+                  : ""
+              }
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;">If you have any questions or need assistance, please don't hesitate to contact us. Our staff is available 24/7 to help you.</p>
+              
+              <!-- CTA Button -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="https://www.comfortstaypg.com/login" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Login to Your Account</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Welcome to Comfort Stay PG! We're excited to have you join our community.</p>
+              
+              <p style="font-size: 16px; line-height: 1.5; margin: 0;">Warm Regards,<br>
+              <strong>Comfort Stay PG Team</strong></p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #eee;">
+                    <p style="font-size: 14px; color: #666; margin: 0 0 10px;">© 2025 Comfort Stay PG. All rights reserved.</p>
+                    <p style="font-size: 14px; color: #666; margin: 0 0 5px;">Hinjewadi Phase 1 Rd, Mukai Nagar, Pune, Maharashtra 411057</p>
+                    <p style="font-size: 14px; margin: 15px 0 0;">
+                      <a href="tel:+919922538989" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">+91 9922 538 989</a> |
+                      <a href="mailto:info@comfortstay.com" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">info@comfortstay.com</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
+  `,
       });
     } catch (emailError) {
       console.error("Error sending confirmation email:", emailError);
