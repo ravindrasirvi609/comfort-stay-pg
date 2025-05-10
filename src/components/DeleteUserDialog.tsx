@@ -45,10 +45,9 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Are you sure you want to Deactivate{" "}
-                    <strong>{userName}</strong>? This action cannot be undone
-                    and the user will be marked as deleted and inactive in the
-                    system.
+                    Are you sure you want to deactivate{" "}
+                    <strong>{userName}</strong>? This user will be moved to the
+                    inactive users list and can be reactivated later if needed.
                   </p>
                 </div>
 
@@ -90,7 +89,7 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
               {isDeleting ? (
                 <>
                   <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Deleting...
+                  Processing...
                 </>
               ) : (
                 <>

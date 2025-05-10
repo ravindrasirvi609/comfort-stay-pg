@@ -3,7 +3,9 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 import Room from "@/app/api/models/Room";
+import UserArchive from "@/app/api/models/UserArchive";
 import mongoose from "mongoose";
+import { differenceInDays } from "date-fns";
 
 // Get a single user
 export async function GET(
@@ -259,10 +261,47 @@ export async function DELETE(
         userToDelete.bedNumber = null;
       }
 
-      // Mark the user as deleted and inactive
+      // Calculate the stay duration
+      const moveInDate = userToDelete.moveInDate || userToDelete.createdAt;
+      const moveOutDate = new Date();
+      const stayDuration = differenceInDays(moveOutDate, moveInDate);
+
+      // Create archive record with appropriate fields
+      // First, check if an archive record already exists
+      let archiveRecord = await UserArchive.findOne({ _id: userToDelete._id });
+
+      if (archiveRecord) {
+        // Update existing archive record
+        archiveRecord.archiveReason = "Other"; // Default reason for admin deactivation
+        archiveRecord.archiveDate = new Date();
+        archiveRecord.exitSurveyCompleted = false;
+        archiveRecord.stayDuration = stayDuration;
+        archiveRecord.moveOutDate = moveOutDate;
+        archiveRecord.isActive = false;
+        archiveRecord.isOnNoticePeriod = false;
+      } else {
+        // Create new archive record with a new ObjectId
+        const userObj = userToDelete.toObject();
+        delete userObj._id; // Remove the original _id to prevent conflicts
+
+        archiveRecord = new UserArchive({
+          ...userObj,
+          userId: userToDelete._id, // Store the original user ID as a reference
+          archiveReason: "Other", // Default reason for admin deactivation
+          archiveDate: new Date(),
+          exitSurveyCompleted: false,
+          stayDuration,
+          moveOutDate,
+          isActive: false,
+          isOnNoticePeriod: false,
+        });
+      }
+
+      await archiveRecord.save();
+
+      // Mark the user as inactive (but not deleted)
       userToDelete.isActive = false;
-      userToDelete.isDeleted = true;
-      userToDelete.moveOutDate = new Date();
+      userToDelete.moveOutDate = moveOutDate;
       await userToDelete.save();
 
       return NextResponse.json({

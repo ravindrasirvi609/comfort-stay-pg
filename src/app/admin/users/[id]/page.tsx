@@ -180,7 +180,7 @@ export default function UserDetailPage() {
               disabled={isDeleting}
             >
               <Trash2 size={18} className="mr-2" />
-              Delete User
+              Deactivate User
             </button>
           </div>
         </div>

@@ -9,50 +9,8 @@ import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import { format } from "date-fns";
 
 export async function GET(request: NextRequest) {
-  try {
-    // Check if user is authenticated and is an admin
-    const { isAuth, user } = await isAuthenticated();
-
-    if (!isAuth || !user) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 }
-      );
-    }
-
-    if (!isAdmin(user)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied. Admin privileges required.",
-        },
-        { status: 403 }
-      );
-    }
-
-    await connectToDatabase();
-
-    // Find all inactive but not deleted users
-    const inactiveUsers = await User.find({
-      isActive: false,
-      isDeleted: { $ne: true },
-      registrationStatus: "Approved", // Only include users who were previously approved
-    })
-      .select("-password")
-      .populate("roomId")
-      .sort({ updatedAt: -1 });
-
-    return NextResponse.json({
-      success: true,
-      users: inactiveUsers,
-    });
-  } catch (error) {
-    console.error("Get inactive users error:", error);
-    return NextResponse.json(
-      { success: false, message: "Internal server error" },
-      { status: 500 }
-    );
-  }
+  // Redirect to the archives API since all deactivated users are now in archives
+  return NextResponse.redirect(new URL("/api/user-archives", request.url), 301);
 }
 
 export async function PUT(request: NextRequest) {
