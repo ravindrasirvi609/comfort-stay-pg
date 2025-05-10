@@ -405,7 +405,7 @@ export async function GET(request: Request, context: unknown) {
                   Hinjawadi, Pune, Pimpri-Chinchwad, Maharashtra 411057
                 </div>
                 <div class="brand-contact">
-                  <span style="margin-right: 10px;">📞 +91 98765 43210</span>
+                  <span style="margin-right: 10px;">📞 +91 9922 538 989</span>
                   <span>✉️ info@comfortstay.com</span>
                 </div>
               </div>
