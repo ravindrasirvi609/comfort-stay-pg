@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import LocalBusinessSchema from "@/components/LocalBusinessSchema";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -13,7 +14,7 @@ const poppins = Poppins({
 });
 
 // Define metadataBase for correct URL resolving
-const siteUrl = "https://comfortstaypg.com";
+const siteUrl = "https://www.comfortstaypg.com";
 
 export const metadata: Metadata = {
   // Add metadataBase
@@ -24,9 +25,8 @@ export const metadata: Metadata = {
     template: "%s | Comfort Stay PG", // Allows page titles to be dynamic like "About Us | Comfort Stay PG"
   },
   description:
-    "Experience comfortable and secure living at Comfort Stay PG, a premium girls' PG accommodation located in Hinjawadi Phase 1, Pune. Offering modern amenities, high-speed WiFi, healthy meals, and 24/7 security.", // Slightly refined description
+    "Experience comfortable and secure living at Comfort Stay PG, a premium girls' PG accommodation located in Hinjawadi Phase 1, Pune. Offering modern amenities, high-speed WiFi, healthy meals, and 24/7 security.",
   keywords: [
-    // Using an array is slightly cleaner
     "Girls PG in Hinjawadi",
     "PG in Pune",
     "Comfort Stay PG",
@@ -37,17 +37,19 @@ export const metadata: Metadata = {
     "Female PG",
     "Working Women Accommodation",
     "Student Accommodation Pune",
-  ], // Added a relevant keyword
+    "Affordable PG in Hinjawadi",
+    "PG near IT Park Pune",
+    "Best PG for women in Pune",
+  ],
   openGraph: {
-    title: "Comfort Stay PG - Premium Girls PG in Hinjawadi, Pune", // Slightly more concise
+    title: "Comfort Stay PG - Premium Girls PG in Hinjawadi, Pune",
     description:
-      "Comfortable & secure girls' PG in Hinjawadi Phase 1, Pune with modern amenities.", // More concise
-    url: siteUrl, // Add the site URL
-    siteName: "Comfort Stay PG", // Add site name
-    // Add image - REMEMBER TO CREATE /public/og-image.png (1200x630 recommended)
+      "Comfortable & secure girls' PG in Hinjawadi Phase 1, Pune with modern amenities, nutritious meals, and 24/7 security.",
+    url: siteUrl,
+    siteName: "Comfort Stay PG",
     images: [
       {
-        url: "/og-image.png", // Path relative to /public folder
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Comfort Stay PG Hinjawadi Pune",
@@ -56,33 +58,48 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
   },
-  // Add Twitter specific tags for better card display
   twitter: {
     card: "summary_large_image",
     title: "Comfort Stay PG - Premium Girls PG in Hinjawadi, Pune",
     description:
       "Comfortable & secure girls' PG in Hinjawadi Phase 1, Pune with modern amenities.",
-    // Use the same image as openGraph
     images: ["/og-image.png"],
   },
-  authors: [{ name: "Comfort Stay PG", url: siteUrl }], // Add URL to author if desired
-  icons: {
-    icon: "/favicon.ico", // Standard favicon
-    shortcut: "/favicon-16x16.png", // Example sizes
-    apple: "/apple-touch-icon.png", // Apple touch icon
-    // other: { // Example for other icons if needed
-    //   rel: 'other-icon',
-    //   url: '/other-icon.png',
-    // },
+  authors: [{ name: "Comfort Stay PG", url: siteUrl }],
+  alternates: {
+    canonical: siteUrl,
   },
+  category: "Accommodation",
+  creator: "Comfort Stay PG",
+  publisher: "Comfort Stay PG",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
+  verification: {
+    google: "google-site-verification-code", // Replace with your actual verification code
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  manifest: "/manifest.json",
+  applicationName: "Comfort Stay PG",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1, // Often good to allow scaling, consider changing userScalable
-  userScalable: false, // Maybe set to true for accessibility? Test usability.
-  themeColor: "#FF92B7", // Your brand color
+  maximumScale: 5, // Changed to allow zooming for better accessibility
+  userScalable: true, // Changed to true for better accessibility
+  themeColor: "#FF92B7",
 };
 
 export default function RootLayout({
@@ -112,6 +129,7 @@ export default function RootLayout({
             <Navbar />
             <main className="container mx-auto px-4 py-8">{children}</main>
             <Footer />
+            <LocalBusinessSchema />
             <Analytics />
             <SpeedInsights />
           </div>

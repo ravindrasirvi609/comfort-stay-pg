@@ -221,22 +221,26 @@ const Footer = () => {
         <div className="py-5 sm:py-6 text-center text-gray-500 dark:text-pink-100/40 text-xs">
           <p>
             &copy; {currentYear} Comfort Stay PG. All rights reserved. Made with{" "}
-            <Heart
-              size={12}
-              className="inline-block text-pink-500 fill-pink-500 mb-0.5"
-            />{" "}
             in Pune
           </p>
           <p className="mt-2">
             Developed and maintained by{" "}
+            <Heart
+              size={12}
+              className="inline-block text-pink-800 fill-pink-800 mb-0.5"
+            />{" "}
             <a
               href="https://ravindrachoudhary.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-pink-500 dark:hover:text-pink-300 transition-colors"
+              className="underline text-pink-600 hover:text-pink-800 dark:hover:text-pink-800 transition-colors"
             >
-              Ravindra Choudhary
-            </a>
+              <strong>Ravindra Choudhary</strong>
+            </a>{" "}
+            <Heart
+              size={12}
+              className="inline-block text-pink-800 fill-pink-800 mb-0.5"
+            />{" "}
           </p>
         </div>
       </div>

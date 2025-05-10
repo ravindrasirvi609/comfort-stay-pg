@@ -1,11 +1,13 @@
-# Allow all agents full access by default
+# robots.txt for comfortstaypg.com
 User-agent: *
 Allow: /
 
-# Disallow specific paths if needed (e.g., admin areas, API routes)
-# User-agent: *
-# Disallow: /admin/
-# Disallow: /api/
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /admin-login/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
 
-# Point to the sitemap location
-Sitemap: https://comfortstaypg.com/sitemap.xml 
+# Sitemap location
+Sitemap: https://www.comfortstaypg.com/sitemap.xml 
