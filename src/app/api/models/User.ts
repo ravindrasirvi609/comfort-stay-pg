@@ -138,6 +138,21 @@ const UserSchema = new Schema<IUser>(
       type: Date,
       default: Date.now,
     },
+    // Key tracking
+    keyIssued: {
+      type: Boolean,
+      default: false,
+    },
+    // Deposit return tracking
+    depositReturn: {
+      amount: {
+        type: Number,
+        default: 0,
+      },
+      date: {
+        type: Date,
+      },
+    },
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt

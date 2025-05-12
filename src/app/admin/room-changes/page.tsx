@@ -188,10 +188,10 @@ export default function RoomChangesPage() {
                   .filter(
                     (change) =>
                       search === "" ||
-                      change.userId.name
+                      (change.userId?.name || "")
                         .toLowerCase()
                         .includes(search.toLowerCase()) ||
-                      change.userId.pgId
+                      (change.userId?.pgId || "")
                         .toLowerCase()
                         .includes(search.toLowerCase())
                   )
@@ -205,30 +205,34 @@ export default function RoomChangesPage() {
                           <div>
                             <div
                               className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
-                              onClick={() => handleViewUser(change.userId._id)}
+                              onClick={() =>
+                                handleViewUser(change.userId?._id || "")
+                              }
                             >
-                              {change.userId.name}
+                              {change.userId?.name || "Unknown User"}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {change.userId.pgId}
+                              {change.userId?.pgId || "No ID"}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-white">
-                          Room {change.oldRoomId.roomNumber}
+                          Room {change.oldRoomId?.roomNumber || "N/A"}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Bed #{change.oldBedNumber} • {change.oldRoomId.type}
+                          Bed #{change.oldBedNumber} •{" "}
+                          {change.oldRoomId?.type || "Unknown"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-white">
-                          Room {change.newRoomId.roomNumber}
+                          Room {change.newRoomId?.roomNumber || "N/A"}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Bed #{change.newBedNumber} • {change.newRoomId.type}
+                          Bed #{change.newBedNumber} •{" "}
+                          {change.newRoomId?.type || "Unknown"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

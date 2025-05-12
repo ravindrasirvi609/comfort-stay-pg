@@ -73,6 +73,7 @@ export default function PendingRegistrationDetailsPage() {
     paymentStatus: "Paid",
     checkInDate: new Date().toISOString().split("T")[0],
     depositAmount: "",
+    keyIssued: false,
   });
 
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -189,6 +190,7 @@ export default function PendingRegistrationDetailsPage() {
           depositAmount: formData.depositAmount
             ? Number(formData.depositAmount)
             : 0,
+          keyIssued: formData.keyIssued,
         }
       );
 
@@ -1013,6 +1015,38 @@ export default function PendingRegistrationDetailsPage() {
                       Selected: {formData.months.join(", ")}
                     </div>
                   )}
+                </div>
+
+                {/* Key Status */}
+                <div className="md:col-span-2 mt-4">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3 border-b border-gray-200 dark:border-gray-700 pb-1">
+                    Key Status
+                  </h4>
+                  <div className="flex items-center mt-2">
+                    <input
+                      type="checkbox"
+                      id="keyIssued"
+                      name="keyIssued"
+                      checked={formData.keyIssued}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          keyIssued: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="keyIssued"
+                      className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Room key issued to resident
+                    </label>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Check this box if you've provided the room key to the
+                    resident
+                  </p>
                 </div>
               </div>
 

@@ -230,6 +230,10 @@ export async function DELETE(
 
     await connectToDatabase();
 
+    // Get key and deposit return data if provided
+    const requestData = await request.json().catch(() => ({}));
+    const { keyIssued, depositReturn } = requestData;
+
     // Find the user
     const userToDelete = await User.findById(params.id).populate("roomId");
 
@@ -248,27 +252,33 @@ export async function DELETE(
             ? userToDelete.roomId._id
             : userToDelete.roomId;
 
-        // Find and update the room
         const room = await Room.findById(roomId);
         if (room) {
-          // Decrease the room occupancy
+          // Decrement room occupancy
           room.currentOccupancy = Math.max(0, room.currentOccupancy - 1);
           await room.save();
         }
-
-        // Clear the room assignment from the user
-        userToDelete.roomId = null;
-        userToDelete.bedNumber = null;
       }
+
+      // Instead of deleting, deactivate and add to archives if not already archived
+      let archiveRecord = await UserArchive.findOne({
+        email: userToDelete.email,
+      });
 
       // Calculate the stay duration
       const moveInDate = userToDelete.moveInDate || userToDelete.createdAt;
       const moveOutDate = new Date();
       const stayDuration = differenceInDays(moveOutDate, moveInDate);
 
-      // Create archive record with appropriate fields
-      // First, check if an archive record already exists
-      let archiveRecord = await UserArchive.findOne({ _id: userToDelete._id });
+      // Update key status and deposit return information
+      userToDelete.keyIssued = keyIssued || false;
+
+      if (depositReturn) {
+        userToDelete.depositReturn = {
+          amount: depositReturn.amount,
+          date: depositReturn.date || new Date(),
+        };
+      }
 
       if (archiveRecord) {
         // Update existing archive record
@@ -279,6 +289,14 @@ export async function DELETE(
         archiveRecord.moveOutDate = moveOutDate;
         archiveRecord.isActive = false;
         archiveRecord.isOnNoticePeriod = false;
+        archiveRecord.keyIssued = keyIssued || false;
+
+        if (depositReturn) {
+          archiveRecord.depositReturn = {
+            amount: depositReturn.amount,
+            date: depositReturn.date || new Date(),
+          };
+        }
       } else {
         // Create new archive record with a new ObjectId
         const userObj = userToDelete.toObject();
@@ -294,6 +312,8 @@ export async function DELETE(
           moveOutDate,
           isActive: false,
           isOnNoticePeriod: false,
+          keyIssued: keyIssued || false,
+          depositReturn: depositReturn || undefined,
         });
       }
 

@@ -35,7 +35,8 @@ export async function POST(
 
     // Get data from the request body
     const data = await request.json();
-    const { roomId, checkInDate, paymentDetails, depositAmount } = data;
+    const { roomId, checkInDate, paymentDetails, depositAmount, keyIssued } =
+      data;
 
     if (!roomId) {
       return NextResponse.json(
@@ -173,6 +174,7 @@ export async function POST(
       pendingRegistration.approvalDate = new Date();
       pendingRegistration.pgId = pgId;
       pendingRegistration.isActive = true;
+      pendingRegistration.keyIssued = keyIssued || false;
 
       await pendingRegistration.save();
 

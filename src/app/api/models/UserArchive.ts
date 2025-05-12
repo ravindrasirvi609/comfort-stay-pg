@@ -20,6 +20,11 @@ interface IUserArchive extends IUser {
     exitReason: string;
     otherComments: string;
   };
+  keyIssued: boolean;
+  depositReturn: {
+    amount: number;
+    date: Date;
+  };
 }
 
 const UserArchiveSchema = new Schema<IUserArchive>(
@@ -86,6 +91,23 @@ const UserArchiveSchema = new Schema<IUserArchive>(
     isDeleted: {
       type: Boolean,
       default: false,
+    },
+
+    // Key tracking
+    keyIssued: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Deposit return tracking
+    depositReturn: {
+      amount: {
+        type: Number,
+        default: 0,
+      },
+      date: {
+        type: Date,
+      },
     },
 
     // Archive specific fields

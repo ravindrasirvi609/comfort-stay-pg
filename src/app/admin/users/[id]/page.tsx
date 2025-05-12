@@ -60,6 +60,12 @@ interface UserData {
   approvalDate?: string;
   moveInDate?: string;
   pgId?: string;
+  depositFees?: number;
+  keyIssued?: boolean;
+  depositReturn?: {
+    amount: number;
+    date?: string;
+  };
   roomId?:
     | {
         _id: string;
@@ -118,21 +124,41 @@ export default function UserDetailPage() {
     setIsDeleteDialogOpen(false);
   };
 
-  const handleDeleteUser = async () => {
+  const handleDeleteUser = async (
+    keyInfo: { keyIssued: boolean },
+    depositInfo: {
+      isReturning: boolean;
+      amount: number;
+    }
+  ) => {
     try {
       setIsDeleting(true);
-      const response = await axios.delete(`/api/users/${id}`);
+
+      const payload = {
+        keyIssued: keyInfo.keyIssued,
+        depositReturn: depositInfo.isReturning
+          ? {
+              amount: depositInfo.amount,
+              date: new Date(),
+            }
+          : undefined,
+      };
+
+      const response = await axios.delete(`/api/users/${id}`, {
+        data: payload,
+      });
+
       if (response.data.success) {
-        toast.success("User deleted successfully");
+        toast.success("User deactivated successfully");
         router.push("/admin/users");
       } else {
-        toast.error(response.data.message || "Failed to delete user");
+        toast.error(response.data.message || "Failed to deactivate user");
       }
     } catch (err) {
-      console.error("Error deleting user:", err);
+      console.error("Error deactivating user:", err);
       const axiosError = err as AxiosError<ErrorResponse>;
       toast.error(
-        axiosError.response?.data?.message || "Failed to delete user"
+        axiosError.response?.data?.message || "Failed to deactivate user"
       );
     } finally {
       setIsDeleting(false);
@@ -193,6 +219,7 @@ export default function UserDetailPage() {
         onConfirm={handleDeleteUser}
         isDeleting={isDeleting}
         userName={user?.name || ""}
+        currentDepositFees={user?.depositFees || 0}
       />
 
       {/* User Profile Card */}

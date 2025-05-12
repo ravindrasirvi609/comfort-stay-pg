@@ -37,6 +37,11 @@ export interface IUser {
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  keyIssued?: boolean;
+  depositReturn?: {
+    amount: number;
+    date?: Date;
+  };
 }
 
 /**
@@ -53,17 +58,21 @@ export interface IUserArchive extends IUser {
   exitSurveyCompleted: boolean;
   stayDuration: number; // in days
   exitFeedback?: {
-    overallExperience: number; // 1-5 stars
-    cleanliness: number; // 1-5 stars
-    facilities: number; // 1-5 stars
-    staff: number; // 1-5 stars
-    foodQuality: number; // 1-5 stars
-    valueForMoney: number; // 1-5 stars
-    wouldRecommend: boolean;
-    likedMost: string;
-    improvements: string;
-    exitReason: string;
-    otherComments: string;
+    overallExperience?: number;
+    cleanliness?: number;
+    facilities?: number;
+    staff?: number;
+    foodQuality?: number;
+    valueForMoney?: number;
+    wouldRecommend?: boolean;
+    likedMost?: string;
+    improvements?: string;
+    exitReason?: string;
+    otherComments?: string;
+  };
+  depositReturn?: {
+    amount: number;
+    date?: Date;
   };
 }
 
