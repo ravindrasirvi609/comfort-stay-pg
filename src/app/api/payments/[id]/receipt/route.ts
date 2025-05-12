@@ -157,19 +157,19 @@ export async function GET(request: Request, context: unknown) {
             }
             .brand-slogan {
               font-size: 14px;
-              color: #777;
+              color: #71706e;
               margin-top: 2px;
             }
             .brand-address {
               font-size: 11px;
-              color: #777;
+              color: #71706e;
               margin-top: 8px;
               max-width: 300px;
               line-height: 1.5;
             }
             .brand-contact {
               font-size: 11px;
-              color: #777;
+              color: #71706e;
               margin-top: 5px;
               display: flex;
               align-items: center;
@@ -406,7 +406,8 @@ export async function GET(request: Request, context: unknown) {
                 </div>
                 <div class="brand-contact">
                   <span style="margin-right: 10px;">📞 +91 9922 538 989</span>
-                  <span>✉️ info@comfortstay.com</span>
+                  <span style="margin-right: 10px;">✉️ info@comfortstay.com</span>
+                  <span>🌐 www.comfortstaypg.com</span>
                 </div>
               </div>
               <div>
@@ -428,6 +429,16 @@ export async function GET(request: Request, context: unknown) {
                   <div class="label">PG ID:</div>
                   <div class="value">${payment.userId.pgId}</div>
                 </div>
+                ${
+                  payment.userId.roomId
+                    ? `
+                <div class="receipt-detail">
+                  <div class="label">Room No.:</div>
+                  <div class="value">${payment.userId.roomId.roomNumber}</div>
+                </div>
+                `
+                    : ""
+                }
                 <div class="receipt-detail">
                   <div class="label">Email:</div>
                   <div class="value">${payment.userId.email}</div>
@@ -514,6 +525,7 @@ export async function GET(request: Request, context: unknown) {
             <div class="footer">
               <p>This is a computer-generated receipt and does not require a signature.</p>
               <p style="margin-top: 10px; color: #d53f8c;">Thank you for choosing Comfort Stay PG!</p>
+              <p style="margin-top: 5px; font-size: 11px;">Visit us at: <a href="https://www.comfortstaypg.com" style="color: #d53f8c; text-decoration: none;">www.comfortstaypg.com</a></p>
             </div>
           </div>
         </body>

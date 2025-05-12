@@ -130,9 +130,9 @@ export default function PaymentsPage() {
       result = result.filter((payment) => {
         const user = payment.userId as User;
         return (
-          (user.name &&
+          (user?.name &&
             user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user.pgId &&
+          (user?.pgId &&
             user.pgId.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (payment.receiptNumber &&
             payment.receiptNumber
@@ -553,10 +553,10 @@ export default function PaymentsPage() {
                         <div className="flex items-center">
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {user.name}
+                              {user?.name || "Unknown"}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.pgId}
+                              {user?.pgId || "N/A"}
                             </div>
                           </div>
                         </div>

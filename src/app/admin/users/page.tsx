@@ -24,6 +24,7 @@ interface User {
   isDeleted?: boolean;
   createdAt: string;
   hasUnpaidDues?: boolean;
+  moveInDate: string;
 }
 
 export default function UsersPage() {
@@ -359,7 +360,7 @@ export default function UsersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {new Date(user.moveInDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
