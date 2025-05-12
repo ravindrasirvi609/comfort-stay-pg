@@ -54,12 +54,12 @@ const amenities = [
   {
     icon: <Shirt size={24} />,
     title: "Laundry Service",
-    description: "Regular laundry and ironing services included",
+    description: "Regular laundry with washing and drying facilities",
   },
   {
     icon: <Clock size={24} />,
     title: "Flexible Timings",
-    description: "No strict curfew with secure digital access for residents",
+    description: "No strict curfew with late check-in and check-out facility",
   },
   {
     icon: <Tv size={24} />,
@@ -69,28 +69,28 @@ const amenities = [
   {
     icon: <Coffee size={24} />,
     title: "Lounge & Kitchen",
-    description: "Fully equipped common kitchen and relaxation lounge",
+    description: "Fully equipped common kitchen and with self cooking facility",
   },
   {
     icon: <Book size={24} />,
     title: "Study Room",
     description: "Quiet study space with high-speed internet for work/study",
   },
-  {
-    icon: <UserCircle2 size={24} />,
-    title: "Beauty Corner",
-    description: "Dedicated space with mirrors and power outlets for styling",
-  },
-  {
-    icon: <Scissors size={24} />,
-    title: "Salon Services",
-    description: "Regular visiting salon services at discounted rates",
-  },
-  {
-    icon: <Package size={24} />,
-    title: "Package Handling",
-    description: "Secure receipt and storage of your deliveries",
-  },
+  // {
+  //   icon: <UserCircle2 size={24} />,
+  //   title: "Beauty Corner",
+  //   description: "Dedicated space with mirrors and power outlets for styling",
+  // },
+  // {
+  //   icon: <Scissors size={24} />,
+  //   title: "Salon Services",
+  //   description: "Regular visiting salon services at discounted rates",
+  // },
+  // {
+  //   icon: <Package size={24} />,
+  //   title: "Package Handling",
+  //   description: "Secure receipt and storage of your deliveries",
+  // },
 ];
 
 const Amenities = () => {
