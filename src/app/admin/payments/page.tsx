@@ -13,6 +13,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaHourglassHalf,
+  FaEdit,
 } from "react-icons/fa";
 import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 
@@ -603,12 +604,13 @@ export default function PaymentsPage() {
                         {payment.paymentMethod}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {/* <Link
-                          href={`/admin/payments/${payment._id}`}
+                        <Link
+                          href={`/admin/payments/${payment._id}/edit`}
                           className="text-pink-600 hover:text-pink-900 dark:text-pink-400 dark:hover:text-pink-300 mr-4"
+                          title="Edit Payment"
                         >
-                          View
-                        </Link> */}
+                          <FaEdit className="inline" />
+                        </Link>
                         <a
                           href={`/api/payments/${payment._id}/receipt`}
                           target="_blank"

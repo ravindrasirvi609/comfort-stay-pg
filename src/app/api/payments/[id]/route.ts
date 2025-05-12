@@ -4,7 +4,10 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Payment from "@/app/api/models/Payment";
 
 // Get a single payment
-export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated
@@ -54,7 +57,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // Update a payment (admin only)
-export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
@@ -79,8 +85,17 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
 
     await connectToDatabase();
 
-    const { amount, month, paymentDate, status, remarks } =
-      await request.json();
+    const {
+      amount,
+      months,
+      paymentDate,
+      dueDate,
+      paymentStatus,
+      paymentMethod,
+      transactionId,
+      remarks,
+      isDepositPayment,
+    } = await request.json();
 
     // Find the payment
     const paymentToUpdate = await Payment.findById(params.id);
@@ -93,11 +108,19 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     // Update fields if provided
-    if (amount) paymentToUpdate.amount = amount;
-    if (month) paymentToUpdate.month = month;
-    if (paymentDate) paymentToUpdate.paymentDate = paymentDate;
-    if (status) paymentToUpdate.status = status;
+    if (amount !== undefined) paymentToUpdate.amount = amount;
+    if (months !== undefined) paymentToUpdate.months = months;
+    if (paymentDate !== undefined) paymentToUpdate.paymentDate = paymentDate;
+    if (dueDate !== undefined) paymentToUpdate.dueDate = dueDate;
+    if (paymentStatus !== undefined)
+      paymentToUpdate.paymentStatus = paymentStatus;
+    if (paymentMethod !== undefined)
+      paymentToUpdate.paymentMethod = paymentMethod;
+    if (transactionId !== undefined)
+      paymentToUpdate.transactionId = transactionId;
     if (remarks !== undefined) paymentToUpdate.remarks = remarks;
+    if (isDepositPayment !== undefined)
+      paymentToUpdate.isDepositPayment = isDepositPayment;
 
     // Save the updated payment
     await paymentToUpdate.save();
@@ -117,7 +140,10 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
 }
 
 // Delete a payment (admin only)
-export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
