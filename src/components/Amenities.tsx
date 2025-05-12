@@ -54,7 +54,7 @@ const amenities = [
   {
     icon: <Shirt size={24} />,
     title: "Laundry Service",
-    description: "Regular laundry with washing and drying facilities",
+    description: "Self-service laundry with washing and drying facilities.",
   },
   {
     icon: <Clock size={24} />,
