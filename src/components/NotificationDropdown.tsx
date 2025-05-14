@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { formatDistanceToNow } from "date-fns";
+import { createPortal } from "react-dom";
 
 interface Notification {
   _id: string;
@@ -40,6 +41,7 @@ export default function NotificationDropdown({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Fetch notifications when dropdown opens
   useEffect(() => {
@@ -75,6 +77,11 @@ export default function NotificationDropdown({
     }, 60000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
 
   const fetchUnreadCount = async () => {
@@ -210,23 +217,18 @@ export default function NotificationDropdown({
     }
   };
 
-  return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
-      <button
-        className="relative p-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Notifications"
+  const dropdownContent = isOpen && (
+    <div
+      className="fixed inset-0 z-[9999] bg-transparent pointer-events-none overflow-hidden"
+      aria-hidden="true"
+    >
+      <div
+        className="absolute right-0 top-0 mt-12 mr-4 md:mr-6 pointer-events-auto"
+        style={{
+          maxWidth: "calc(100vw - 2rem)",
+        }}
       >
-        <Bell size={22} />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-pink-600 rounded-full">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 md:w-96 backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-lg shadow-lg border border-pink-100 dark:border-gray-700 z-9999 py-1 max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="w-80 md:w-96 backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-lg shadow-lg border border-pink-100 dark:border-gray-700 py-1 max-h-[80vh] overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <h3 className="text-sm font-medium text-gray-900 dark:text-white">
               Notifications
@@ -316,7 +318,26 @@ export default function NotificationDropdown({
             </div>
           )}
         </div>
-      )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      <button
+        className="relative p-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notifications"
+      >
+        <Bell size={22} />
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-pink-600 rounded-full">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {mounted && isOpen && createPortal(dropdownContent, document.body)}
     </div>
   );
 }
