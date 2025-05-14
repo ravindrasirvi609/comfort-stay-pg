@@ -7,6 +7,17 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
 
+// Define PaymentData interface based on Payment model
+interface PaymentData {
+  _id: string;
+  userId: { id: string; _id: string } | null; // Allow null and ensure _id is also potentially there
+  amount: number;
+  months: string[]; // Corrected from month to months
+  paymentDate: string; // or Date
+  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  isDepositPayment?: boolean;
+}
+
 interface User {
   _id: string;
   name: string;
@@ -19,24 +30,26 @@ interface User {
         _id: string;
         roomNumber: string;
         type: string;
-        price: number;
+        price: number; // Rent amount
       }
     | string
     | null;
   isActive: boolean;
   isDeleted?: boolean;
   createdAt: string;
-  hasUnpaidDues?: boolean;
+  hasUnpaidDues?: boolean; // General dues flag
   moveInDate: string;
+  currentMonthRentStatus?: "Paid" | "Unpaid" | "N/A"; // New field
 }
 
 interface SortConfig {
-  key: keyof User | null;
+  key: keyof User | "currentMonthRentStatus" | null; // Added new sort key
   direction: "ascending" | "descending";
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [allPayments, setAllPayments] = useState<PaymentData[]>([]); // To store all fetched payments
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,37 +66,74 @@ export default function UsersPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Fetch users data
+  // Fetch users and payments data
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("/api/users");
+        // Fetch users
+        const usersResponse = await axios.get("/api/users");
+        const usersData = usersResponse.data.users || [];
 
-        // Get payment status for active users
-        const usersData = response.data.users || [];
+        // Fetch all non-deposit payments
+        const paymentsResponse = await axios.get("/api/payments");
+        const allFetchedPayments: PaymentData[] =
+          paymentsResponse.data.payments || [];
+        setAllPayments(allFetchedPayments); // Store for potential future use, though processeduser uses it directly
 
-        // Fetch payment data to check unpaid dues
-        const paymentsResponse = await axios.get("/api/payments/dues");
-        const unpaidUserIds = paymentsResponse.data.usersWithDues || [];
+        // Get current month and year in "Month YYYY" format (e.g., "July 2024")
+        const currentDate = new Date();
+        const currentMonthYear = `${currentDate.toLocaleString("default", { month: "long" })} ${currentDate.getFullYear()}`;
+        console.log("currentMonthYear", currentMonthYear);
 
-        // Mark users with unpaid dues
-        const usersWithPaymentInfo = usersData.map((user: User) => ({
-          ...user,
-          hasUnpaidDues: unpaidUserIds.includes(user._id),
-        }));
+        const processedUsers = usersData.map((user: User) => {
+          let rentStatus: User["currentMonthRentStatus"] = "N/A";
+          const roomPrice =
+            typeof user.roomId === "object" && user.roomId?.price
+              ? user.roomId.price
+              : 0;
+          console.log("roomPrice", roomPrice);
 
-        setUsers(usersWithPaymentInfo);
-        setFilteredUsers(usersWithPaymentInfo);
+          if (roomPrice > 0) {
+            const userPaymentsForCurrentMonth = allFetchedPayments.filter(
+              (p) =>
+                p.userId && // Important: Check if userId is not null
+                p.userId.id === user._id && // Using .id as per your last change, ensure this is correct from API population
+                !p.isDepositPayment &&
+                p.months.includes(currentMonthYear) // Corrected to use p.months
+            );
+
+            // Refined logic: Sum all 'Paid' payments for the current month
+            let totalAmountPaidForCurrentMonth = 0;
+            for (const payment of userPaymentsForCurrentMonth) {
+              if (payment.paymentStatus === "Paid") {
+                totalAmountPaidForCurrentMonth += payment.amount;
+              }
+            }
+
+            if (totalAmountPaidForCurrentMonth >= roomPrice) {
+              rentStatus = "Paid";
+            } else {
+              rentStatus = "Unpaid"; // Even if partially paid but less than full roomPrice
+            }
+          }
+
+          return {
+            ...user,
+            currentMonthRentStatus: rentStatus,
+          };
+        });
+
+        setUsers(processedUsers);
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching users:", err);
-        setError("Failed to load users data");
+        console.error("Error fetching data:", err);
+        setError("Failed to load user or payment data");
         setLoading(false);
       }
     };
 
-    fetchUsers();
+    fetchData();
   }, []);
 
   // Filter and sort users
@@ -121,8 +171,18 @@ export default function UsersPage() {
     // Sorting logic
     if (sortConfig.key !== null) {
       result.sort((a, b) => {
-        const aValue = a[sortConfig.key!];
-        const bValue = b[sortConfig.key!];
+        const aValue = a[sortConfig.key as keyof User]; // Type assertion for standard keys
+        const bValue = b[sortConfig.key as keyof User];
+
+        // Handle currentMonthRentStatus sorting specifically
+        if (sortConfig.key === "currentMonthRentStatus") {
+          const order = { Paid: 1, Unpaid: 2, "N/A": 3 };
+          const aStatus = a.currentMonthRentStatus || "N/A";
+          const bStatus = b.currentMonthRentStatus || "N/A";
+          return sortConfig.direction === "ascending"
+            ? order[aStatus] - order[bStatus]
+            : order[bStatus] - order[aStatus];
+        }
 
         // Handle cases where values might be null, undefined or need specific comparison
         if (aValue === null || aValue === undefined)
@@ -182,7 +242,7 @@ export default function UsersPage() {
     setCurrentPage(1); // Reset to first page on filter or sort change
   }, [searchTerm, filterStatus, filterPayment, users, sortConfig]);
 
-  const requestSort = (key: keyof User) => {
+  const requestSort = (key: keyof User | "currentMonthRentStatus") => {
     if (key === "phone") return;
     let direction: "ascending" | "descending" = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -191,7 +251,7 @@ export default function UsersPage() {
     setSortConfig({ key, direction });
   };
 
-  const getSortIndicator = (key: keyof User) => {
+  const getSortIndicator = (key: keyof User | "currentMonthRentStatus") => {
     if (key === "phone") return "";
     if (sortConfig.key === key) {
       return sortConfig.direction === "ascending" ? " ▲" : " ▼";
@@ -379,6 +439,20 @@ export default function UsersPage() {
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("isActive")}
+                  >
+                    Status {getSortIndicator("isActive")}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("currentMonthRentStatus")}
+                  >
+                    Current Rent {getSortIndicator("currentMonthRentStatus")}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort("moveInDate")}
                   >
                     Date Joined {getSortIndicator("moveInDate")}
@@ -437,6 +511,36 @@ export default function UsersPage() {
                           : "-"}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          user.isDeleted
+                            ? "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200"
+                            : user.isActive
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                        }`}
+                      >
+                        {user.isDeleted
+                          ? "Deleted"
+                          : user.isActive
+                            ? "Active"
+                            : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          user.currentMonthRentStatus === "Paid"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                            : user.currentMonthRentStatus === "Unpaid"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200" // For N/A
+                        }`}
+                      >
+                        {user.currentMonthRentStatus}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {new Date(user.moveInDate).toLocaleDateString()}
                     </td>
@@ -445,7 +549,7 @@ export default function UsersPage() {
                 {currentUsers.length === 0 && (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6} // Adjusted colSpan from 5 to 6 (User, PGID, Room, Status, Current Rent, Date Joined)
                       className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
                       No users found matching the criteria
