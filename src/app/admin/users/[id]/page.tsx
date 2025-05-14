@@ -224,12 +224,29 @@ export default function UserDetailPage() {
 
       {/* User Profile Card */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden mb-8">
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              User Profile
-            </h1>
-            <div className="flex items-center">
+        <div className="md:flex">
+          {/* Profile Image / Initial Section */}
+          <div className="md:w-1/3 p-6 flex flex-col items-center justify-center bg-gradient-to-br from-pink-50 to-blue-50 dark:from-gray-800 dark:to-purple-900/30">
+            {user.profileImage ? (
+              <Image
+                src={user.profileImage}
+                alt={user.name}
+                width={128}
+                height={128}
+                className="rounded-full object-cover w-32 h-32 shadow-lg border-4 border-white dark:border-gray-700"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-5xl font-bold shadow-lg border-4 border-white dark:border-gray-700">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <h2 className="mt-4 text-2xl font-bold text-gray-800 dark:text-white text-center">
+              {user.name}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+              {user.email}
+            </p>
+            <div className="mt-2 flex items-center">
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                   user.isActive
@@ -249,186 +266,142 @@ export default function UserDetailPage() {
                 <Shield size={14} className="mr-1" />
                 {user.role || "User"}
               </span>
-              {user.registrationStatus && (
-                <span
-                  className={`inline-flex items-center ml-2 px-3 py-1 rounded-full text-xs font-medium ${
-                    user.registrationStatus === "Approved"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      : user.registrationStatus === "Pending"
-                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                  }`}
-                >
-                  <CheckCircle size={14} className="mr-1" />
-                  {user.registrationStatus}
-                </span>
-              )}
             </div>
           </div>
-        </div>
 
-        <div className="p-6">
-          {/* User Info Section */}
-          <div className="mb-8">
-            <div className="flex flex-col md:flex-row">
-              {/* User Avatar and Basic Info */}
-              <div className="md:w-1/4 flex flex-col items-center mb-6 md:mb-0">
-                {user.profileImage ? (
-                  <div className="w-32 h-32 rounded-full overflow-hidden mb-3 border-4 border-pink-200 dark:border-pink-900">
-                    <Image
-                      src={user.profileImage}
-                      alt={user.name}
-                      width={128}
-                      height={128}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-32 h-32 bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center text-white text-4xl font-bold mb-3">
-                    {user.name?.charAt(0).toUpperCase() || "U"}
-                  </div>
-                )}
-                <div className="text-center">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    {user.name}
-                  </h2>
-                  {user.pgId && (
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">
-                      ID: {user.pgId}
+          {/* User Details Section */}
+          <div className="md:w-2/3 p-6">
+            <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                User Information
+              </h1>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+              <div>
+                <div className="flex items-start">
+                  <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Email
                     </p>
-                  )}
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Phone
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.phone || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Guardian Mobile
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.guardianMobileNumber || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <UserCheck className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Father&apos;s Name
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.fathersName || "Not provided"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* User Details */}
-              <div className="md:w-3/4 md:pl-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-5">
-                    <div className="flex items-start">
-                      <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Email
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Phone
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.phone || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Guardian Mobile
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.guardianMobileNumber || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <UserCheck className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Father&apos;s Name
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.fathersName || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
+              <div>
+                <div className="flex items-start">
+                  <MapPin className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Permanent Address
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.permanentAddress || "Not provided"}
+                    </p>
                   </div>
+                </div>
 
-                  <div className="space-y-5">
-                    <div className="flex items-start">
-                      <MapPin className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Permanent Address
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.permanentAddress || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-start">
+                  <Location className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      City & State
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.city && user.state
+                        ? `${user.city}, ${user.state}`
+                        : "Not provided"}
+                    </p>
+                  </div>
+                </div>
 
-                    <div className="flex items-start">
-                      <Location className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          City & State
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.city && user.state
-                            ? `${user.city}, ${user.state}`
-                            : "Not provided"}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-start">
+                  <Briefcase className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Company Name
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.companyName || "Not provided"}
+                    </p>
+                  </div>
+                </div>
 
-                    <div className="flex items-start">
-                      <Briefcase className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Company Name
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.companyName || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-start">
+                  <MapPin className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Company Address
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.companyAddress || "Not provided"}
+                    </p>
+                  </div>
+                </div>
 
-                    <div className="flex items-start">
-                      <MapPin className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Company Address
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.companyAddress || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-start">
+                  <CreditCard className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      ID Type
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.validIdType || "Not provided"}
+                    </p>
+                  </div>
+                </div>
 
-                    <div className="flex items-start">
-                      <CreditCard className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          ID Type
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.validIdType || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Move-in Date
-                        </p>
-                        <p className="text-base font-medium text-gray-900 dark:text-white">
-                          {user.moveInDate
-                            ? formatDate(user.moveInDate)
-                            : "Not set"}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-start">
+                  <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Move-in Date
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.moveInDate
+                        ? formatDate(user.moveInDate)
+                        : "Not set"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -471,22 +444,6 @@ export default function UserDetailPage() {
                 </p>
               </div>
             </div>
-
-            {/* {user.roomId && (
-              <div className="flex items-start">
-                <Building className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Room ID
-                  </p>
-                  <p className="text-base font-medium text-gray-900 dark:text-white">
-                    {typeof user.roomId === "object"
-                      ? user.roomId._id
-                      : user.roomId}
-                  </p>
-                </div>
-              </div>
-            )} */}
           </div>
         </div>
 

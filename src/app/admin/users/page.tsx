@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import Image from "next/image";
 
 interface User {
   _id: string;
@@ -11,6 +13,7 @@ interface User {
   email: string;
   pgId: string;
   phone?: string;
+  profileImage?: string;
   roomId?:
     | {
         _id: string;
@@ -27,6 +30,11 @@ interface User {
   moveInDate: string;
 }
 
+interface SortConfig {
+  key: keyof User | null;
+  direction: "ascending" | "descending";
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -38,7 +46,12 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "name",
+    direction: "ascending",
+  });
   const { toast } = useToast();
+  const router = useRouter();
 
   // Fetch users data
   useEffect(() => {
@@ -73,16 +86,18 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
-  // Filter users based on search and filter criteria
+  // Filter and sort users
   useEffect(() => {
-    let result = users;
+    let result = [...users]; // Create a new array to avoid mutating the original
 
+    // Filtering logic (existing)
     if (searchTerm) {
       result = result.filter(
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.pgId.toLowerCase().includes(searchTerm.toLowerCase())
+          (user.pgId &&
+            user.pgId.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -103,15 +118,97 @@ export default function UsersPage() {
       result = result.filter((user) => user.hasUnpaidDues === hasUnpaidDues);
     }
 
+    // Sorting logic
+    if (sortConfig.key !== null) {
+      result.sort((a, b) => {
+        const aValue = a[sortConfig.key!];
+        const bValue = b[sortConfig.key!];
+
+        // Handle cases where values might be null, undefined or need specific comparison
+        if (aValue === null || aValue === undefined)
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        if (bValue === null || bValue === undefined)
+          return sortConfig.direction === "ascending" ? 1 : -1;
+
+        // Special handling for roomNumber as it's nested
+        if (
+          sortConfig.key === "roomId" &&
+          typeof aValue === "object" &&
+          aValue &&
+          typeof bValue === "object" &&
+          bValue
+        ) {
+          const aRoom = (aValue as { roomNumber?: string }).roomNumber || "";
+          const bRoom = (bValue as { roomNumber?: string }).roomNumber || "";
+          if (aRoom < bRoom)
+            return sortConfig.direction === "ascending" ? -1 : 1;
+          if (aRoom > bRoom)
+            return sortConfig.direction === "ascending" ? 1 : -1;
+          return 0;
+        }
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortConfig.direction === "ascending"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+          return sortConfig.direction === "ascending"
+            ? aValue === bValue
+              ? 0
+              : aValue
+                ? -1
+                : 1
+            : aValue === bValue
+              ? 0
+              : aValue
+                ? 1
+                : -1;
+        }
+
+        // Fallback for numbers or other types
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
     setFilteredUsers(result);
-    setCurrentPage(1); // Reset to first page on filter change
-  }, [searchTerm, filterStatus, filterPayment, users]);
+    setCurrentPage(1); // Reset to first page on filter or sort change
+  }, [searchTerm, filterStatus, filterPayment, users, sortConfig]);
+
+  const requestSort = (key: keyof User) => {
+    if (key === "phone") return;
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIndicator = (key: keyof User) => {
+    if (key === "phone") return "";
+    if (sortConfig.key === key) {
+      return sortConfig.direction === "ascending" ? " ▲" : " ▼";
+    }
+    return ""; // Or a default "unsorted" icon e.g. <ChevronsUpDown size={14} className="ml-1 inline-block" />
+  };
 
   // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  // Function to handle row click
+  const handleRowClick = (userId: string) => {
+    router.push(`/admin/users/${userId}`);
+  };
 
   // Function to send payment reminder
   const handleSendReminder = async (userId: string) => {
@@ -260,40 +357,31 @@ export default function UsersPage() {
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("name")}
                   >
-                    User
+                    User {getSortIndicator("name")}
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("pgId")}
                   >
-                    PG ID
+                    PG ID {getSortIndicator("pgId")}
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("roomId")}
                   >
-                    Room
-                  </th>
-
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                  >
-                    Status
+                    Room {getSortIndicator("roomId")}
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("moveInDate")}
                   >
-                    Date Joined
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                  >
-                    Actions
+                    Date Joined {getSortIndicator("moveInDate")}
                   </th>
                 </tr>
               </thead>
@@ -301,12 +389,25 @@ export default function UsersPage() {
                 {currentUsers.map((user) => (
                   <tr
                     key={user._id}
-                    className="hover:bg-white/40 dark:hover:bg-gray-700/40 transition-colors duration-200"
+                    className="hover:bg-white/40 dark:hover:bg-gray-700/40 transition-colors duration-200 cursor-pointer"
+                    onClick={() => handleRowClick(user._id)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                          {user.name.charAt(0).toUpperCase()}
+                        <div className="flex-shrink-0 h-10 w-10">
+                          {user.profileImage ? (
+                            <Image
+                              src={user.profileImage}
+                              alt={user.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
@@ -315,11 +416,6 @@ export default function UsersPage() {
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             {user.email}
                           </div>
-                          {user.phone && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.phone}
-                            </div>
-                          )}
                         </div>
                         {user.hasUnpaidDues && user.isActive && (
                           <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200">
@@ -341,97 +437,15 @@ export default function UsersPage() {
                           : "-"}
                       </div>
                     </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.isDeleted
-                            ? "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200"
-                            : user.isActive
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
-                        }`}
-                      >
-                        {user.isDeleted
-                          ? "Deleted"
-                          : user.isActive
-                            ? "Active"
-                            : "Inactive"}
-                      </span>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {new Date(user.moveInDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
-                        <Link
-                          href={`/admin/users/${user._id}`}
-                          className="text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </Link>
-
-                        {user.hasUnpaidDues && user.isActive && (
-                          <button
-                            onClick={() => handleSendReminder(user._id)}
-                            disabled={sendingReminder === user._id}
-                            className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-200 dark:hover:bg-yellow-800/60 transition-colors"
-                            title="Send payment reminder"
-                          >
-                            {sendingReminder === user._id ? (
-                              <>
-                                <svg
-                                  className="animate-spin h-4 w-4 mr-1"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  ></circle>
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  ></path>
-                                </svg>
-                                Sending...
-                              </>
-                            ) : (
-                              <>
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4 mr-1"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                                </svg>
-                                Send Reminder
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 ))}
                 {currentUsers.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={5}
                       className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
                       No users found matching the criteria
