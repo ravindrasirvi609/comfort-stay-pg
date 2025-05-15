@@ -14,6 +14,7 @@ interface Resident {
   moveInDate?: string;
   isOnNoticePeriod: boolean;
   lastStayingDate: string;
+  profileImage?: string;
 }
 
 // Get a single room
@@ -39,7 +40,7 @@ export async function GET(
     const room = await Room.findById(params.id).populate({
       path: "residents",
       select:
-        "name email pgId phone _id moveInDate bedNumber isOnNoticePeriod lastStayingDate",
+        "name email pgId phone _id moveInDate bedNumber isOnNoticePeriod lastStayingDate profileImage",
     });
 
     if (!room) {

@@ -12,6 +12,7 @@ import {
   FaIdCard,
 } from "react-icons/fa";
 import Link from "next/link";
+import Image from "next/image";
 
 interface User {
   _id: string;
@@ -23,6 +24,7 @@ interface User {
   moveInDate: string;
   isOnNoticePeriod: boolean;
   lastStayingDate?: string;
+  profileImage?: string;
 }
 
 interface Bed {
@@ -141,27 +143,44 @@ export default function RoomDetailPage() {
         </div>
 
         {assignment?.isOccupied && assignment.resident ? (
-          <div>
-            <Link
-              href={`/admin/users/${assignment.resident._id}`}
-              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-            >
-              {assignment.resident.name}
-            </Link>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {assignment.resident.email}
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              {assignment.resident.profileImage ? (
+                <Image
+                  src={assignment.resident.profileImage}
+                  alt={`${assignment.resident.name}'s profile`}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm"
+                  width={48}
+                  height={48}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  <FaUser className="text-gray-400 dark:text-gray-500" />
+                </div>
+              )}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              PG ID: {assignment.resident.pgId}
-            </div>
-            {isOnNoticePeriod && assignment.resident.lastStayingDate && (
-              <div className="text-sm text-orange-600 dark:text-orange-400 mt-2">
-                Leaving on:{" "}
-                {new Date(
-                  assignment.resident.lastStayingDate
-                ).toLocaleDateString()}
+            <div>
+              <Link
+                href={`/admin/users/${assignment.resident._id}`}
+                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                {assignment.resident.name}
+              </Link>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {assignment.resident.email}
               </div>
-            )}
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                PG ID: {assignment.resident.pgId}
+              </div>
+              {isOnNoticePeriod && assignment.resident.lastStayingDate && (
+                <div className="text-sm text-orange-600 dark:text-orange-400 mt-2">
+                  Leaving on:{" "}
+                  {new Date(
+                    assignment.resident.lastStayingDate
+                  ).toLocaleDateString()}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="text-green-600 dark:text-green-400">Available</div>
@@ -201,8 +220,7 @@ export default function RoomDetailPage() {
                 Building {room.building} - Room {room.roomNumber}
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-400">
-                Floor: {room.floor} | Type:{" "}
-                {room.type.charAt(0).toUpperCase() + room.type.slice(1)}
+                Floor: {room.floor} | Type: {room.capacity}-Sharing
               </p>
             </div>
             <span
