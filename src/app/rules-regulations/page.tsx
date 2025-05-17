@@ -178,7 +178,7 @@ export default function RulesAndRegulations() {
         </svg>
       ),
       rules: [
-        "Notice period of 30 days must be given before vacating the room.",
+        "Notice period of 15 days must be given before vacating the room.",
         "Room must be handed over in the same condition as it was allotted.",
         "All personal belongings must be removed during checkout.",
         "Security deposit will be refunded within 15 days after deducting for damages, if any.",
