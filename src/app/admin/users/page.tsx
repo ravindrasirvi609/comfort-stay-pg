@@ -40,10 +40,14 @@ interface User {
   hasUnpaidDues?: boolean; // General dues flag
   moveInDate: string;
   currentMonthRentStatus?: "Paid" | "Unpaid" | "N/A"; // New field
+  dueAmount: number; // Amount due from the user
 }
 
+// Define the sort keys including standard User properties and custom ones
+type SortKey = keyof User | "currentMonthRentStatus";
+
 interface SortConfig {
-  key: keyof User | "currentMonthRentStatus" | null; // Added new sort key
+  key: SortKey | null;
   direction: "ascending" | "descending";
 }
 
@@ -60,7 +64,7 @@ export default function UsersPage() {
   const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "name",
+    key: "name" as SortKey,
     direction: "ascending",
   });
   const { toast } = useToast();
@@ -88,6 +92,7 @@ export default function UsersPage() {
 
         const processedUsers = usersData.map((user: User) => {
           let rentStatus: User["currentMonthRentStatus"] = "N/A";
+          let dueAmount = 0; // Initialize due amount
           const roomPrice =
             typeof user.roomId === "object" && user.roomId?.price
               ? user.roomId.price
@@ -114,13 +119,16 @@ export default function UsersPage() {
             if (totalAmountPaidForCurrentMonth >= roomPrice) {
               rentStatus = "Paid";
             } else {
-              rentStatus = "Unpaid"; // Even if partially paid but less than full roomPrice
+              rentStatus = "Unpaid";
+              // Calculate due amount as difference between room price and amount paid
+              dueAmount = roomPrice - totalAmountPaidForCurrentMonth;
             }
           }
 
           return {
             ...user,
             currentMonthRentStatus: rentStatus,
+            dueAmount: dueAmount,
           };
         });
 
@@ -166,15 +174,10 @@ export default function UsersPage() {
     if (filterPayment !== "all") {
       const hasUnpaidDues = filterPayment === "unpaid";
       result = result.filter((user) => user.hasUnpaidDues === hasUnpaidDues);
-    }
-
-    // Sorting logic
+    } // Sorting logic
     if (sortConfig.key !== null) {
       result.sort((a, b) => {
-        const aValue = a[sortConfig.key as keyof User]; // Type assertion for standard keys
-        const bValue = b[sortConfig.key as keyof User];
-
-        // Handle currentMonthRentStatus sorting specifically
+        // Handle special sort keys
         if (sortConfig.key === "currentMonthRentStatus") {
           const order = { Paid: 1, Unpaid: 2, "N/A": 3 };
           const aStatus = a.currentMonthRentStatus || "N/A";
@@ -183,6 +186,19 @@ export default function UsersPage() {
             ? order[aStatus] - order[bStatus]
             : order[bStatus] - order[aStatus];
         }
+
+        if (sortConfig.key === "dueAmount") {
+          const aDue = a.dueAmount || 0;
+          const bDue = b.dueAmount || 0;
+          return sortConfig.direction === "ascending"
+            ? aDue - bDue
+            : bDue - aDue;
+        }
+
+        // Handle standard User properties
+        const userKey = sortConfig.key as keyof User;
+        const aValue = a[userKey];
+        const bValue = b[userKey];
 
         // Handle cases where values might be null, undefined or need specific comparison
         if (aValue === null || aValue === undefined)
@@ -242,7 +258,7 @@ export default function UsersPage() {
     setCurrentPage(1); // Reset to first page on filter or sort change
   }, [searchTerm, filterStatus, filterPayment, users, sortConfig]);
 
-  const requestSort = (key: keyof User | "currentMonthRentStatus") => {
+  const requestSort = (key: SortKey) => {
     if (key === "phone") return;
     let direction: "ascending" | "descending" = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -251,7 +267,7 @@ export default function UsersPage() {
     setSortConfig({ key, direction });
   };
 
-  const getSortIndicator = (key: keyof User | "currentMonthRentStatus") => {
+  const getSortIndicator = (key: SortKey) => {
     if (key === "phone") return "";
     if (sortConfig.key === key) {
       return sortConfig.direction === "ascending" ? " ▲" : " ▼";
@@ -297,7 +313,7 @@ export default function UsersPage() {
       <div className="flex justify-center items-center h-96">
         <div className="relative">
           <div className="h-24 w-24 rounded-full border-t-4 border-b-4 border-pink-500 animate-spin"></div>
-          <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-4 border-b-4 border-purple-500 animate-spin animate-pulse"></div>
+          <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-4 border-b-4 border-purple-500 animate-pulse"></div>
         </div>
       </div>
     );
@@ -453,6 +469,13 @@ export default function UsersPage() {
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort("dueAmount")}
+                  >
+                    Due Amount {getSortIndicator("dueAmount")}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort("moveInDate")}
                   >
                     Date Joined {getSortIndicator("moveInDate")}
@@ -542,6 +565,11 @@ export default function UsersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {user.dueAmount && user.dueAmount > 0
+                        ? `₹${user.dueAmount.toLocaleString()}`
+                        : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {new Date(user.moveInDate).toLocaleDateString()}
                     </td>
                   </tr>
@@ -549,7 +577,7 @@ export default function UsersPage() {
                 {currentUsers.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6} // Adjusted colSpan from 5 to 6 (User, PGID, Room, Status, Current Rent, Date Joined)
+                      colSpan={7} // Adjusted colSpan from 6 to 7 (User, PGID, Room, Status, Current Rent, Due Amount, Date Joined)
                       className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
                       No users found matching the criteria
