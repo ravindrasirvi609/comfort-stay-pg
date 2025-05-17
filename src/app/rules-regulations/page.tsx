@@ -43,11 +43,11 @@ export default function RulesAndRegulations() {
         </svg>
       ),
       rules: [
-        "Residents must maintain cleanliness in their rooms and common areas.",
-        "Noise levels should be kept to a minimum after 10:00 PM.",
-        "No smoking is allowed inside the building.",
-        "Consumption of alcohol is strictly prohibited within the premises.",
-        "Residents are responsible for their own belongings. Management is not liable for any loss or damage.",
+        "No Outside Visitors Without Permission: Residents must get prior approval from the PG owner before bringing any guest. Overnight stays require permission and incur extra charges.",
+        "Meals Only in the Dining Area: Meals are not permitted inside the rooms. All residents are requested to have their meals at the dining table only to maintain cleanliness and hygiene.",
+        "Maintain Cleanliness: Residents are responsible for keeping their rooms and common areas clean. Any damage or mess caused will need to be cleaned or compensated for.",
+        "Noise Control: Please avoid playing loud music or causing disturbances to fellow residents. Maintain a peaceful environment, especially during rest hours.",
+        "Avoid Gathering Near the Main Gate: Residents should not stand or gather with others in front of the main gate. It is important to maintain discipline and not cause inconvenience to neighbors or security.",
       ],
     },
     {
@@ -70,11 +70,65 @@ export default function RulesAndRegulations() {
         </svg>
       ),
       rules: [
-        "Visitors are allowed between 9:00 AM and 8:00 PM only.",
-        "All visitors must register at the reception/security desk.",
-        "Visitors are not permitted to stay overnight without prior approval.",
+        "No outside visitors without prior approval from the PG owner.",
+        "All visitors must be registered at the reception/security desk.",
+        "Overnight stays require special permission and additional charges.",
         "Residents are responsible for their visitors' behavior.",
         "Management reserves the right to deny entry to any visitor.",
+      ],
+    },
+    {
+      id: "safety",
+      title: "Safety & Security",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
+        </svg>
+      ),
+      rules: [
+        "Security & Safety: Always keep your belongings safe. The PG management will not be responsible for any personal loss or theft. Lock your room when not in use.",
+        "Prohibited Items: Smoking, alcohol consumption, and any kind of narcotics are strictly prohibited within the PG premises.",
+        "Report Issues Promptly: Any maintenance or facility-related issues should be reported to the management immediately for timely resolution.",
+        "Do Not Use or Place Items on Vacant Beds: Residents must not place their belongings or themselves on vacant beds, even if they appear unused. Every bed is reserved and must remain clean and ready for new occupants.",
+        "Respect & Behaviour: All residents are expected to behave respectfully with fellow roommates, staff, and management. Any misconduct may lead to termination of stay.",
+      ],
+    },
+    {
+      id: "facilities",
+      title: "Facilities Usage",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+          />
+        </svg>
+      ),
+      rules: [
+        "Switch Off Electrical Appliances: Please ensure all electrical appliances, lights, and fans are turned off when not in use to conserve energy and avoid hazards.",
+        "Electrical Appliances: Usage of personal electrical appliances like heaters, induction cooktops, or high-voltage devices is not allowed without prior approval from the management.",
+        "Laundry & Drying Clothes: Use the designated laundry and drying areas. Hanging clothes in balconies or common areas is not permitted.",
+        "Do Not Waste Water: Use water responsibly. Unnecessary wastage in bathrooms, wash areas, or while doing laundry is discouraged.",
+        "Report any damages or malfunctions to management immediately.",
       ],
     },
     {
@@ -102,60 +156,6 @@ export default function RulesAndRegulations() {
         "Late payments will incur a penalty of 5% per week.",
         "Payment can be made through online transfer, UPI, or at the reception.",
         "Receipts will be provided for all payments.",
-      ],
-    },
-    {
-      id: "facilities",
-      title: "Facilities Usage",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-          />
-        </svg>
-      ),
-      rules: [
-        "Common facilities such as TV room, gym, and kitchen should be used responsibly.",
-        "Switch off lights and fans when not in use.",
-        "Water should be used judiciously.",
-        "Report any damages or malfunctions to management immediately.",
-        "Laundry facilities are available between 7:00 AM and 9:00 PM.",
-      ],
-    },
-    {
-      id: "safety",
-      title: "Safety & Security",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-          />
-        </svg>
-      ),
-      rules: [
-        "Entry gates will be locked at 10:30 PM. Contact security if returning later.",
-        "Keep your room locked when not inside.",
-        "Do not share your room key with anyone.",
-        "Report any suspicious activity to management/security immediately.",
-        "Register your vehicles with management for parking access.",
       ],
     },
     {
