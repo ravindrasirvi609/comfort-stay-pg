@@ -80,6 +80,7 @@ export default function RegisterPage() {
     companyName: "",
     companyAddress: "",
     profileImage: "",
+    agreeToTerms: false, // Added field for rules agreement
   });
 
   useEffect(() => {
@@ -99,10 +100,11 @@ export default function RegisterPage() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target as HTMLInputElement;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]:
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
     setError("");
   };
@@ -182,6 +184,12 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!formData.agreeToTerms) {
+      setError("You must agree to the rules and regulations to proceed");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Submit registration request
       const response = await axios.post("/api/auth/register-request", {
@@ -198,6 +206,7 @@ export default function RegisterPage() {
         companyName: formData.companyName,
         companyAddress: formData.companyAddress,
         profileImage: formData.profileImage,
+        agreeToTerms: formData.agreeToTerms,
       });
 
       if (response.data.success) {
@@ -218,6 +227,7 @@ export default function RegisterPage() {
           companyName: "",
           companyAddress: "",
           profileImage: "",
+          agreeToTerms: false,
         });
       } else {
         setError(response.data.message || "Registration request failed");
@@ -740,6 +750,50 @@ export default function RegisterPage() {
                             Passport photo uploaded successfully
                           </p>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Terms and Conditions Checkbox */}
+              {currentStep === 2 && (
+                <div className="mt-8">
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                    <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <input
+                            type="checkbox"
+                            id="agreeToTerms"
+                            name="agreeToTerms"
+                            checked={formData.agreeToTerms}
+                            onChange={handleChange}
+                            className="h-5 w-5 text-purple-500 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="agreeToTerms"
+                            className="block text-sm text-gray-800 dark:text-gray-200 font-medium cursor-pointer"
+                          >
+                            I agree to the{" "}
+                            <Link
+                              href="/rules-regulations"
+                              target="_blank"
+                              className="text-pink-600 dark:text-pink-400 hover:text-pink-500 dark:hover:text-pink-300 font-semibold underline"
+                            >
+                              Rules and Regulations
+                            </Link>{" "}
+                            of ComfortStay PG *
+                          </label>
+                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                            By checking this box, you confirm that you have
+                            read, understood, and agree to abide by all the
+                            rules and policies of our facility.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>

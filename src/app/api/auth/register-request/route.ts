@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       companyName,
       companyAddress,
       profileImage,
+      agreeToTerms,
     } = requestData;
 
     if (
@@ -35,7 +36,8 @@ export async function POST(request: NextRequest) {
       !guardianMobileNumber ||
       !validIdType ||
       !validIdPhoto ||
-      !profileImage
+      !profileImage ||
+      !agreeToTerms
     ) {
       return NextResponse.json(
         { success: false, message: "All required fields must be filled" },
@@ -72,6 +74,7 @@ export async function POST(request: NextRequest) {
       companyName: companyName || "",
       companyAddress: companyAddress || "",
       profileImage,
+      agreeToTerms: true, // User has agreed to terms and regulations
     });
 
     const savedUser = await newUser.save();

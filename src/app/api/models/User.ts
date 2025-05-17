@@ -114,6 +114,10 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    agreeToTerms: {
+      type: Boolean,
+      default: false,
+    },
     // New fields for PG management
     depositFees: {
       type: Number,

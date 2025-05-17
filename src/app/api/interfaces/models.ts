@@ -38,6 +38,7 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
   keyIssued?: boolean;
+  agreeToTerms?: boolean;
   depositReturn?: {
     amount: number;
     date?: Date;
