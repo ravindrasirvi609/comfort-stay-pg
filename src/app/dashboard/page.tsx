@@ -20,7 +20,10 @@ import {
   FaSignOutAlt,
   FaDownload,
   FaDoorClosed,
+  FaBookOpen,
+  FaStar,
 } from "react-icons/fa";
+import { motion } from "framer-motion";
 import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -99,6 +102,7 @@ interface Notice {
 }
 
 export default function UserProfilePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -124,7 +128,6 @@ export default function UserProfilePage() {
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   const [isExitSurveyOpen, setIsExitSurveyOpen] = useState(false);
   const [isCompleteCheckout, setIsCompleteCheckout] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     // Fetch dashboard data
@@ -417,11 +420,20 @@ export default function UserProfilePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Profile Header Section */}
-      <div className="backdrop-blur-lg bg-gradient-to-r from-pink-500/10 to-purple-600/10 dark:from-pink-500/5 dark:to-purple-600/5 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-lg p-8 mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="backdrop-blur-lg bg-gradient-to-r from-pink-500/10 via-indigo-300/10 to-purple-600/10 dark:from-pink-500/10 dark:via-indigo-500/5 dark:to-purple-600/10 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl hover:shadow-pink-200/20 dark:hover:shadow-pink-700/20 transition-all duration-300 p-8 mb-8"
+      >
         <div className="flex flex-col md:flex-row md:items-center">
           {/* Profile Image */}
-          <div className="mb-4 md:mb-0 md:mr-8">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white dark:border-gray-800">
+          <motion.div
+            className="mb-4 md:mb-0 md:mr-8"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 via-pink-400 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white/80 dark:border-gray-800/80 shadow-lg">
               {user?.profileImage ? (
                 <Image
                   src={user.profileImage}
@@ -434,21 +446,38 @@ export default function UserProfilePage() {
                 <FaUser className="text-white text-4xl md:text-5xl" />
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* User Info */}
-          <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 dark:from-pink-400 dark:to-purple-500">
+          <motion.div
+            className="flex-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400">
               {user?.name}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2">
-              <div className="flex items-center text-gray-700 dark:text-gray-300">
-                <FaIdCard className="mr-2" />
-                <span>{user?.pgId}</span>
-              </div>
-              <div className="flex items-center text-gray-700 dark:text-gray-300">
-                <FaDoorOpen className="mr-2" />
-                <span>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-3">
+              <motion.div
+                className="flex items-center px-3 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                }}
+              >
+                <FaIdCard className="mr-2 text-pink-500 dark:text-pink-400" />
+                <span className="font-medium">{user?.pgId}</span>
+              </motion.div>
+              <motion.div
+                className="flex items-center px-3 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                }}
+              >
+                <FaDoorOpen className="mr-2 text-purple-500 dark:text-purple-400" />
+                <span className="font-medium">
                   Room{" "}
                   {roomDetails
                     ? roomDetails.roomNumber
@@ -457,51 +486,77 @@ export default function UserProfilePage() {
                       ? user.roomId.roomNumber
                       : "Not Assigned"}
                 </span>
-              </div>
+              </motion.div>
               {user?.bedNumber && (
-                <div className="flex items-center text-gray-700 dark:text-gray-300">
-                  <FaBed className="mr-2" />
-                  <span>Bed #{user.bedNumber}</span>
-                </div>
+                <motion.div
+                  className="flex items-center px-3 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
+                  whileHover={{
+                    scale: 1.05,
+                    backgroundColor: "rgba(255,255,255,0.7)",
+                  }}
+                >
+                  <FaBed className="mr-2 text-indigo-500 dark:text-indigo-400" />
+                  <span className="font-medium">Bed #{user.bedNumber}</span>
+                </motion.div>
               )}
               {user?.isOnNoticePeriod && user?.lastStayingDate && (
-                <div className="flex items-center text-red-600 dark:text-red-400">
+                <motion.div
+                  className="flex items-center px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/30 shadow-sm"
+                  whileHover={{ scale: 1.05 }}
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
                   <FaCalendarTimes className="mr-2" />
-                  <span>
+                  <span className="font-medium">
                     Leaving on{" "}
                     {new Date(user.lastStayingDate).toLocaleDateString("en-IN")}
                   </span>
-                </div>
+                </motion.div>
               )}
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 mt-4">
+              <Link
+                href="/rules-regulations"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                <FaBookOpen className="mr-2" />
+                Rules & Regulations
+              </Link>
+
               {!user?.isOnNoticePeriod && !user?.moveOutDate && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setIsNoticePeriodDialogOpen(true)}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   <FaSignOutAlt className="mr-2" />
                   Submit Notice
-                </button>
+                </motion.button>
               )}
               {user?.isOnNoticePeriod && !user?.moveOutDate && (
                 <>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setIsWithdrawDialogOpen(true)}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
                     <FaCalendarAlt className="mr-2" />
                     Withdraw Notice
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setIsCheckoutDialogOpen(true)}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
                     <FaDoorClosed className="mr-2" />
                     Checkout Now
-                  </button>
+                  </motion.button>
                 </>
               )}
               {user?.moveOutDate && (
@@ -512,18 +567,45 @@ export default function UserProfilePage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Payment Status Card */}
-          <div className="mt-6 md:mt-0 md:ml-4">
-            <div
-              className={`rounded-xl p-4 ${currentMonthPayment ? "bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-900/50" : "bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-900/50"}`}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="mt-6 md:mt-0 md:ml-4"
+          >
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className={`rounded-xl p-5 shadow-lg ${
+                currentMonthPayment
+                  ? currentMonthPayment.paymentStatus === "Paid"
+                    ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 border border-green-200 dark:border-green-800/50"
+                    : currentMonthPayment.paymentStatus === "Partial"
+                      ? "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800/50"
+                      : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 border border-red-200 dark:border-red-800/50"
+                  : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 border border-red-200 dark:border-red-800/50"
+              }`}
             >
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {currentMonth} Rent
-              </h3>
+              <div className="flex items-center mb-2">
+                <FaRupeeSign
+                  className={`mr-2 ${
+                    currentMonthPayment
+                      ? currentMonthPayment.paymentStatus === "Paid"
+                        ? "text-green-600 dark:text-green-400"
+                        : currentMonthPayment.paymentStatus === "Partial"
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : "text-red-600 dark:text-red-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                />
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {currentMonth} Rent
+                </h3>
+              </div>
               <p
-                className={`text-xl font-bold ${
+                className={`text-2xl font-bold ${
                   currentMonthPayment
                     ? currentMonthPayment.paymentStatus === "Paid"
                       ? "text-green-700 dark:text-green-400"
@@ -537,7 +619,7 @@ export default function UserProfilePage() {
                   ? currentMonthPayment.paymentStatus
                   : "Due"}
               </p>
-              <p className="text-sm mt-1">
+              <p className="text-sm mt-1 font-medium">
                 {currentMonthPayment
                   ? `Paid on ${new Date(currentMonthPayment.paymentDate).toLocaleDateString()}`
                   : roomDetails?.price
@@ -546,94 +628,122 @@ export default function UserProfilePage() {
                       ? `₹${user.roomId.price.toLocaleString("en-IN")} due`
                       : ""}
               </p>
-            </div>
-          </div>
+              {!currentMonthPayment && (
+                <div className="mt-2 pt-2 border-t border-red-200 dark:border-red-800/30">
+                  <Link
+                    href="/dashboard/payments/new"
+                    className="text-xs text-red-700 dark:text-red-400 font-medium hover:underline flex items-center"
+                  >
+                    Pay Now <FaChevronRight className="ml-1 text-xs" />
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Navigation Tabs */}
-      <div className="flex overflow-x-auto mb-8 backdrop-blur-md bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30">
-        <button
-          onClick={() => setActiveTab("overview")}
-          className={`flex-1 py-4 px-6 text-center font-medium transition-all duration-200 ${activeTab === "overview" ? "text-pink-600 border-b-2 border-pink-600" : "text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-500"}`}
-        >
-          Overview
-        </button>
-        <button
-          onClick={() => setActiveTab("payments")}
-          className={`flex-1 py-4 px-6 text-center font-medium transition-all duration-200 ${activeTab === "payments" ? "text-pink-600 border-b-2 border-pink-600" : "text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-500"}`}
-        >
-          Payments
-        </button>
-        <button
-          onClick={() => setActiveTab("complaints")}
-          className={`flex-1 py-4 px-6 text-center font-medium transition-all duration-200 ${activeTab === "complaints" ? "text-pink-600 border-b-2 border-pink-600" : "text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-500"}`}
-        >
-          Complaints
-        </button>
-        <button
-          onClick={() => setActiveTab("notices")}
-          className={`flex-1 py-4 px-6 text-center font-medium transition-all duration-200 ${activeTab === "notices" ? "text-pink-600 border-b-2 border-pink-600" : "text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-500"}`}
-        >
-          Notices
-        </button>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="flex overflow-x-auto mb-8 backdrop-blur-md bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-md hover:shadow-lg transition-shadow duration-300"
+      >
+        {["overview", "payments", "complaints", "notices"].map((tab) => (
+          <motion.button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-4 px-6 text-center font-medium transition-all duration-200 ${
+              activeTab === tab
+                ? "text-white bg-gradient-to-r from-pink-500 to-purple-600 shadow-md"
+                : "text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-gray-700/50"
+            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </motion.button>
+        ))}
+      </motion.div>
 
       {/* Content based on active tab */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {activeTab === "overview" && (
           <>
             {/* Personal Information Card */}
-            <div className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6 lg:col-span-1">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 flex items-center">
-                <FaUser className="mr-3 text-pink-600" />
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="backdrop-blur-lg bg-gradient-to-br from-white/80 to-white/50 dark:from-gray-800/80 dark:to-gray-800/50 rounded-xl border border-white/30 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:col-span-1"
+            >
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 mb-6 flex items-center">
+                <div className="p-2 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white mr-3">
+                  <FaUser />
+                </div>
                 Personal Information
               </h2>
 
               <div className="space-y-5">
-                <div>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                >
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Full Name
                   </h3>
                   <p className="text-gray-900 dark:text-white font-medium">
                     {user?.name}
                   </p>
-                </div>
+                </motion.div>
 
-                <div>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                >
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     <div className="flex items-center">
-                      <FaEnvelope className="mr-2 text-gray-400" />
+                      <FaEnvelope className="mr-2 text-pink-500 dark:text-pink-400" />
                       Email Address
                     </div>
                   </h3>
                   <p className="text-gray-900 dark:text-white">{user?.email}</p>
-                </div>
+                </motion.div>
 
-                <div>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                >
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     <div className="flex items-center">
-                      <FaPhone className="mr-2 text-gray-400" />
+                      <FaPhone className="mr-2 text-purple-500 dark:text-purple-400" />
                       Phone Number
                     </div>
                   </h3>
                   <p className="text-gray-900 dark:text-white">{user?.phone}</p>
-                </div>
+                </motion.div>
 
-                <div>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                >
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     <div className="flex items-center">
-                      <FaIdCard className="mr-2 text-gray-400" />
+                      <FaIdCard className="mr-2 text-indigo-500 dark:text-indigo-400" />
                       PG ID
                     </div>
                   </h3>
                   <p className="text-gray-900 dark:text-white">{user?.pgId}</p>
-                </div>
+                </motion.div>
 
-                <div>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                >
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     <div className="flex items-center">
-                      <FaCalendarAlt className="mr-2 text-gray-400" />
+                      <FaCalendarAlt className="mr-2 text-pink-500 dark:text-pink-400" />
                       Move-in Date
                     </div>
                   </h3>
@@ -647,55 +757,85 @@ export default function UserProfilePage() {
                       }
                     )}
                   </p>
-                </div>
+                </motion.div>
 
                 {user?.guardianMobileNumber && (
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Emergency Contact
+                      <div className="flex items-center">
+                        <FaPhone className="mr-2 text-indigo-500 dark:text-indigo-400" />
+                        Emergency Contact
+                      </div>
                     </h3>
                     <p className="text-gray-900 dark:text-white">
                       {user.guardianMobileNumber}
                     </p>
-                  </div>
+                  </motion.div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Room Information Card */}
-            <div className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6 lg:col-span-1">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 flex items-center">
-                <FaDoorOpen className="mr-3 text-pink-600" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="backdrop-blur-lg bg-gradient-to-br from-white/80 to-white/50 dark:from-gray-800/80 dark:to-gray-800/50 rounded-xl border border-white/30 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:col-span-1"
+            >
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 mb-6 flex items-center">
+                <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white mr-3">
+                  <FaDoorOpen />
+                </div>
                 Room Information
               </h2>
 
               {roomDetails ? (
                 <div className="space-y-5">
-                  <div className="bg-gradient-to-r from-pink-500/10 to-purple-600/10 dark:from-pink-500/5 dark:to-purple-600/5 rounded-lg p-4 border border-pink-200 dark:border-pink-900/30 mb-6">
-                    <h3 className="font-bold text-2xl text-gray-900 dark:text-white mb-1">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gradient-to-r from-purple-500/10 to-indigo-600/10 dark:from-purple-500/5 dark:to-indigo-600/5 rounded-lg p-6 border border-purple-200 dark:border-purple-900/30 mb-6 text-center shadow-md"
+                  >
+                    <h3 className="font-bold text-3xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 mb-2">
                       Room {roomDetails.roomNumber || "Not assigned"}
                     </h3>
-                    <p className="text-gray-700 dark:text-gray-300">
+                    <div className="flex justify-center mb-2 text-yellow-400">
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                      <FaStar className="text-gray-300 dark:text-gray-600" />
+                    </div>
+                    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/70 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 text-sm font-medium border border-purple-100 dark:border-purple-900/30 shadow-sm">
                       {roomDetails.type
                         ? `${roomDetails.type.charAt(0).toUpperCase() + roomDetails.type.slice(1)} Room`
                         : "Room"}
                       {user?.bedNumber ? ` • Bed #${user.bedNumber}` : ""}
-                    </p>
-                  </div>
+                    </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Room Type
                     </h3>
-                    <p className="text-gray-900 dark:text-white capitalize">
+                    <p className="text-gray-900 dark:text-white capitalize flex items-center">
+                      <FaDoorOpen className="mr-2 text-purple-500" />
                       {roomDetails.type || "Not specified"}
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       <div className="flex items-center">
-                        <FaRupeeSign className="mr-2 text-gray-400" />
+                        <FaRupeeSign className="mr-2 text-indigo-500 dark:text-indigo-400" />
                         Monthly Rent
                       </div>
                     </h3>
@@ -704,73 +844,99 @@ export default function UserProfilePage() {
                         ? `₹${roomDetails.price.toLocaleString("en-IN")}`
                         : "₹"}
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       <div className="flex items-center">
-                        <FaBed className="mr-2 text-gray-400" />
+                        <FaBed className="mr-2 text-purple-500 dark:text-purple-400" />
                         Bed Number
                       </div>
                     </h3>
                     <p className="text-gray-900 dark:text-white">
                       {user?.bedNumber || "Not assigned"}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               ) : (
                 <div className="space-y-5">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-4 mb-4">
-                    <p className="flex items-center text-yellow-800 dark:text-yellow-200">
-                      <FaExclamationCircle className="mr-2" />
-                      No room assigned yet. Please contact the admin.
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-6 mb-6 shadow-sm text-center"
+                  >
+                    <div className="bg-yellow-100 dark:bg-yellow-800/30 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FaExclamationCircle className="text-yellow-600 dark:text-yellow-400 text-xl" />
+                    </div>
+                    <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                      No Room Assigned
+                    </h3>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                      Please contact the administration to get a room assigned
+                      to you.
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Room
                     </h3>
                     <p className="text-gray-900 dark:text-white">
                       Not assigned
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Room Type
                     </h3>
                     <p className="text-gray-900 dark:text-white">
                       Not specified
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       <div className="flex items-center">
-                        <FaRupeeSign className="mr-2 text-gray-400" />
+                        <FaRupeeSign className="mr-2 text-indigo-500 dark:text-indigo-400" />
                         Monthly Rent
                       </div>
                     </h3>
                     <p className="text-gray-900 dark:text-white font-medium">
                       ₹
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div>
+                  <motion.div
+                    whileHover={{ x: 5 }}
+                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       <div className="flex items-center">
-                        <FaBed className="mr-2 text-gray-400" />
+                        <FaBed className="mr-2 text-purple-500 dark:text-purple-400" />
                         Bed Number
                       </div>
                     </h3>
                     <p className="text-gray-900 dark:text-white">
                       {user?.bedNumber || "Not assigned"}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               )}
-            </div>
+            </motion.div>
           </>
         )}
 
@@ -1116,7 +1282,7 @@ export default function UserProfilePage() {
                       min={
                         new Date(
                           Date.now() +
-                            (user?.isOnNoticePeriod ? 2 : 10) *
+                            (user?.isOnNoticePeriod ? 2 : 5) *
                               24 *
                               60 *
                               60 *
@@ -1129,7 +1295,7 @@ export default function UserProfilePage() {
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Minimum {user?.isOnNoticePeriod ? "10" : "30"} days from
+                      Minimum {user?.isOnNoticePeriod ? "10" : "15"} days from
                       today
                     </p>
                   </div>

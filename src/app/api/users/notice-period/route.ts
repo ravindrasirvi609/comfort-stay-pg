@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     if (currentUser.isOnNoticePeriod) {
       // If already on notice period, only need 10 days minimum notice
-      minimumDate.setDate(today.getDate() + 10);
+      minimumDate.setDate(today.getDate() + 5);
     } else {
       // First time notice period needs 20 days minimum notice
       minimumDate.setDate(today.getDate() + 1); // Changed from 30 days to 1 day (next day)

@@ -276,7 +276,7 @@ export default function RulesAndRegulations() {
             of these rules may result in termination of residency.
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               href="/register"
               className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium text-sm"
