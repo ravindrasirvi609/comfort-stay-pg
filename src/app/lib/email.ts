@@ -183,6 +183,67 @@ export async function sendRegistrationConfirmationEmail(
               
               <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;">If you have any questions about your registration, feel free to contact our support team.</p>
               
+              <!-- Rules and Regulations Section -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td>
+                    <h3 style="color: #d53f8c; font-size: 18px; margin: 0 0 15px;">Important Rules & Regulations:</h3>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 20px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">General Rules:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">No outside visitors without prior approval</li>
+                            <li style="margin-bottom: 8px;">Meals only in the dining area</li>
+                            <li style="margin-bottom: 8px;">Maintain cleanliness in rooms and common areas</li>
+                            <li style="margin-bottom: 8px;">Noise control and peaceful environment</li>
+                            <li style="margin-bottom: 0;">No gathering near the main gate</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 20px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">Safety & Security:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">Keep belongings safe and lock rooms when not in use</li>
+                            <li style="margin-bottom: 8px;">No smoking, alcohol, or narcotics on premises</li>
+                            <li style="margin-bottom: 8px;">Report maintenance issues promptly</li>
+                            <li style="margin-bottom: 0;">Respectful behavior with roommates and staff</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">Payment Rules:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">Monthly rent due by the 5th of each month</li>
+                            <li style="margin-bottom: 8px;">5% late payment penalty per week</li>
+                            <li style="margin-bottom: 0;">15-day notice period for vacating</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Rules and Regulations Buttons -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/rules-regulations" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center; margin: 0 10px;">View Full Rules & Regulations</a>
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/rules-regulations#download" target="_blank" style="background: white; color: #FF92B7; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center; border: 2px solid #FF92B7; margin: 0 10px;">Download Rules PDF</a>
+                  </td>
+                </tr>
+              </table>
+              
               <!-- Features Section -->
               <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px 0 25px;">
                 <tr>
@@ -222,7 +283,7 @@ export async function sendRegistrationConfirmationEmail(
               <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 12px 24px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Contact Support</a>
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/rules-regulations" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">View Full Rules & Regulations</a>
                   </td>
                 </tr>
               </table>
@@ -320,11 +381,62 @@ export async function sendWelcomeEmail(
               
               <p style="font-size: 16px; line-height: 1.5; margin: 0 0 25px;"><strong>Note:</strong> Please use your email address as your login ID when signing in.</p>
               
-              <!-- CTA Button -->
+              <!-- Rules and Regulations Section -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td>
+                    <h3 style="color: #d53f8c; font-size: 18px; margin: 0 0 15px;">Important Rules & Regulations:</h3>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 20px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">General Rules:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">No outside visitors without prior approval</li>
+                            <li style="margin-bottom: 8px;">Meals only in the dining area</li>
+                            <li style="margin-bottom: 8px;">Maintain cleanliness in rooms and common areas</li>
+                            <li style="margin-bottom: 8px;">Noise control and peaceful environment</li>
+                            <li style="margin-bottom: 0;">No gathering near the main gate</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 20px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">Safety & Security:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">Keep belongings safe and lock rooms when not in use</li>
+                            <li style="margin-bottom: 8px;">No smoking, alcohol, or narcotics on premises</li>
+                            <li style="margin-bottom: 8px;">Report maintenance issues promptly</li>
+                            <li style="margin-bottom: 0;">Respectful behavior with roommates and staff</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">Payment Rules:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">Monthly rent due by the 5th of each month</li>
+                            <li style="margin-bottom: 8px;">5% late payment penalty per week</li>
+                            <li style="margin-bottom: 0;">15-day notice period for vacating</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Rules and Regulations Buttons -->
               <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 12px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center;">Login to Your Account</a>
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/rules-regulations" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center; margin: 0 10px;">View Full Rules & Regulations</a>
                   </td>
                 </tr>
               </table>
