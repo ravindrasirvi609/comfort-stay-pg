@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
-import { FiUsers, FiEye, FiBell } from "react-icons/fi";
+import { FiUsers, FiEye, FiBell, FiX } from "react-icons/fi";
 import { FaFileExport, FaFileInvoiceDollar, FaUsers } from "react-icons/fa";
 
 // Define PaymentData interface based on Payment model
@@ -83,6 +83,9 @@ export default function UsersPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [showUnpaidDuesOnly, setShowUnpaidDuesOnly] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
 
   // Fetch users and payments data
   useEffect(() => {
@@ -229,14 +232,28 @@ export default function UsersPage() {
     router.push(`/admin/users/${userId}`);
   };
 
+  // Function to handle reminder button click
+  const handleReminderClick = (
+    e: React.MouseEvent,
+    userId: string,
+    userName: string
+  ) => {
+    e.stopPropagation();
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setShowConfirmDialog(true);
+  };
+
   // Function to send payment reminder
-  const handleSendReminder = async (userId: string) => {
+  const handleSendReminder = async () => {
+    if (!selectedUserId) return;
+
     try {
-      setSendingReminder(userId);
+      setSendingReminder(selectedUserId);
 
       // Call the API endpoint to send payment reminders
       const response = await axios.post(
-        `/api/payments/send-reminder/${userId}`
+        `/api/payments/send-reminder/${selectedUserId}`
       );
 
       if (response.data.success) {
@@ -251,6 +268,9 @@ export default function UsersPage() {
       );
     } finally {
       setSendingReminder(null);
+      setShowConfirmDialog(false);
+      setSelectedUserId(null);
+      setSelectedUserName("");
     }
   };
 
@@ -597,10 +617,9 @@ export default function UsersPage() {
                       <div className="flex items-center space-x-3">
                         {user.dueAmount > 0 && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendReminder(user._id);
-                            }}
+                            onClick={(e) =>
+                              handleReminderClick(e, user._id, user.name)
+                            }
                             disabled={sendingReminder === user._id}
                             className="p-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors duration-200"
                             title="Send Reminder"
@@ -734,6 +753,61 @@ export default function UsersPage() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                Confirm Reminder
+              </h3>
+              <button
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  setSelectedUserId(null);
+                  setSelectedUserName("");
+                }}
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              >
+                <FiX className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Are you sure you want to send a payment reminder to{" "}
+                {selectedUserName}?
+              </p>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  setSelectedUserId(null);
+                  setSelectedUserName("");
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendReminder}
+                disabled={sendingReminder === selectedUserId}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingReminder === selectedUserId ? (
+                  <div className="flex items-center">
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Sending...
+                  </div>
+                ) : (
+                  "Send Reminder"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
