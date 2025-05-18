@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
-import { FiUsers } from "react-icons/fi";
-import { FaFileExport } from "react-icons/fa";
+import { FiUsers, FiEye, FiBell } from "react-icons/fi";
+import { FaFileExport, FaFileInvoiceDollar, FaUsers } from "react-icons/fa";
 
 // Define PaymentData interface based on Payment model
 interface PaymentData {
@@ -82,6 +82,7 @@ export default function UsersPage() {
   });
   const { toast } = useToast();
   const router = useRouter();
+  const [showUnpaidDuesOnly, setShowUnpaidDuesOnly] = useState(false);
 
   // Fetch users and payments data
   useEffect(() => {
@@ -159,9 +160,9 @@ export default function UsersPage() {
 
   // Filter and sort users
   useEffect(() => {
-    let result = [...users]; // Create a new array to avoid mutating the original
+    let result = [...users];
 
-    // Filtering logic (existing)
+    // Existing filtering logic
     if (searchTerm) {
       result = result.filter(
         (user) =>
@@ -184,92 +185,21 @@ export default function UsersPage() {
       }
     }
 
-    if (filterPayment !== "all") {
-      const hasUnpaidDues = filterPayment === "unpaid";
-      result = result.filter((user) => user.hasUnpaidDues === hasUnpaidDues);
-    } // Sorting logic
-    if (sortConfig.key !== null) {
-      result.sort((a, b) => {
-        // Handle special sort keys
-        if (sortConfig.key === "currentMonthRentStatus") {
-          const order = { Paid: 1, Unpaid: 2, "N/A": 3 };
-          const aStatus = a.currentMonthRentStatus || "N/A";
-          const bStatus = b.currentMonthRentStatus || "N/A";
-          return sortConfig.direction === "ascending"
-            ? order[aStatus] - order[bStatus]
-            : order[bStatus] - order[aStatus];
-        }
+    // Enhanced unpaid dues filtering
+    if (showUnpaidDuesOnly) {
+      result = result.filter(
+        (user) => user.currentMonthRentStatus === "Unpaid"
+      );
+    }
 
-        if (sortConfig.key === "dueAmount") {
-          const aDue = a.dueAmount || 0;
-          const bDue = b.dueAmount || 0;
-          return sortConfig.direction === "ascending"
-            ? aDue - bDue
-            : bDue - aDue;
-        }
-
-        // Handle standard User properties
-        const userKey = sortConfig.key as keyof User;
-        const aValue = a[userKey];
-        const bValue = b[userKey];
-
-        // Handle cases where values might be null, undefined or need specific comparison
-        if (aValue === null || aValue === undefined)
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        if (bValue === null || bValue === undefined)
-          return sortConfig.direction === "ascending" ? 1 : -1;
-
-        // Special handling for roomNumber as it's nested
-        if (
-          sortConfig.key === "roomId" &&
-          typeof aValue === "object" &&
-          aValue &&
-          typeof bValue === "object" &&
-          bValue
-        ) {
-          const aRoom = (aValue as { roomNumber?: string }).roomNumber || "";
-          const bRoom = (bValue as { roomNumber?: string }).roomNumber || "";
-          if (aRoom < bRoom)
-            return sortConfig.direction === "ascending" ? -1 : 1;
-          if (aRoom > bRoom)
-            return sortConfig.direction === "ascending" ? 1 : -1;
-          return 0;
-        }
-
-        if (typeof aValue === "string" && typeof bValue === "string") {
-          return sortConfig.direction === "ascending"
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        }
-
-        if (typeof aValue === "boolean" && typeof bValue === "boolean") {
-          return sortConfig.direction === "ascending"
-            ? aValue === bValue
-              ? 0
-              : aValue
-                ? -1
-                : 1
-            : aValue === bValue
-              ? 0
-              : aValue
-                ? 1
-                : -1;
-        }
-
-        // Fallback for numbers or other types
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
+    // Sort by due amount if showing unpaid dues
+    if (showUnpaidDuesOnly) {
+      result.sort((a, b) => (b.dueAmount || 0) - (a.dueAmount || 0));
     }
 
     setFilteredUsers(result);
     setCurrentPage(1); // Reset to first page on filter or sort change
-  }, [searchTerm, filterStatus, filterPayment, users, sortConfig]);
+  }, [users, searchTerm, filterStatus, showUnpaidDuesOnly]);
 
   const requestSort = (key: SortKey) => {
     if (key === "phone") return;
@@ -303,6 +233,7 @@ export default function UsersPage() {
   const handleSendReminder = async (userId: string) => {
     try {
       setSendingReminder(userId);
+
       // Call the API endpoint to send payment reminders
       const response = await axios.post(
         `/api/payments/send-reminder/${userId}`
@@ -313,9 +244,11 @@ export default function UsersPage() {
       } else {
         toast.error(response.data.message || "Failed to send reminder");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error sending payment reminder:", err);
-      toast.error("Failed to send payment reminder");
+      toast.error(
+        err.response?.data?.message || "Failed to send payment reminder"
+      );
     } finally {
       setSendingReminder(null);
     }
@@ -396,6 +329,15 @@ export default function UsersPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Add this before the return statement
+  const totalUnpaidDues = users.reduce(
+    (sum, user) => sum + (user.dueAmount || 0),
+    0
+  );
+  const unpaidUsersCount = users.filter(
+    (user) => user.currentMonthRentStatus === "Unpaid"
+  ).length;
 
   if (loading) {
     return (
@@ -521,60 +463,61 @@ export default function UsersPage() {
           </div>
         </div>
 
+        {/* Add this in the JSX, before the users table */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Total Unpaid Dues
+                </p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  ₹{totalUnpaidDues.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <FaFileInvoiceDollar className="text-red-600 dark:text-red-400 text-xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Users with Unpaid Dues
+                </p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  {unpaidUsersCount}
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <FiUsers className="text-red-600 dark:text-red-400 text-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Users Table */}
         <div className="backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200/50 dark:divide-gray-700/50">
-              <thead className="bg-white/50 dark:bg-gray-900/50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("name")}
-                  >
-                    User {getSortIndicator("name")}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    User
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("pgId")}
-                  >
-                    PG ID {getSortIndicator("pgId")}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Room
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("roomId")}
-                  >
-                    Room {getSortIndicator("roomId")}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Status
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("isActive")}
-                  >
-                    Status {getSortIndicator("isActive")}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Due Amount
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("currentMonthRentStatus")}
-                  >
-                    Current Rent {getSortIndicator("currentMonthRentStatus")}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("dueAmount")}
-                  >
-                    Due Amount {getSortIndicator("dueAmount")}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    onClick={() => requestSort("moveInDate")}
-                  >
-                    Date Joined {getSortIndicator("moveInDate")}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -594,11 +537,11 @@ export default function UsersPage() {
                               alt={user.name}
                               width={40}
                               height={40}
-                              className="rounded-full object-cover"
+                              className="rounded-full"
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                              {user.name.charAt(0).toUpperCase()}
+                            <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                              <FiUsers className="text-gray-500 dark:text-gray-400" />
                             </div>
                           )}
                         </div>
@@ -610,63 +553,66 @@ export default function UsersPage() {
                             {user.email}
                           </div>
                         </div>
-                        {user.hasUnpaidDues && user.isActive && (
-                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200">
-                            Unpaid
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {user.pgId}
+                        {typeof user.roomId === "object" && user.roomId
+                          ? `Room ${user.roomId.roomNumber}`
+                          : "Not Assigned"}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {typeof user.roomId === "object" &&
-                        user.roomId?.roomNumber
-                          ? user.roomId.roomNumber
-                          : "-"}
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {typeof user.roomId === "object" && user.roomId
+                          ? `₹${user.roomId.price.toLocaleString()}/month`
+                          : ""}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.isDeleted
-                            ? "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200"
-                            : user.isActive
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
-                        }`}
-                      >
-                        {user.isDeleted
-                          ? "Deleted"
-                          : user.isActive
-                            ? "Active"
-                            : "Inactive"}
-                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           user.currentMonthRentStatus === "Paid"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                             : user.currentMonthRentStatus === "Unpaid"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
-                              : "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200" // For N/A
+                              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400"
                         }`}
                       >
-                        {user.currentMonthRentStatus}
+                        {user.currentMonthRentStatus || "N/A"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {user.dueAmount && user.dueAmount > 0
-                        ? `₹${user.dueAmount.toLocaleString()}`
-                        : "-"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {user.dueAmount > 0 ? (
+                          <span className="text-red-600 dark:text-red-400 font-medium">
+                            ₹{user.dueAmount.toLocaleString()}
+                          </span>
+                        ) : (
+                          <span className="text-green-600 dark:text-green-400">
+                            No dues
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(user.moveInDate).toLocaleDateString()}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-3">
+                        {user.dueAmount > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendReminder(user._id);
+                            }}
+                            disabled={sendingReminder === user._id}
+                            className="p-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors duration-200"
+                            title="Send Reminder"
+                          >
+                            {sendingReminder === user._id ? (
+                              <div className="h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <FiBell className="h-5 w-5" />
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
