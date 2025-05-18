@@ -275,15 +275,6 @@ export default function RulesAndRegulations() {
             as necessary. Residents will be notified of any changes. Violation
             of these rules may result in termination of residency.
           </p>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href="/register"
-              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium text-sm"
-            >
-              Return to Registration
-            </Link>
-          </div>
         </motion.div>
       </div>
     </div>
