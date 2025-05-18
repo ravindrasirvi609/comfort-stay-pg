@@ -671,6 +671,46 @@ export default function UserProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {activeTab === "overview" && (
           <>
+            {/* Roommate Conflict Resolution Warning */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="lg:col-span-3 mb-6"
+            >
+              <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-lg shadow-sm">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <FaExclamationCircle className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Important Notice: Roommate Conflict Resolution
+                    </h3>
+                    <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                      <p>
+                        If you experience any issues with your roommate's
+                        behavior, please:
+                      </p>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>
+                          Do not engage in direct conflicts or confrontations
+                        </li>
+                        <li>Report the matter directly to the PG office</li>
+                        <li>
+                          Let the management handle the situation professionally
+                        </li>
+                        <li>
+                          Remember: Getting involved in conflicts may make you
+                          equally responsible
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Personal Information Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -806,7 +846,7 @@ export default function UserProfilePage() {
                       <FaStar />
                       <FaStar />
                       <FaStar />
-                      <FaStar className="text-gray-300 dark:text-gray-600" />
+                      <FaStar />
                     </div>
                     <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/70 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 text-sm font-medium border border-purple-100 dark:border-purple-900/30 shadow-sm">
                       {roomDetails.type
