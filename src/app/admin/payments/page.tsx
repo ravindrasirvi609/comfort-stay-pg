@@ -553,11 +553,22 @@ export default function PaymentsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {user?.name || "Unknown"}
-                            </div>
+                            {typeof user === "object" && user?._id ? (
+                              <Link
+                                href={`/admin/users/${user._id}`}
+                                className="text-sm font-medium text-gray-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400"
+                              >
+                                {user?.name || "Unknown"}
+                              </Link>
+                            ) : (
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                Unknown
+                              </span>
+                            )}
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {user?.pgId || "N/A"}
+                              {typeof user === "object"
+                                ? user?.pgId || "N/A"
+                                : "N/A"}
                             </div>
                           </div>
                         </div>
