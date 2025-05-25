@@ -226,6 +226,7 @@ export async function sendRegistrationConfirmationEmail(
                             <li style="margin-bottom: 8px;">Monthly rent due by the 5th of each month</li>
                             <li style="margin-bottom: 8px;">5% late payment penalty per week</li>
                             <li style="margin-bottom: 0;">15-day notice period for vacating</li>
+                            <li style="margin-bottom: 0;">Residents vacating on the 1st of the month will be charged only for that extra day, as payments for the 30th or 31st do not cover the 1st of the new month.</li>
                           </ul>
                         </td>
                       </tr>
