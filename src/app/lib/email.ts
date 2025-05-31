@@ -195,10 +195,22 @@ export async function sendRegistrationConfirmationEmail(
                           <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">General Rules:</h4>
                           <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
                             <li style="margin-bottom: 8px;">No outside visitors without prior approval</li>
-                            <li style="margin-bottom: 8px;">Meals only in the dining area</li>
+                            <li style="margin-bottom: 8px; color: #d53f8c; font-weight: 500;">STRICTLY NO FOOD ALLOWED IN ROOMS - All meals must be consumed in the dining area only</li>
                             <li style="margin-bottom: 8px;">Maintain cleanliness in rooms and common areas</li>
                             <li style="margin-bottom: 8px;">Noise control and peaceful environment</li>
                             <li style="margin-bottom: 0;">No gathering near the main gate</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 20px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">Dining Rules:</h4>
+                          <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
+                            <li style="margin-bottom: 8px;">All meals must be consumed in the designated dining area only</li>
+                            <li style="margin-bottom: 8px;">Carrying food to rooms is strictly prohibited</li>
                           </ul>
                         </td>
                       </tr>
