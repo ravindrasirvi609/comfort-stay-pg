@@ -983,6 +983,7 @@ export default function PendingRegistrationDetailsPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border border-gray-300 dark:border-gray-700 rounded-md max-h-60 overflow-y-auto">
                     {Array.from({ length: 12 }, (_, i) => {
                       const date = new Date();
+                      date.setDate(1);
                       date.setMonth(date.getMonth() + i);
                       const month = date.toLocaleString("default", {
                         month: "long",
