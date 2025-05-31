@@ -496,7 +496,7 @@ export async function GET(request: Request, context: unknown) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>${payment.isDepositPayment ? "Security Deposit" : "Monthly Rent"}</td>
+                    <td>${payment.isDepositPayment ? "Booking harge" : "Monthly Rent"}</td>
                     <td>${payment.months && payment.months.length > 0 ? payment.months.join(", ") : "N/A"}</td>
                     <td>₹${payment.amount.toLocaleString("en-IN")}</td>
                   </tr>

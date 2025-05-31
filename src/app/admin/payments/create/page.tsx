@@ -393,7 +393,7 @@ export default function CreatePaymentPage() {
                 htmlFor="depositPayment"
                 className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
               >
-                This is a security deposit payment
+                This is a security deposit and booking payment
               </label>
             </div>
             {isDepositPayment && (

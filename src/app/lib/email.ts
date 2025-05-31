@@ -225,8 +225,9 @@ export async function sendRegistrationConfirmationEmail(
                           <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
                             <li style="margin-bottom: 8px;">Monthly rent due by the 5th of each month</li>
                             <li style="margin-bottom: 8px;">5% late payment penalty per week</li>
-                            <li style="margin-bottom: 0;">15-day notice period for vacating</li>
-                            <li style="margin-bottom: 0;">Residents vacating on the 1st of the month will be charged only for that extra day, as payments for the 30th or 31st do not cover the 1st of the new month.</li>
+                            <li style="margin-bottom: 8px;">Minimum 15 days notice period required for vacating</li>
+                            <li style="margin-bottom: 8px;">₹1500 refund from booking amount if notice period is more than 15 days</li>
+                            <li style="margin-bottom: 0;">No refund will be provided if notice period is less than 15 days</li>
                           </ul>
                         </td>
                       </tr>

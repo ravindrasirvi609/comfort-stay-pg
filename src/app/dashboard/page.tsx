@@ -212,11 +212,24 @@ export default function UserProfilePage() {
       return;
     }
 
+    // Calculate days between today and last staying date
+    const today = new Date();
+    const lastDate = new Date(lastStayingDate);
+    const daysDifference = Math.ceil(
+      (lastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (daysDifference < 15) {
+      setNoticePeriodError("Notice period must be at least 15 days");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
       const response = await axios.post("/api/users/notice-period", {
         lastStayingDate: lastStayingDate,
+        isEligibleForRefund: daysDifference > 15,
       });
 
       if (response.data.success) {
@@ -227,7 +240,7 @@ export default function UserProfilePage() {
         });
         setNoticePeriodSuccess(
           response.data.message ||
-            "Your notice period has been submitted successfully"
+            `Your notice period has been submitted successfully. ${daysDifference > 15 ? "You are eligible for a ₹1500 refund from your booking amount." : "No refund will be provided as notice period is less than 15 days."}`
         );
         // Close dialog after 2 seconds
         setTimeout(() => {
@@ -672,7 +685,7 @@ export default function UserProfilePage() {
         {activeTab === "overview" && (
           <>
             {/* Roommate Conflict Resolution Warning */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
@@ -705,6 +718,48 @@ export default function UserProfilePage() {
                           equally responsible
                         </li>
                       </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div> */}
+
+            {/* Notice Period Policy Warning */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="lg:col-span-3 mb-6"
+            >
+              <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg shadow-sm">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <FaCalendarAlt className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Notice Period Policy
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                      <p className="mb-2">
+                        When planning to leave the PG, please note our notice
+                        period policy:
+                      </p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Minimum notice period required: 15 days</li>
+                        <li>
+                          If notice period is more than 15 days: ₹1500 refund
+                          from booking amount
+                        </li>
+                        <li>
+                          If notice period is less than 15 days: No refund will
+                          be provided
+                        </li>
+                      </ul>
+                      <p className="mt-2 text-blue-600 dark:text-blue-400">
+                        Please plan your departure accordingly to ensure you
+                        receive the refund.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1287,12 +1342,31 @@ export default function UserProfilePage() {
                     ? "You can update your last staying date. Your notice period will be adjusted accordingly."
                     : "Please confirm your last staying date. Once submitted, your notice period will be activated."}
                 </p>
-                <p className="text-amber-600 dark:text-amber-400 text-sm mb-6">
-                  Note: According to the PG policy, you need to provide
-                  {user?.isOnNoticePeriod
-                    ? " at least 5 days notice to change your last staying date."
-                    : " at least 20 days notice before leaving."}
-                </p>
+                <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-lg shadow-sm mb-6">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <FaExclamationCircle className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        Notice Period Policy
+                      </h3>
+                      <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Minimum notice period required: 15 days</li>
+                          <li>
+                            If notice period is more than 15 days: ₹1500 refund
+                            from booking amount
+                          </li>
+                          <li>
+                            If notice period is less than 15 days: No refund
+                            will be provided
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {noticePeriodError && (
                   <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
@@ -1320,14 +1394,7 @@ export default function UserProfilePage() {
                       value={lastStayingDate}
                       onChange={(e) => setLastStayingDate(e.target.value)}
                       min={
-                        new Date(
-                          Date.now() +
-                            (user?.isOnNoticePeriod ? 2 : 5) *
-                              24 *
-                              60 *
-                              60 *
-                              1000
-                        )
+                        new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
                           .toISOString()
                           .split("T")[0]
                       }
@@ -1335,8 +1402,7 @@ export default function UserProfilePage() {
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Minimum {user?.isOnNoticePeriod ? "10" : "15"} days from
-                      today
+                      Minimum 15 days from today
                     </p>
                   </div>
 

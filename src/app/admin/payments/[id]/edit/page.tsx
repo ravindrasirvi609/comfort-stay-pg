@@ -389,7 +389,9 @@ export default function EditPaymentPage() {
                 onChange={(e) => setIsDepositPayment(e.target.checked)}
                 className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
               />
-              <span className="ml-2">This is a security deposit payment</span>
+              <span className="ml-2">
+                This is a security deposit and booking payment
+              </span>
             </label>
           </div>
         </div>
