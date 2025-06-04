@@ -256,61 +256,119 @@ export default function CreatePaymentPage() {
       >
         <div className="space-y-6">
           {/* User selection */}
-          <div>
+          <div className="bg-white/50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <label
               htmlFor="user"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Resident <span className="text-red-500">*</span>
+              Select Resident <span className="text-red-500">*</span>
             </label>
-            <div className="mb-2">
-              <input
-                type="text"
-                placeholder="Search by name, PG ID or room"
-                className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md mb-2">
-              {filteredUsers.length === 0 ? (
-                <div className="p-4 text-gray-500 dark:text-gray-400 text-center">
-                  No users found
+
+            {!selectedUser ? (
+              <>
+                <div className="relative mb-3">
+                  <input
+                    type="text"
+                    placeholder="Search by name, PG ID or room number..."
+                    className="bg-white dark:bg-gray-800 focus:ring-pink-500 focus:border-pink-500 block w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-              ) : (
-                filteredUsers.map((user) => (
-                  <div
-                    key={user._id}
-                    className={`p-3 cursor-pointer transition-colors duration-150 ${
-                      selectedUser === user._id
-                        ? "bg-pink-50 dark:bg-pink-900/30 border-l-4 border-pink-500"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50 border-l-4 border-transparent"
-                    }`}
-                    onClick={() => setSelectedUser(user._id)}
-                  >
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {user.name}
+                <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                      <p className="font-medium">No residents found</p>
+                      <p className="text-sm mt-1">Try adjusting your search</p>
                     </div>
-                    <div className="flex text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      <span className="mr-3">ID: {user.pgId}</span>
-                      <span>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <div
+                        key={user._id}
+                        className="p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 border-transparent"
+                        onClick={() => setSelectedUser(user._id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {user.name}
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-1 text-sm">
+                              <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                ID: {user.pgId}
+                              </span>
+                              <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                Room:{" "}
+                                {typeof user.roomId === "object" &&
+                                user.roomId?.roomNumber
+                                  ? user.roomId.roomNumber
+                                  : "Not Assigned"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-green-800 dark:text-green-200">
+                      {users.find((user) => user._id === selectedUser)?.name}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-1 text-sm">
+                      <span className="text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">
+                        ID:{" "}
+                        {users.find((user) => user._id === selectedUser)?.pgId}
+                      </span>
+                      <span className="text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">
                         Room:{" "}
-                        {typeof user.roomId === "object" &&
-                        user.roomId?.roomNumber
-                          ? user.roomId.roomNumber
-                          : "Not Assigned"}
+                        {(() => {
+                          const user = users.find(
+                            (user) => user._id === selectedUser
+                          );
+                          if (user?.roomId && typeof user.roomId === "object") {
+                            return user.roomId.roomNumber;
+                          }
+                          return "Not Assigned";
+                        })()}
                       </span>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-            {selectedUser && (
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Selected resident:{" "}
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {users.find((user) => user._id === selectedUser)?.name}
-                </span>
+                  <button
+                    onClick={() => {
+                      setSelectedUser("");
+                      setSearchTerm("");
+                    }}
+                    className="text-sm text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium flex items-center gap-1"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                    Change Selection
+                  </button>
+                </div>
               </div>
             )}
           </div>
