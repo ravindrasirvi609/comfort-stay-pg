@@ -160,7 +160,6 @@ export default function PaymentsPage() {
       setLoading(true);
 
       const response = await axios.get("/api/payments");
-      console.log("Payments response:", response.data);
 
       if (response.data.success) {
         // Sort payments by createdAt in descending order (newest first)
