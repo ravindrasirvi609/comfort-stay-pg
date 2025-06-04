@@ -61,6 +61,11 @@ interface DashboardStats {
   previousMonthRent?: number;
 }
 
+interface StateDistribution {
+  state: string;
+  count: number;
+}
+
 interface User {
   _id: string;
   name: string;
@@ -69,6 +74,7 @@ interface User {
   role: string;
   isActive: boolean;
   joinDate?: string;
+  state?: string;
 }
 
 interface Room {
@@ -130,6 +136,10 @@ export default function AdminDashboard() {
     previousMonthRent: 0,
   });
 
+  const [stateDistribution, setStateDistribution] = useState<
+    StateDistribution[]
+  >([]);
+
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
   const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
   const [pendingComplaints, setPendingComplaints] = useState<Complaint[]>([]);
@@ -175,6 +185,26 @@ export default function AdminDashboard() {
       const rooms = roomsResponse.data.rooms || [];
       const payments = paymentsResponse.data.payments || [];
       const allComplaints = complaintsResponse.data.complaints || [];
+
+      // Calculate state-wise distribution
+      const stateCounts: { [key: string]: number } = {};
+      users.forEach((user: User) => {
+        if (user.state) {
+          stateCounts[user.state] = (stateCounts[user.state] || 0) + 1;
+        }
+      });
+
+      const stateDistributionData = Object.entries(stateCounts).map(
+        ([state, count]) => ({
+          state,
+          count,
+        })
+      );
+
+      // Sort by count in descending order
+      stateDistributionData.sort((a, b) => b.count - a.count);
+
+      setStateDistribution(stateDistributionData);
 
       // Store complete data sets
       setAllUsers(users);
@@ -757,6 +787,51 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* State-wise Distribution Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+              <RiBarChartLine className="h-5 w-5 text-purple-600 mr-2" />
+              State-wise Distribution
+            </h2>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={stateDistribution}
+                margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="state"
+                  stroke="#94a3b8"
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
+                  interval={0}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip
+                  formatter={(value) => [`${value} users`, "Count"]}
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={36} />
+                <Bar
+                  dataKey="count"
+                  name="Users"
+                  fill="#8b5cf6"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         {/* Room Occupancy Chart */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
@@ -799,9 +874,12 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+      {/* Quick Actions */}
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"> */}
+      {/* Quick Actions */}
+      {/* <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
               <FiSettings className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
@@ -869,8 +947,8 @@ export default function AdminDashboard() {
               </div>
             </Link>
           </div>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
 
       {/* Users on Notice Period Section */}
       <div className="mt-8">
