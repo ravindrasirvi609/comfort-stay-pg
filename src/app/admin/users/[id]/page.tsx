@@ -75,6 +75,18 @@ interface UserData {
       }
     | string
     | null;
+  payments?: {
+    _id: string;
+    amount: number;
+    months: string[];
+    paymentDate: string;
+    paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+    receiptNumber?: string;
+    paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Card" | "Other";
+    transactionId?: string;
+    remarks?: string;
+    isDepositPayment: boolean;
+  }[];
 }
 
 interface ErrorResponse {
@@ -624,6 +636,90 @@ export default function UserDetailPage() {
             <div className="mt-6 text-center py-8 text-gray-500 dark:text-gray-400">
               <FileText className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
               <p>No additional documents uploaded</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Payments Section */}
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden mb-8">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            Payment History
+          </h2>
+        </div>
+        <div className="p-6">
+          {user.payments && user.payments.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Receipt No.
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Months
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Payment Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Method
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Type
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {user.payments.map((payment) => (
+                    <tr key={payment._id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {payment.receiptNumber || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        ₹{payment.amount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {payment.months.join(", ")}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {formatDate(payment.paymentDate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            payment.paymentStatus === "Paid"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : payment.paymentStatus === "Partial"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
+                        >
+                          {payment.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {payment.paymentMethod}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {payment.isDepositPayment ? "Deposit" : "Rent"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <CreditCard className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+              <p>No payment history available</p>
             </div>
           )}
         </div>

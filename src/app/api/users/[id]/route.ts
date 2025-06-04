@@ -37,7 +37,11 @@ export async function GET(
     // Find user by ID
     const userData = await User.findById(params.id)
       .select("-password")
-      .populate("roomId");
+      .populate("roomId")
+      .populate({
+        path: "payments",
+        options: { sort: { paymentDate: -1 } },
+      });
 
     if (!userData) {
       return NextResponse.json(
