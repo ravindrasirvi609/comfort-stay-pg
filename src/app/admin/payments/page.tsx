@@ -163,18 +163,24 @@ export default function PaymentsPage() {
       console.log("Payments response:", response.data);
 
       if (response.data.success) {
-        setPayments(response.data.payments);
-        setFilteredPayments(response.data.payments);
+        // Sort payments by createdAt in descending order (newest first)
+        const sortedPayments = response.data.payments.sort(
+          (a: Payment, b: Payment) => {
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+          }
+        );
+
+        setPayments(sortedPayments);
+        setFilteredPayments(sortedPayments);
 
         // Calculate initial total amount
-        const total = response.data.payments.reduce(
-          (sum: number, payment: Payment) => {
-            return payment.paymentStatus === "Paid" || payment.status === "Paid"
-              ? sum + payment.amount
-              : sum;
-          },
-          0
-        );
+        const total = sortedPayments.reduce((sum: number, payment: Payment) => {
+          return payment.paymentStatus === "Paid" || payment.status === "Paid"
+            ? sum + payment.amount
+            : sum;
+        }, 0);
 
         setTotalAmount(total);
       } else {
