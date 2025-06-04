@@ -124,6 +124,7 @@ interface UserWithDues extends User {
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showRentAmount, setShowRentAmount] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalRooms: 0,
@@ -406,6 +407,12 @@ export default function AdminDashboard() {
     );
   }, [stats.rentCollected, stats.previousMonthRent]);
 
+  // Add this function to format rent amount
+  const formatRentAmount = (amount: number) => {
+    if (!showRentAmount) return "****";
+    return `₹${amount.toLocaleString("en-IN")}`;
+  };
+
   useEffect(() => {
     fetchDashboardData();
     // Add a refresh interval every 5 minutes
@@ -478,6 +485,22 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
+            {/* Add Toggle Switch */}
+            <div className="flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-lg">
+              <span className="text-sm">Show Rent</span>
+              <button
+                onClick={() => setShowRentAmount(!showRentAmount)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-purple-600 ${
+                  showRentAmount ? "bg-green-500" : "bg-gray-400"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    showRentAmount ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
             <button
               onClick={refreshDashboard}
               disabled={refreshing}
@@ -580,7 +603,7 @@ export default function AdminDashboard() {
                   Rent Collected
                 </p>
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
-                  ₹{stats.rentCollected.toLocaleString("en-IN")}
+                  {formatRentAmount(stats.rentCollected)}
                 </h3>
                 <div className="flex items-center mt-2">
                   <span
