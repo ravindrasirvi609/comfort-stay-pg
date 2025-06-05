@@ -309,12 +309,12 @@ export default function RoomDetailPage() {
                   Edit Room Details
                 </Link>
 
-                <Link
+                {/* <Link
                   href={`/admin/residents?roomId=${room._id}`}
                   className="inline-flex items-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition duration-300 shadow-md"
                 >
                   Manage Residents
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
