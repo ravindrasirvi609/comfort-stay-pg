@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useToast } from "@/hooks/useToast";
+import CustomSelect from "./CustomSelect";
 
 interface Room {
   _id: string;
@@ -122,38 +123,18 @@ const AdminRoomChange: React.FC<AdminRoomChangeProps> = ({
               >
                 Select New Room
               </label>
-              <select
-                id="roomId"
-                name="roomId"
+              <CustomSelect
                 value={selectedRoomId}
-                onChange={(e) => setSelectedRoomId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                onChange={setSelectedRoomId}
+                placeholder="Select a room"
                 disabled={submitting}
-              >
-                <option value="">Select a room</option>
-                {availableRooms.map((room) => {
-                  const isBuildingA = room.building === "A";
-                  const isBuildingB = room.building === "B";
-                  return (
-                    <option
-                      key={room._id}
-                      value={room._id}
-                      disabled={room._id === currentRoomId}
-                      className={`${
-                        isBuildingA
-                          ? "bg-blue-100 dark:bg-blue-900"
-                          : isBuildingB
-                            ? "bg-green-100 dark:bg-green-900"
-                            : ""
-                      }`}
-                    >
-                      Room {room.roomNumber} - {room.type} (₹{room.price}) -
-                      {room.currentOccupancy}/{room.capacity} occupied
-                      {room._id === currentRoomId ? " (Current)" : ""}
-                    </option>
-                  );
-                })}
-              </select>
+                options={availableRooms.map((room) => ({
+                  value: room._id,
+                  label: `Room ${room.roomNumber} - ${room.type} (₹${room.price}) - ${room.currentOccupancy}/${room.capacity} occupied${room._id === currentRoomId ? " (Current)" : ""}`,
+                  disabled: room._id === currentRoomId,
+                  building: room.building,
+                }))}
+              />
               {selectedRoomId && (
                 <div className="mt-1">
                   <div className="flex items-center gap-2">

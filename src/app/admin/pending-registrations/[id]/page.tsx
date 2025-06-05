@@ -6,6 +6,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { FaSpinner } from "react-icons/fa";
+import CustomSelect from "@/components/CustomSelect";
 
 interface PendingRegistration {
   _id: string;
@@ -837,42 +838,30 @@ export default function PendingRegistrationDetailsPage() {
                       >
                         Room *
                       </label>
-                      <select
-                        id="room"
-                        name="room"
+                      <CustomSelect
                         value={formData.roomId}
-                        onChange={handleRoomChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
-                      >
-                        <option value="">Select a room</option>
-                        {rooms.map((room) => {
-                          const isBuildingA = room.building === "A";
-                          const isBuildingB = room.building === "B";
-                          return (
-                            <option
-                              key={room._id}
-                              value={room._id}
-                              className={`${
-                                isBuildingA
-                                  ? "bg-blue-100 dark:bg-blue-900"
-                                  : isBuildingB
-                                    ? "bg-green-100 dark:bg-green-900"
-                                    : ""
-                              }`}
-                            >
-                              Room {room.roomNumber} - {room.type} (
-                              {room.currentOccupancy}/{room.capacity})
-                            </option>
+                        onChange={(value) => {
+                          const selectedRoom = rooms.find(
+                            (room) => room._id === value
                           );
-                        })}
-                      </select>
+                          setFormData((prev) => ({
+                            ...prev,
+                            roomId: value,
+                            roomNumber: selectedRoom
+                              ? selectedRoom.roomNumber
+                              : "",
+                          }));
+                        }}
+                        placeholder="Select a room"
+                        options={rooms.map((room) => ({
+                          value: room._id,
+                          label: `Room ${room.roomNumber} - ${room.type} (${room.currentOccupancy}/${room.capacity})`,
+                          building: room.building,
+                        }))}
+                      />
                       {formData.roomNumber && (
                         <div className="mt-1">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Selected Room: {formData.roomNumber}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500 dark:text-gray-400">
                               Building:
                             </span>
