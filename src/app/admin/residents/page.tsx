@@ -75,12 +75,16 @@ export default function ResidentsPage() {
     if (searchTerm) {
       result = result.filter(
         (resident) =>
-          resident.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          resident.pgId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          resident.roomNumber
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          resident.phone.includes(searchTerm)
+          (resident.name?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase()
+          ) ||
+          (resident.pgId?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase()
+          ) ||
+          (resident.roomNumber?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase()
+          ) ||
+          (resident.phone || "").includes(searchTerm)
       );
     }
 

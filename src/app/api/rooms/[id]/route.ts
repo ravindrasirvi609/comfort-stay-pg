@@ -39,6 +39,7 @@ export async function GET(
     // Find room by ID and populate residents virtual
     const room = await Room.findById(params.id).populate({
       path: "residents",
+      match: { isActive: true },
       select:
         "name email pgId phone _id moveInDate bedNumber isOnNoticePeriod lastStayingDate profileImage",
     });
