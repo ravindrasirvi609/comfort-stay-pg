@@ -9,6 +9,7 @@ interface Room {
   price: number;
   currentOccupancy: number;
   capacity: number;
+  building: string;
 }
 
 interface AdminRoomChangeProps {
@@ -130,18 +131,54 @@ const AdminRoomChange: React.FC<AdminRoomChangeProps> = ({
                 disabled={submitting}
               >
                 <option value="">Select a room</option>
-                {availableRooms.map((room) => (
-                  <option
-                    key={room._id}
-                    value={room._id}
-                    disabled={room._id === currentRoomId}
-                  >
-                    Room {room.roomNumber} - {room.type} (₹{room.price}) -
-                    {room.currentOccupancy}/{room.capacity} occupied
-                    {room._id === currentRoomId ? " (Current)" : ""}
-                  </option>
-                ))}
+                {availableRooms.map((room) => {
+                  const isBuildingA = room.building === "A";
+                  const isBuildingB = room.building === "B";
+                  return (
+                    <option
+                      key={room._id}
+                      value={room._id}
+                      disabled={room._id === currentRoomId}
+                      className={`${
+                        isBuildingA
+                          ? "bg-blue-100 dark:bg-blue-900"
+                          : isBuildingB
+                            ? "bg-green-100 dark:bg-green-900"
+                            : ""
+                      }`}
+                    >
+                      Room {room.roomNumber} - {room.type} (₹{room.price}) -
+                      {room.currentOccupancy}/{room.capacity} occupied
+                      {room._id === currentRoomId ? " (Current)" : ""}
+                    </option>
+                  );
+                })}
               </select>
+              {selectedRoomId && (
+                <div className="mt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Building:
+                    </span>
+                    <span
+                      className={`inline-block w-3 h-3 rounded-full ${
+                        availableRooms.find((r) => r._id === selectedRoomId)
+                          ?.building === "A"
+                          ? "bg-blue-500"
+                          : availableRooms.find((r) => r._id === selectedRoomId)
+                                ?.building === "B"
+                            ? "bg-green-500"
+                            : "bg-gray-500"
+                      }`}
+                    ></span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Building{" "}
+                      {availableRooms.find((r) => r._id === selectedRoomId)
+                        ?.building || "Other"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button

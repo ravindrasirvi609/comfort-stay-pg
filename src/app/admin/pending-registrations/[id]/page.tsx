@@ -44,6 +44,7 @@ interface Room {
   type: string;
   currentOccupancy: number;
   capacity: number;
+  building?: string;
 }
 
 export default function PendingRegistrationDetailsPage() {
@@ -845,17 +846,58 @@ export default function PendingRegistrationDetailsPage() {
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
                       >
                         <option value="">Select a room</option>
-                        {rooms.map((room) => (
-                          <option key={room._id} value={room._id}>
-                            Room {room.roomNumber} - {room.type} (
-                            {room.currentOccupancy}/{room.capacity})
-                          </option>
-                        ))}
+                        {rooms.map((room) => {
+                          const isBuildingA = room.building === "A";
+                          const isBuildingB = room.building === "B";
+                          return (
+                            <option
+                              key={room._id}
+                              value={room._id}
+                              className={`${
+                                isBuildingA
+                                  ? "bg-blue-100 dark:bg-blue-900"
+                                  : isBuildingB
+                                    ? "bg-green-100 dark:bg-green-900"
+                                    : ""
+                              }`}
+                            >
+                              Room {room.roomNumber} - {room.type} (
+                              {room.currentOccupancy}/{room.capacity})
+                            </option>
+                          );
+                        })}
                       </select>
                       {formData.roomNumber && (
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          Selected Room: {formData.roomNumber}
-                        </p>
+                        <div className="mt-1">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Selected Room: {formData.roomNumber}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Building:
+                            </span>
+                            <span
+                              className={`inline-block w-3 h-3 rounded-full ${
+                                rooms.find(
+                                  (r) => r.roomNumber === formData.roomNumber
+                                )?.building === "A"
+                                  ? "bg-blue-500"
+                                  : rooms.find(
+                                        (r) =>
+                                          r.roomNumber === formData.roomNumber
+                                      )?.building === "B"
+                                    ? "bg-green-500"
+                                    : "bg-gray-500"
+                              }`}
+                            ></span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Building{" "}
+                              {rooms.find(
+                                (r) => r.roomNumber === formData.roomNumber
+                              )?.building || "Other"}
+                            </span>
+                          </div>
+                        </div>
                       )}
                     </div>
 
