@@ -52,6 +52,7 @@ interface UserData {
   validIdType?: string;
   companyName?: string;
   companyAddress?: string;
+  employeeId?: string;
   validIdPhoto?: string;
   profileImage?: string;
   documents?: string[];
@@ -375,6 +376,18 @@ export default function UserDetailPage() {
                     </p>
                     <p className="text-base font-medium text-gray-900 dark:text-white">
                       {user.companyName || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <CreditCard className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Employee ID
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.employeeId || "Not provided"}
                     </p>
                   </div>
                 </div>

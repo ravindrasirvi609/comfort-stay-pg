@@ -20,6 +20,7 @@ interface PendingRegistration {
   state: string;
   companyName: string;
   companyAddress: string;
+  employeeId: string;
   validIdType: string;
   validIdPhoto: string;
   profileImage: string;
