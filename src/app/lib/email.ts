@@ -195,7 +195,7 @@ export async function sendRegistrationConfirmationEmail(
                           <h4 style="color: #d53f8c; font-size: 16px; margin: 0 0 10px;">General Rules:</h4>
                           <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
                             <li style="margin-bottom: 8px;">No outside visitors without prior approval</li>
-                            <li style="margin-bottom: 8px; color: #d53f8c; font-weight: 500;">STRICTLY NO FOOD ALLOWED IN ROOMS - All meals must be consumed in the dining area only</li>
+                            <li style="margin-bottom: 8px;">STRICTLY NO FOOD ALLOWED IN ROOMS - All meals must be consumed in the dining area only</li>
                             <li style="margin-bottom: 8px;">Maintain cleanliness in rooms and common areas</li>
                             <li style="margin-bottom: 8px;">Noise control and peaceful environment</li>
                             <li style="margin-bottom: 0;">No gathering near the main gate</li>
@@ -253,7 +253,6 @@ export async function sendRegistrationConfirmationEmail(
                 <tr>
                   <td align="center">
                     <a href="${process.env.NEXT_PUBLIC_SITE_URL}/rules-regulations" target="_blank" style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); color: white; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center; margin: 0 10px;">View Full Rules & Regulations</a>
-                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/rules-regulations#download" target="_blank" style="background: white; color: #FF92B7; text-decoration: none; font-weight: 600; padding: 14px 30px; border-radius: 6px; font-size: 16px; display: inline-block; text-align: center; border: 2px solid #FF92B7; margin: 0 10px;">Download Rules PDF</a>
                   </td>
                 </tr>
               </table>
@@ -287,7 +286,6 @@ export async function sendRegistrationConfirmationEmail(
                         <td width="25" valign="top" style="padding-right: 10px;">
                           <div style="width: 8px; height: 8px; background-color: #FF92B7; border-radius: 50%; margin-top: 6px;"></div>
                         </td>
-                        <td style="font-size: 15px;">24/7 security with biometric access for your safety</td>
                       </tr>
                     </table>
                   </td>
@@ -388,7 +386,6 @@ export async function sendWelcomeEmail(
                     <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">Email (Login ID):</strong> ${email}</p>
                     <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">PG ID:</strong> ${pgId}</p>
                     <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">Password:</strong> ${password}</p>
-                    <p style="font-size: 14px; color: #666; margin: 15px 0 0; font-style: italic;">For security, please change your password after your first login.</p>
                   </td>
                 </tr>
               </table>

@@ -256,7 +256,6 @@ export async function POST(
                   <td style="padding: 20px 25px;">
                     <p style="font-size: 15px; margin: 0 0 10px;"><strong style="color: #d53f8c;">PG ID:</strong> ${pgId}</p>
                     <p style="font-size: 15px; margin: 0;"><strong style="color: #d53f8c;">Password:</strong> ${plainPassword}</p>
-                    <p style="font-size: 14px; color: #666; margin: 15px 0 0; font-style: italic;">Please keep this information secure and change your password after your first login.</p>
                   </td>
                 </tr>
               </table>
@@ -306,7 +305,7 @@ export async function POST(
                   depositAmount
                     ? `
                 <tr>
-                  <td width="140" style="font-size: 15px; color: #666;">Security Deposit:</td>
+                  <td width="140" style="font-size: 15px; color: #666;">Security & maintanence Charge:</td>
                   <td style="font-size: 15px; font-weight: 600;">₹${depositAmount}</td>
                 </tr>
                 `
