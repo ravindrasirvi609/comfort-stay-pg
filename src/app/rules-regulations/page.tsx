@@ -48,6 +48,7 @@ export default function RulesAndRegulations() {
         "Maintain Cleanliness: Residents are responsible for keeping their rooms and common areas clean. Any damage or mess caused will need to be cleaned or compensated for.",
         "Noise Control: Please avoid playing loud music or causing disturbances to fellow residents. Maintain a peaceful environment, especially during rest hours.",
         "Avoid Gathering Near the Main Gate: Residents should not stand or gather with others in front of the main gate. It is important to maintain discipline and not cause inconvenience to neighbors or security.",
+        "Do Not Carry PG Items: Residents are strictly prohibited from taking any PG items like bedsheets, buckets, mugs, etc., outside the premises. These items must remain within the PG facility.",
       ],
     },
     {
@@ -181,7 +182,7 @@ export default function RulesAndRegulations() {
         "Notice period of 15 days must be given before vacating the room.",
         "Room must be handed over in the same condition as it was allotted.",
         "All personal belongings must be removed during checkout.",
-        "Security deposit will be refunded within 15 days after deducting for damages, if any.",
+        "Security deposit will be refunded only after returning the room key to the staff on the day of leaving the PG. if Applicable",
         "Complete the exit survey form for feedback.",
       ],
     },
