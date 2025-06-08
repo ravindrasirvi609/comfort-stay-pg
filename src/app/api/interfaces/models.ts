@@ -20,6 +20,7 @@ export interface IUser {
   validIdType: "Aadhar Card" | "Passport" | "Driving License" | "Voter Card";
   companyName: string;
   companyAddress: string;
+  employeeId: string;
   validIdPhoto: string;
   profileImage: string;
   documents?: string[];

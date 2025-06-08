@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       validIdPhoto,
       companyName,
       companyAddress,
+      employeeId,
       profileImage,
       agreeToTerms,
     } = requestData;
@@ -37,7 +38,10 @@ export async function POST(request: NextRequest) {
       !validIdType ||
       !validIdPhoto ||
       !profileImage ||
-      !agreeToTerms
+      !agreeToTerms ||
+      !companyName ||
+      !companyAddress ||
+      !employeeId
     ) {
       return NextResponse.json(
         { success: false, message: "All required fields must be filled" },
@@ -71,8 +75,9 @@ export async function POST(request: NextRequest) {
       guardianMobileNumber,
       validIdType,
       validIdPhoto,
-      companyName: companyName || "",
-      companyAddress: companyAddress || "",
+      companyName,
+      companyAddress,
+      employeeId,
       profileImage,
       agreeToTerms: true, // User has agreed to terms and regulations
     });

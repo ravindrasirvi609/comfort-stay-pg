@@ -79,6 +79,7 @@ export default function RegisterPage() {
     validIdPhoto: "",
     companyName: "",
     companyAddress: "",
+    employeeId: "",
     profileImage: "",
     agreeToTerms: false, // Added field for rules agreement
   });
@@ -190,6 +191,16 @@ export default function RegisterPage() {
       return;
     }
 
+    if (
+      !formData.companyName ||
+      !formData.companyAddress ||
+      !formData.employeeId
+    ) {
+      setError("Please fill in all company details including Employee ID");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Submit registration request
       const response = await axios.post("/api/auth/register-request", {
@@ -205,6 +216,7 @@ export default function RegisterPage() {
         validIdPhoto: formData.validIdPhoto,
         companyName: formData.companyName,
         companyAddress: formData.companyAddress,
+        employeeId: formData.employeeId,
         profileImage: formData.profileImage,
         agreeToTerms: formData.agreeToTerms,
       });
@@ -226,6 +238,7 @@ export default function RegisterPage() {
           validIdPhoto: "",
           companyName: "",
           companyAddress: "",
+          employeeId: "",
           profileImage: "",
           agreeToTerms: false,
         });
@@ -646,15 +659,38 @@ export default function RegisterPage() {
                           htmlFor="companyName"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          Company Name
+                          Company Name *
                         </label>
                         <input
                           id="companyName"
                           name="companyName"
                           type="text"
+                          required
                           className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your company name (if applicable)"
+                          placeholder="Enter your company name"
                           value={formData.companyName}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                      <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                        <label
+                          htmlFor="employeeId"
+                          className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                        >
+                          Employee ID *
+                        </label>
+                        <input
+                          id="employeeId"
+                          name="employeeId"
+                          type="text"
+                          required
+                          className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                          placeholder="Enter your employee ID"
+                          value={formData.employeeId}
                           onChange={handleChange}
                         />
                       </div>
@@ -667,14 +703,15 @@ export default function RegisterPage() {
                           htmlFor="companyAddress"
                           className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                         >
-                          Company Address
+                          Company Address *
                         </label>
                         <textarea
                           id="companyAddress"
                           name="companyAddress"
                           rows={2}
+                          required
                           className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                          placeholder="Enter your company address (if applicable)"
+                          placeholder="Enter your company address"
                           value={formData.companyAddress}
                           onChange={handleChange}
                         />
