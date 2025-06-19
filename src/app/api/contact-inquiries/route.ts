@@ -27,6 +27,12 @@ export async function POST(request: NextRequest) {
       message,
     });
 
+    // Send confirmation email to the user
+    const { sendContactInquiryConfirmationEmail } = await import(
+      "@/app/lib/email"
+    );
+    await sendContactInquiryConfirmationEmail(name, email, phone, message);
+
     // Find all admin users to notify them
     const adminUsers = await User.find({ role: "admin" });
 
@@ -69,12 +75,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Contact inquiry error:", error);
-    return NextResponse.json(
-      { success: false, message: error.message || "Failed to submit inquiry" },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to submit inquiry";
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
 
@@ -90,7 +95,9 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build filter criteria
-    const filter: any = { isActive: true };
+    const filter: { isActive: boolean; respondedTo?: boolean } = {
+      isActive: true,
+    };
     if (responded !== null) {
       filter.respondedTo = responded === "true";
     }
@@ -119,11 +126,10 @@ export async function GET(request: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Get contact inquiries error:", error);
-    return NextResponse.json(
-      { success: false, message: error.message || "Failed to get inquiries" },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to get inquiries";
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

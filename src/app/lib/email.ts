@@ -747,3 +747,105 @@ export async function sendRejectionEmail(
 
   return sendEmail({ to: email, subject, html, userId });
 }
+
+/**
+ * Send contact inquiry confirmation email
+ */
+export async function sendContactInquiryConfirmationEmail(
+  name: string,
+  email: string,
+  phone: string,
+  message: string
+) {
+  const subject = "Contact Inquiry Received - Comfort Stay PG";
+  const whatsappNumber = "+919922538989"; // Use your PG WhatsApp number
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^\d]/g, "")}?text=Hello%2C%20I%20have%20an%20urgent%20query%20regarding%20Comfort%20Stay%20PG.`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #fff5f8; color: #4a4a4a;">
+      <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background: linear-gradient(90deg, #FF92B7 0%, #FFC0D6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 600;">Comfort Stay PG</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <h2 style="color: #FF92B7; font-size: 22px; margin: 0 0 20px; font-weight: 600;">Contact Inquiry Received</h2>
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px;">Dear ${name},</p>
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Thank you for reaching out to Comfort Stay PG. Your inquiry has been received and our team will get back to you soon.</p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffeef5; border-radius: 8px; margin: 0 0 25px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="font-size: 16px; margin: 0; font-weight: 500;">
+                      <span style="display: inline-block; width: 12px; height: 12px; background-color: #FFC0D6; border-radius: 50%; margin-right: 8px;"></span>
+                      Your inquiry details:
+                    </p>
+                    <ul style="margin: 10px 0 0 20px; padding: 0; color: #4a4a4a; font-size: 15px;">
+                      <li><strong>Name:</strong> ${name}</li>
+                      <li><strong>Email:</strong> ${email}</li>
+                      <li><strong>Phone:</strong> ${phone}</li>
+                      <li><strong>Message:</strong> ${message}</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">If your inquiry is urgent, you can contact us directly via WhatsApp by clicking the button below:</p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px 0 25px;">
+                <tr>
+                  <td align="center">
+                    <a href="${whatsappUrl}" style="display: inline-block; padding: 12px 28px; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); color: #fff; border-radius: 6px; font-size: 16px; font-weight: 600; text-decoration: none; margin: 10px 0;" target="_blank" rel="noopener">Contact on WhatsApp</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 10px;">We appreciate your interest in Comfort Stay PG. If you have any further questions, feel free to reply to this email or contact us via WhatsApp.</p>
+              <p style="font-size: 16px; line-height: 1.5; margin: 0;">Warm Regards,<br><strong>The Comfort Stay PG Team</strong></p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #eee;">
+                    <p style="font-size: 14px; color: #666; margin: 0 0 10px;">© ${new Date().getFullYear()} Comfort Stay PG. All rights reserved.</p>
+                    <p style="font-size: 14px; color: #666; margin: 0 0 5px;">Hinjewadi Phase 1 Rd, Mukai Nagar, Pune, Maharashtra 411057</p>
+                    <p style="font-size: 14px; margin: 15px 0 0;">
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Website</a> |
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL}/contact" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">Contact</a> |
+                      <a href="tel:+919922538989" style="color: #FF92B7; text-decoration: none; margin: 0 10px;">+91 9922 538 989</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    saveNotification: false,
+  });
+}

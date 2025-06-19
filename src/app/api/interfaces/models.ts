@@ -203,7 +203,8 @@ export interface INotification {
     | "Other"
     | "NoticePeriod"
     | "Notice"
-    | "Checkout";
+    | "Checkout"
+    | "Contact";
   relatedId?: Schema.Types.ObjectId;
   relatedModel?:
     | "Payment"
@@ -212,7 +213,8 @@ export interface INotification {
     | "User"
     | "Room"
     | "Notice"
-    | "UserArchive";
+    | "UserArchive"
+    | "ContactInquiry";
   isRead: boolean;
   isEmailSent: boolean;
   emailDetails?: {

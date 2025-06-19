@@ -30,6 +30,7 @@ const NotificationSchema = new Schema<INotification>(
         "Other",
         "NoticePeriod",
         "Notice",
+        "Contact",
       ],
       default: "System",
     },
@@ -48,6 +49,7 @@ const NotificationSchema = new Schema<INotification>(
         "User",
         "Room",
         "Notice",
+        "ContactInquiry",
       ],
     },
 
