@@ -41,6 +41,7 @@ export default function NotificationDropdown({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
 
   // Fetch notifications when dropdown opens
@@ -50,22 +51,29 @@ export default function NotificationDropdown({
     }
   }, [isOpen]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside - FIXED VERSION
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+
+      // Don't close if clicking on the bell button or inside the dropdown
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        (buttonRef.current && buttonRef.current.contains(target)) ||
+        (dropdownRef.current && dropdownRef.current.contains(target))
       ) {
-        setIsOpen(false);
+        return;
       }
+
+      setIsOpen(false);
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isOpen]);
 
   // Check for unread notifications on initial load
   useEffect(() => {
@@ -112,7 +120,10 @@ export default function NotificationDropdown({
     }
   };
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
       const response = await axios.put("/api/notifications", {
         notificationIds: [id],
@@ -133,7 +144,10 @@ export default function NotificationDropdown({
     }
   };
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
       const response = await axios.put("/api/notifications", {
         markAll: true,
@@ -153,7 +167,10 @@ export default function NotificationDropdown({
     }
   };
 
-  const deleteNotification = async (id: string) => {
+  const deleteNotification = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
       const response = await axios.delete(`/api/notifications/${id}`);
 
@@ -212,9 +229,15 @@ export default function NotificationDropdown({
   const getTimeAgo = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-    } catch (error) {
+    } catch {
       return "Recently";
     }
+  };
+
+  const handleCloseDropdown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(false);
   };
 
   const dropdownContent = isOpen && (
@@ -223,6 +246,7 @@ export default function NotificationDropdown({
       aria-hidden="true"
     >
       <div
+        ref={dropdownRef}
         className="absolute right-0 top-0 mt-12 mr-4 md:mr-6 pointer-events-auto"
         style={{
           maxWidth: "calc(100vw - 2rem)",
@@ -236,7 +260,8 @@ export default function NotificationDropdown({
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
+                className="text-xs text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300 px-2 py-1 rounded hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
+                type="button"
               >
                 Mark all as read
               </button>
@@ -282,17 +307,19 @@ export default function NotificationDropdown({
                     <div className="flex items-start space-x-1 ml-2">
                       {!notification.isRead && (
                         <button
-                          onClick={() => markAsRead(notification._id)}
-                          className="text-gray-400 hover:text-pink-500 dark:text-gray-500 dark:hover:text-pink-400"
+                          onClick={(e) => markAsRead(e, notification._id)}
+                          className="text-gray-400 hover:text-pink-500 dark:text-gray-500 dark:hover:text-pink-400 p-1 rounded hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
                           title="Mark as read"
+                          type="button"
                         >
                           <CheckCircle size={16} />
                         </button>
                       )}
                       <button
-                        onClick={() => deleteNotification(notification._id)}
-                        className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
+                        onClick={(e) => deleteNotification(e, notification._id)}
+                        className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         title="Delete notification"
+                        type="button"
                       >
                         <X size={16} />
                       </button>
@@ -310,8 +337,9 @@ export default function NotificationDropdown({
           {notifications.length > 0 && (
             <div className="mt-auto border-t border-gray-200 dark:border-gray-700 p-2 text-center">
               <button
-                onClick={() => setIsOpen(false)}
-                className="text-xs text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
+                onClick={handleCloseDropdown}
+                className="text-xs text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300 px-3 py-1 rounded hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
+                type="button"
               >
                 Close
               </button>
@@ -323,11 +351,13 @@ export default function NotificationDropdown({
   );
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative ${className}`}>
       <button
+        ref={buttonRef}
         className="relative p-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifications"
+        type="button"
       >
         <Bell size={22} />
         {unreadCount > 0 && (
