@@ -239,7 +239,8 @@ export async function sendRegistrationConfirmationEmail(
                             <li style="margin-bottom: 8px;">5% late payment penalty per week</li>
                             <li style="margin-bottom: 8px;">Minimum 15 days notice period required for vacating</li>
                             <li style="margin-bottom: 8px;">₹1500 refund from booking amount if notice period is more than 15 days</li>
-                            <li style="margin-bottom: 0;">No refund will be provided if notice period is less than 15 days</li>
+                            <li style="margin-bottom: 8px;">No refund will be provided if notice period is less than 15 days</li>
+                            <li style="margin-bottom: 0;">Early Departure Payment Policy: When a resident decides to leave the PG, they must pay the entire month's rent for that month, regardless of the departure date. Alternatively, they can choose to stay on a day-to-day basis with daily charges until the end of the month.</li>
                           </ul>
                         </td>
                       </tr>
@@ -434,7 +435,8 @@ export async function sendWelcomeEmail(
                           <ul style="margin: 0; padding-left: 20px; color: #4a4a4a;">
                             <li style="margin-bottom: 8px;">Monthly rent due by the 5th of each month</li>
                             <li style="margin-bottom: 8px;">5% late payment penalty per week</li>
-                            <li style="margin-bottom: 0;">15-day notice period for vacating</li>
+                            <li style="margin-bottom: 8px;">15-day notice period for vacating</li>
+                            <li style="margin-bottom: 0;">Early Departure Payment Policy: When a resident decides to leave the PG, they must pay the entire month's rent for that month, regardless of the departure date. Alternatively, they can choose to stay on a day-to-day basis with daily charges until the end of the month.</li>
                           </ul>
                         </td>
                       </tr>
