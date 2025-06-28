@@ -96,6 +96,12 @@ PaymentSchema.virtual("month").get(function () {
   return this.months && this.months.length > 0 ? this.months[0] : "";
 });
 
+// Database indexes for performance optimization
+PaymentSchema.index({ userId: 1, months: 1, isActive: 1, isDepositPayment: 1 });
+PaymentSchema.index({ userId: 1, isActive: 1 });
+PaymentSchema.index({ paymentDate: -1 });
+PaymentSchema.index({ paymentStatus: 1 });
+
 // Create model
 const Payment =
   mongoose.models.Payment || mongoose.model("Payment", PaymentSchema);

@@ -31,7 +31,9 @@ export async function GET(request: NextRequest) {
       const month = url.searchParams.get("month");
 
       // Build query based on parameters
-      const query: Record<string, any> = { isActive: true };
+      const query: Record<string, string | boolean | { $in: string[] }> = {
+        isActive: true,
+      };
       if (userId) query.userId = userId;
       if (status) query.paymentStatus = status;
 
@@ -141,6 +143,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: "User not found" },
         { status: 404 }
+      );
+    }
+
+    // Validate that user doesn't already have payments for the selected months
+    const selectedMonths = Array.isArray(months) ? months : [months];
+
+    // Check for existing payments for the same user and months (excluding deposit payments)
+    const existingPayments = await Payment.find({
+      userId,
+      months: { $in: selectedMonths },
+      isActive: true,
+      isDepositPayment: false, // Exclude deposit payments from this validation
+    });
+
+    if (existingPayments.length > 0) {
+      // Find which months already have payments
+      const existingMonths = existingPayments.flatMap(
+        (payment) => payment.months
+      );
+      const conflictingMonths = selectedMonths.filter((month) =>
+        existingMonths.includes(month)
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Payment already exists for the following month(s): ${conflictingMonths.join(", ")}. Each user can only have one payment entry per month.`,
+        },
+        { status: 400 }
       );
     }
 

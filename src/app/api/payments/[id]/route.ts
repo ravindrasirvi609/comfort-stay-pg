@@ -107,6 +107,38 @@ export async function PUT(
       );
     }
 
+    // If months are being updated, validate that there are no conflicts
+    if (months !== undefined) {
+      const selectedMonths = Array.isArray(months) ? months : [months];
+
+      // Check for existing payments for the same user and months (excluding current payment and deposit payments)
+      const existingPayments = await Payment.find({
+        _id: { $ne: params.id }, // Exclude current payment
+        userId: paymentToUpdate.userId,
+        months: { $in: selectedMonths },
+        isActive: true,
+        isDepositPayment: false, // Exclude deposit payments from this validation
+      });
+
+      if (existingPayments.length > 0) {
+        // Find which months already have payments
+        const existingMonths = existingPayments.flatMap(
+          (payment) => payment.months
+        );
+        const conflictingMonths = selectedMonths.filter((month) =>
+          existingMonths.includes(month)
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Payment already exists for the following month(s): ${conflictingMonths.join(", ")}. Each user can only have one payment entry per month.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update fields if provided
     if (amount !== undefined) paymentToUpdate.amount = amount;
     if (months !== undefined) paymentToUpdate.months = months;

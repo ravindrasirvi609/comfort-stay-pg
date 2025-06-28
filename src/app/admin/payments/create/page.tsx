@@ -51,6 +51,8 @@ export default function CreatePaymentPage() {
   const [success, setSuccess] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [existingPayments, setExistingPayments] = useState<string[]>([]);
+  const [checkingPayments, setCheckingPayments] = useState(false);
 
   // Generate months array for month selection (last 3 months, current month, next 3 months)
   const availableMonths = [];
@@ -139,13 +141,33 @@ export default function CreatePaymentPage() {
     }
   }, [selectedUser, users]);
 
-  // Handle deposit payment toggle
-  const handleDepositToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isChecked = e.target.checked;
-    setIsDepositPayment(isChecked);
-    if (isChecked) {
-      setStatus("Paid"); // Auto-set status to Paid for deposit payments
+  // Fetch existing payments for selected user
+  const fetchExistingPayments = async (userId: string) => {
+    try {
+      setCheckingPayments(true);
+      const response = await axios.get(`/api/payments?userId=${userId}`);
+      if (response.data.success) {
+        const payments = response.data.payments;
+        const existingMonths = payments
+          .filter(
+            (payment: { isDepositPayment: boolean }) =>
+              !payment.isDepositPayment
+          )
+          .flatMap((payment: { months: string[] }) => payment.months);
+        setExistingPayments(existingMonths);
+      }
+    } catch (error) {
+      console.error("Error fetching existing payments:", error);
+    } finally {
+      setCheckingPayments(false);
     }
+  };
+
+  // Handle user selection
+  const handleUserSelection = (userId: string) => {
+    setSelectedUser(userId);
+    setMonths([]); // Reset months when user changes
+    fetchExistingPayments(userId);
   };
 
   // Handle month selection
@@ -160,11 +182,31 @@ export default function CreatePaymentPage() {
     });
   };
 
+  // Handle deposit payment toggle
+  const handleDepositToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setIsDepositPayment(isChecked);
+    if (isChecked) {
+      setStatus("Paid"); // Auto-set status to Paid for deposit payments
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedUser || !amount || months.length === 0 || !dueDate) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    // Check for conflicting months
+    const conflictingMonths = months.filter((month) =>
+      existingPayments.includes(month)
+    );
+    if (conflictingMonths.length > 0) {
+      setError(
+        `Cannot create payment for months that already have payments: ${conflictingMonths.join(", ")}`
+      );
       return;
     }
 
@@ -294,7 +336,7 @@ export default function CreatePaymentPage() {
                       <div
                         key={user._id}
                         className="p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 border-transparent"
-                        onClick={() => setSelectedUser(user._id)}
+                        onClick={() => handleUserSelection(user._id)}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -409,28 +451,58 @@ export default function CreatePaymentPage() {
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Select months:
                 </p>
+                {checkingPayments && (
+                  <div className="mb-2 text-sm text-blue-600 dark:text-blue-400">
+                    Checking existing payments...
+                  </div>
+                )}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
-                  {availableMonths.map((m) => (
-                    <div key={m} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`month-${m}`}
-                        checked={months.includes(m)}
-                        onChange={() => handleMonthSelection(m)}
-                        className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-                      />
-                      <label
-                        htmlFor={`month-${m}`}
-                        className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        {m}
-                      </label>
-                    </div>
-                  ))}
+                  {availableMonths.map((m) => {
+                    const hasExistingPayment = existingPayments.includes(m);
+                    return (
+                      <div key={m} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`month-${m}`}
+                          checked={months.includes(m)}
+                          onChange={() => handleMonthSelection(m)}
+                          disabled={hasExistingPayment}
+                          className={`h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded ${
+                            hasExistingPayment
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                        />
+                        <label
+                          htmlFor={`month-${m}`}
+                          className={`ml-2 block text-sm ${
+                            hasExistingPayment
+                              ? "text-red-600 dark:text-red-400 line-through"
+                              : "text-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          {m}
+                          {hasExistingPayment && (
+                            <span className="ml-1 text-xs text-red-500 dark:text-red-400">
+                              (Already paid)
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                    );
+                  })}
                 </div>
                 {months.length > 0 && (
                   <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Selected months: {months.join(", ")}
+                  </div>
+                )}
+                {existingPayments.length > 0 && (
+                  <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      ⚠️ The following months already have payments:{" "}
+                      {existingPayments.join(", ")}
+                    </p>
                   </div>
                 )}
               </div>
