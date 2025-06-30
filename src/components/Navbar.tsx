@@ -115,7 +115,13 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <div className="flex items-center gap-1">
                   <Link
-                    href={user?.role === "admin" ? "/admin" : "/dashboard"}
+                    href={
+                      user?.role === "admin"
+                        ? "/admin"
+                        : user?.role === "manager"
+                          ? "/manager"
+                          : "/dashboard"
+                    }
                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-pink-50/50 dark:bg-pink-900/20 hover:bg-pink-100/80 dark:hover:bg-pink-800/30"
                   >
                     <div className="relative">
@@ -213,7 +219,13 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <>
                   <Link
-                    href={user?.role === "admin" ? "/admin" : "/dashboard"}
+                    href={
+                      user?.role === "admin"
+                        ? "/admin"
+                        : user?.role === "manager"
+                          ? "/manager"
+                          : "/dashboard"
+                    }
                     className="col-span-2 px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center gap-2 text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20"
                     onClick={() => setIsMenuOpen(false)}
                   >

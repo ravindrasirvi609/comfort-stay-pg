@@ -6,11 +6,7 @@ import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const { email, password } = await request.json();
-
-    console.log("[Login] Attempting login with email:", email);
 
     // Check if all fields are provided
     if (!email || !password) {
@@ -20,12 +16,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle fixed admin credentials
+    if (email === "comfortstaypg@gmail.com" && password === "Comfort@189") {
+      // Generate JWT token for hardcoded admin
+      const token = await generateToken({
+        _id: "admin_id_123456789",
+        name: "ComfortStay Admin",
+        email: "comfortstaypg@gmail.com",
+        role: "admin",
+        pgId: "ADMIN123",
+      });
+
+      // Set cookie
+      const cookieStore = await cookies();
+      cookieStore.set("token", token, {
+        httpOnly: true,
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24, // 1 day
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Login successful",
+        user: {
+          _id: "admin_id_123456789",
+          name: "ComfortStay Admin",
+          email: "comfortstaypg@gmail.com",
+          role: "admin",
+        },
+      });
+    }
+
+    await connectToDatabase();
+
     // Find user by email with case-insensitive search
     const user = await User.findOne({
       email: { $regex: new RegExp(`^${email}$`, "i") },
     });
-
-    console.log("[Login] User found:", user ? "Yes" : "No");
 
     // Check if user exists
     if (!user) {
@@ -45,9 +73,6 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
-
-    console.log("[Login] Password valid:", isPasswordValid);
-
     if (!isPasswordValid) {
       return NextResponse.json(
         { success: false, message: "Invalid credentials" },

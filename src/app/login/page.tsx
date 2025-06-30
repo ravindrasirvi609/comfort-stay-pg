@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import Link from "next/link";
+// import Link from "next/link"; // Removed unused import
 import useAuth from "../../hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, loading, login } = useAuth();
-  const [activeTab, setActiveTab] = useState("user");
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -20,14 +19,7 @@ export default function LoginPage() {
     password: "",
   });
 
-  // Admin login form state
-  const [adminForm, setAdminForm] = useState({
-    email: "",
-    password: "",
-  });
-
   const [showUserPassword, setShowUserPassword] = useState(false);
-  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -47,15 +39,8 @@ export default function LoginPage() {
     setError("");
   };
 
-  // Handle admin form input change
-  const handleAdminChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setAdminForm((prev) => ({ ...prev, [name]: value }));
-    setError("");
-  };
-
-  // Handle user login
-  const handleUserLogin = async (e: React.FormEvent) => {
+  // Handle login
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
     setError("");
@@ -64,7 +49,16 @@ export default function LoginPage() {
       const response = await axios.post("/api/auth/user-login", userForm);
 
       if (response.data.success) {
-        login(response.data.user);
+        const user = response.data.user;
+        login(user);
+        // Redirect based on role
+        if (user.role === "admin") {
+          router.push("/admin");
+        } else if (user.role === "manager") {
+          router.push("/manager");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         setError(response.data.message || "Login failed");
       }
@@ -74,36 +68,6 @@ export default function LoginPage() {
           err.response?.data?.message || "An error occurred during login"
         );
       } else {
-        setError("An unexpected error occurred");
-      }
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  // Handle admin login
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormLoading(true);
-    setError("");
-
-    try {
-      const response = await axios.post("/api/auth/admin-login", adminForm);
-
-      if (response.data.success) {
-        console.log("Admin login successful");
-        login(response.data.user);
-      } else {
-        setError(response.data.message || "Login failed");
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        console.error("Admin login error:", err.response?.data);
-        setError(
-          err.response?.data?.message || "An error occurred during login"
-        );
-      } else {
-        console.error("Unexpected error:", err);
         setError("An unexpected error occurred");
       }
     } finally {
@@ -145,32 +109,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex p-1 bg-gray-100/60 dark:bg-gray-700/40 rounded-xl mb-6">
-          <button
-            type="button"
-            className={`w-1/2 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === "user"
-                ? "bg-white dark:bg-gray-800 text-pink-600 dark:text-pink-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400"
-            }`}
-            onClick={() => setActiveTab("user")}
-          >
-            User Login
-          </button>
-          <button
-            type="button"
-            className={`w-1/2 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === "admin"
-                ? "bg-white dark:bg-gray-800 text-pink-600 dark:text-pink-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400"
-            }`}
-            onClick={() => setActiveTab("admin")}
-          >
-            Admin Login
-          </button>
-        </div>
-
         {/* Error message */}
         {error && (
           <div
@@ -193,319 +131,133 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* User Login Form */}
-        {activeTab === "user" && (
-          <form className="space-y-6" onSubmit={handleUserLogin}>
-            <div className="space-y-4">
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                  <label
-                    htmlFor="email"
-                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                  >
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                    placeholder="Enter your email"
-                    value={userForm.email}
-                    onChange={handleUserChange}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                  <label
-                    htmlFor="user-password"
-                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                  >
-                    Password
-                  </label>
-                  <input
-                    id="user-password"
-                    name="password"
-                    type={showUserPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                    placeholder="Enter your password"
-                    value={userForm.password}
-                    onChange={handleUserChange}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowUserPassword((v) => !v)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none"
-                  >
-                    {showUserPassword ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10a9.96 9.96 0 011.175-4.775M6.308 6.308A9.958 9.958 0 0112 5c5.523 0 10 4.477 10 10a9.957 9.957 0 01-1.308 4.464M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 3l18 18"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {formLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Logging in...
-                  </>
-                ) : (
-                  "Login"
-                )}
-              </button>
-            </div>
-
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-              <p>
-                Don&apos;t have an account?{" "}
-                <Link
-                  href="/register"
-                  className="font-medium text-pink-600 hover:text-pink-500 dark:text-pink-400"
+        {/* Unified Login Form */}
+        <form className="space-y-6" onSubmit={handleLogin}>
+          <div className="space-y-4">
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+              <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                <label
+                  htmlFor="email"
+                  className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
                 >
-                  Register here
-                </Link>
-              </p>
-            </div>
-          </form>
-        )}
-
-        {/* Admin Login Form */}
-        {activeTab === "admin" && (
-          <form className="space-y-6" onSubmit={handleAdminLogin}>
-            <div className="space-y-4">
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                  <label
-                    htmlFor="email"
-                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                  placeholder="Enter your email"
+                  value={userForm.email}
+                  onChange={handleUserChange}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                    placeholder="comfortstaypg@gmail.com"
-                    value={adminForm.email}
-                    onChange={handleAdminChange}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+              <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type={showUserPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                  placeholder="Enter your password"
+                  value={userForm.password}
+                  onChange={handleUserChange}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-pink-500 focus:outline-none"
+                  onClick={() => setShowUserPassword((show) => !show)}
+                  tabIndex={-1}
+                >
+                  {showUserPassword ? (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-400"
+                      className="h-5 w-5"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
-                  <label
-                    htmlFor="admin-password"
-                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
-                  >
-                    Password
-                  </label>
-                  <input
-                    id="admin-password"
-                    name="password"
-                    type={showAdminPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                    placeholder="Enter your password"
-                    value={adminForm.password}
-                    onChange={handleAdminChange}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAdminPassword((v) => !v)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none"
-                  >
-                    {showAdminPassword ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10a9.96 9.96 0 011.175-4.775M6.308 6.308A9.958 9.958 0 0112 5c5.523 0 10 4.477 10 10a9.957 9.957 0 01-1.308 4.464M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 3l18 18"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {formLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
                       <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                        fillRule="evenodd"
+                        d="M10 3C5 3 1.73 7.11 1.05 10.29a1 1 0 000 .42C1.73 12.89 5 17 10 17s8.27-4.11 8.95-7.29a1 1 0 000-.42C18.27 7.11 15 3 10 3zm0 12c-3.87 0-7.16-3.13-7.93-6C2.84 7.13 6.13 4 10 4s7.16 3.13 7.93 6c-.77 2.87-4.06 6-7.93 6zm0-10a4 4 0 100 8 4 4 0 000-8zm0 6a2 2 0 110-4 2 2 0 010 4z"
+                        clipRule="evenodd"
+                      />
                     </svg>
-                    Logging in...
-                  </>
-                ) : (
-                  "Admin Login"
-                )}
-              </button>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0l10 10a1 1 0 01-1.414 1.414l-1.387-1.387A7.963 7.963 0 0110 17c-5 0-8.27-4.11-8.95-7.29a1 1 0 010-.42C1.73 7.11 5 3 10 3c1.61 0 3.13.39 4.45 1.09l-1.45 1.45A5.978 5.978 0 0010 5c-3.87 0-7.16 3.13-7.93 6 .77 2.87 4.06 6 7.93 6 1.61 0 3.13-.39 4.45-1.09l-1.45-1.45A5.978 5.978 0 0110 15c-3.87 0-7.16-3.13-7.93-6 .77-2.87 4.06-6 7.93-6z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+          </div>
 
-            {/* <div className="text-center text-xs text-gray-500 dark:text-gray-400">
-              <p>Admin credentials for testing:</p>
-              <p>Email: comfortstaypg@gmail.com</p>
-              <p>Password: Comfort@189</p>
-            </div> */}
-          </form>
-        )}
+          <div>
+            <button
+              type="submit"
+              disabled={formLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {formLoading ? (
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  ></path>
+                </svg>
+              ) : (
+                "Login"
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

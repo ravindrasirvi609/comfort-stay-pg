@@ -81,7 +81,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
           {options.map((option) => (
             <div
               key={option.value}

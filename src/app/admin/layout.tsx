@@ -83,7 +83,6 @@ export default function AdminLayout({
         </svg>
       ),
     },
-
     {
       name: "Rooms",
       href: "/admin/rooms",
@@ -140,6 +139,26 @@ export default function AdminLayout({
             strokeLinejoin="round"
             strokeWidth={2}
             d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Expenses",
+      href: "/admin/expenses",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8a8 8 0 11-16 0 8 8 0 0116 0z"
           />
         </svg>
       ),

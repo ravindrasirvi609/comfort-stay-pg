@@ -8,7 +8,7 @@ export interface IUser {
   name: string;
   email: string;
   phone: string;
-  role: "admin" | "user";
+  role: "admin" | "manager" | "user";
   password?: string;
   pgId?: string;
   registrationStatus: "Pending" | "Approved" | "Rejected";
@@ -268,6 +268,18 @@ export interface ISubscriber {
   email: string;
   subscriptionDate: Date;
   isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IExpense {
+  _id?: string;
+  amount: number;
+  category: "Food" | "Maintenance" | "Utilities" | "Other";
+  description: string;
+  date: Date;
+  createdBy: string; // User _id
+  status: "Pending" | "Approved" | "Rejected";
   createdAt?: Date;
   updatedAt?: Date;
 }

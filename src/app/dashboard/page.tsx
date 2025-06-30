@@ -322,17 +322,15 @@ export default function UserProfilePage() {
       // First we'll show the exit survey
       setIsCheckoutDialogOpen(false);
       setIsExitSurveyOpen(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error starting checkout process:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to start checkout process"
-      );
+
       setIsSubmitting(false);
     }
   };
 
   // Complete the checkout with survey data
-  const handleCompleteSurvey = async (surveyData?: any) => {
+  const handleCompleteSurvey = async (surveyData?: unknown) => {
     if (!user?._id) return;
 
     try {
@@ -355,11 +353,8 @@ export default function UserProfilePage() {
       } else {
         toast.error(response.data.message || "Failed to complete checkout");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error completing checkout:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to complete checkout"
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -447,16 +442,22 @@ export default function UserProfilePage() {
             transition={{ type: "spring", stiffness: 300 }}
           >
             <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 via-pink-400 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white/80 dark:border-gray-800/80 shadow-lg">
-              {user?.profileImage ? (
+              {user?.profileImage && user.profileImage.trim() !== "" ? (
                 <Image
                   src={user.profileImage}
-                  alt={user?.name}
+                  alt={user?.name || "User"}
                   className="w-full h-full object-cover"
                   width={100}
                   height={100}
                 />
               ) : (
-                <FaUser className="text-white text-4xl md:text-5xl" />
+                <Image
+                  src="/default-avatar.png"
+                  alt="Default Avatar"
+                  className="w-full h-full object-cover"
+                  width={100}
+                  height={100}
+                />
               )}
             </div>
           </motion.div>
