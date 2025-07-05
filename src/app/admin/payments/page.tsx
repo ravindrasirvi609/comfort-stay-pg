@@ -14,6 +14,8 @@ import {
   FaTimesCircle,
   FaHourglassHalf,
   FaEdit,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 
@@ -50,6 +52,7 @@ export default function PaymentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
+  const [showRentInfo, setShowRentInfo] = useState(false);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -341,7 +344,7 @@ export default function PaymentsPage() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            ₹{totalAmount.toLocaleString()}
+            {showRentInfo ? `₹${totalAmount.toLocaleString()}` : "***"}
           </h3>
         </div>
 
@@ -377,21 +380,22 @@ export default function PaymentsPage() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            ₹
-            {payments
-              .filter((p) => {
-                const currentMonth = new Date().toLocaleString("default", {
-                  month: "long",
-                  year: "numeric",
-                });
-                return (
-                  p.months &&
-                  p.months.some((month) => month === currentMonth) &&
-                  (p.paymentStatus === "Paid" || p.status === "Paid")
-                );
-              })
-              .reduce((sum, payment) => sum + payment.amount, 0)
-              .toLocaleString()}
+            {showRentInfo
+              ? `₹${payments
+                  .filter((p) => {
+                    const currentMonth = new Date().toLocaleString("default", {
+                      month: "long",
+                      year: "numeric",
+                    });
+                    return (
+                      p.months &&
+                      p.months.some((month) => month === currentMonth) &&
+                      (p.paymentStatus === "Paid" || p.status === "Paid")
+                    );
+                  })
+                  .reduce((sum, payment) => sum + payment.amount, 0)
+                  .toLocaleString()}`
+              : "***"}
           </h3>
         </div>
       </div>
@@ -464,12 +468,29 @@ export default function PaymentsPage() {
             </div>
           </div>
 
-          <div className="mt-3 text-right">
+          <div className="mt-3 flex justify-between items-center">
             <button
               onClick={resetFilters}
               className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               Reset Filters
+            </button>
+
+            <button
+              onClick={() => setShowRentInfo(!showRentInfo)}
+              className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            >
+              {showRentInfo ? (
+                <>
+                  <FaEyeSlash className="mr-2" />
+                  Hide Rent Info
+                </>
+              ) : (
+                <>
+                  <FaEye className="mr-2" />
+                  Show Rent Info
+                </>
+              )}
             </button>
           </div>
         </div>
