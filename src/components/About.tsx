@@ -13,8 +13,7 @@ const features = [
   {
     icon: <Shield size={24} />,
     title: "Enhanced Security",
-    description:
-      "Dedicated 24/7 security with biometric entry and CCTV surveillance.",
+    description: "Dedicated 24/7 security and CCTV surveillance.",
   },
   {
     icon: <Users size={24} />,

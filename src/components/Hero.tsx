@@ -120,7 +120,7 @@ const Hero = () => {
                   Enhanced Security
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  24/7 security with biometric access
+                  24/7 security
                 </p>
               </motion.div>
 

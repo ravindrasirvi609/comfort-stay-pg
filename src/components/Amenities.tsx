@@ -13,9 +13,6 @@ import {
   Coffee,
   Clock,
   Book,
-  Scissors,
-  UserCircle2,
-  Package,
 } from "lucide-react";
 
 const amenities = [
@@ -43,8 +40,7 @@ const amenities = [
   {
     icon: <Shield size={24} />,
     title: "Enhanced Security",
-    description:
-      "Female security guards, biometric entry, and CCTV surveillance",
+    description: "security guards, and CCTV surveillance",
   },
   {
     icon: <ParkingSquare size={24} />,

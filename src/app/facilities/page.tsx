@@ -65,8 +65,8 @@ export default function FacilitiesPage() {
                 24/7 Security
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Round-the-clock security with CCTV surveillance, biometric
-                access, and security personnel for your complete safety.
+                Round-the-clock security with CCTV surveillance, and security
+                personnel for your complete safety.
               </p>
             </div>
 
