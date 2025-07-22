@@ -93,7 +93,7 @@ const AdminRoomChange: React.FC<AdminRoomChangeProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden min-h-96">
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
           Change Room

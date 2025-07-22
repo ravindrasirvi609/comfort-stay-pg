@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaExchangeAlt, FaDoorOpen, FaBed } from "react-icons/fa";
+import { FaExchangeAlt } from "react-icons/fa";
 
 interface Room {
   _id: string;
