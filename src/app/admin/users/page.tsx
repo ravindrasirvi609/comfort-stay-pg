@@ -172,7 +172,9 @@ export default function UsersPage() {
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (user.pgId &&
-            user.pgId.toLowerCase().includes(searchTerm.toLowerCase()))
+            user.pgId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.companyName &&
+            user.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -441,7 +443,7 @@ export default function UsersPage() {
                 <input
                   type="text"
                   className="block w-full pl-10 pr-3 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                  placeholder="Search by name, email, or PG ID"
+                  placeholder="Search by name, email, PG ID, or company"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
