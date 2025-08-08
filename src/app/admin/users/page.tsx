@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
-import { FiUsers, FiEye, FiBell, FiX } from "react-icons/fi";
-import { FaFileExport, FaFileInvoiceDollar, FaUsers } from "react-icons/fa";
+import { FiUsers, FiBell, FiX } from "react-icons/fi";
+import { FaFileExport, FaFileInvoiceDollar } from "react-icons/fa";
 
 // Define PaymentData interface based on Payment model
 interface PaymentData {
@@ -56,17 +55,24 @@ interface User {
   agreeToTerms?: boolean;
 }
 
-// Define the sort keys including standard User properties and custom ones
-type SortKey = keyof User | "currentMonthRentStatus";
-
-interface SortConfig {
-  key: SortKey | null;
-  direction: "ascending" | "descending";
-}
+// (Sorting config removed)
 
 export default function UsersPage() {
+  // Validate image src to avoid Next/Image defaultLoader "Invalid URL" errors
+  const isValidImageSrc = (src?: string): boolean => {
+    try {
+      if (!src || typeof src !== "string") return false;
+      if (src.startsWith("/")) return true; // public asset
+      // Allow common safe protocols
+      const u = new URL(src);
+      return ["http:", "https:", "data:"].includes(u.protocol);
+    } catch {
+      return false;
+    }
+  };
+
   const [users, setUsers] = useState<User[]>([]);
-  const [allPayments, setAllPayments] = useState<PaymentData[]>([]); // To store all fetched payments
+  // Removed unused allPayments state
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -76,13 +82,10 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "name" as SortKey,
-    direction: "ascending",
-  });
+  // Removed unused sort config state
   const { toast } = useToast();
   const router = useRouter();
-  const [showUnpaidDuesOnly, setShowUnpaidDuesOnly] = useState(false);
+  const [showUnpaidDuesOnly] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
@@ -100,7 +103,6 @@ export default function UsersPage() {
         const paymentsResponse = await axios.get("/api/payments");
         const allFetchedPayments: PaymentData[] =
           paymentsResponse.data.payments || [];
-        setAllPayments(allFetchedPayments); // Store for potential future use, though processeduser uses it directly
 
         // Get current month and year in "Month YYYY" format (e.g., "July 2024")
         const currentDate = new Date();
@@ -167,6 +169,7 @@ export default function UsersPage() {
 
     // Existing filtering logic
     if (searchTerm) {
+      debugger;
       result = result.filter(
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -190,6 +193,13 @@ export default function UsersPage() {
       }
     }
 
+    // Payment filter (wire up dropdown)
+    if (filterPayment === "unpaid") {
+      result = result.filter((user) => (user.dueAmount || 0) > 0);
+    } else if (filterPayment === "paid") {
+      result = result.filter((user) => (user.dueAmount || 0) === 0);
+    }
+
     // Enhanced unpaid dues filtering
     if (showUnpaidDuesOnly) {
       result = result.filter(
@@ -204,24 +214,7 @@ export default function UsersPage() {
 
     setFilteredUsers(result);
     setCurrentPage(1); // Reset to first page on filter or sort change
-  }, [users, searchTerm, filterStatus, showUnpaidDuesOnly]);
-
-  const requestSort = (key: SortKey) => {
-    if (key === "phone") return;
-    let direction: "ascending" | "descending" = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const getSortIndicator = (key: SortKey) => {
-    if (key === "phone") return "";
-    if (sortConfig.key === key) {
-      return sortConfig.direction === "ascending" ? " ▲" : " ▼";
-    }
-    return ""; // Or a default "unsorted" icon e.g. <ChevronsUpDown size={14} className="ml-1 inline-block" />
-  };
+  }, [users, searchTerm, filterStatus, showUnpaidDuesOnly, filterPayment]);
 
   // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
@@ -263,11 +256,12 @@ export default function UsersPage() {
       } else {
         toast.error(response.data.message || "Failed to send reminder");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error sending payment reminder:", err);
-      toast.error(
-        err.response?.data?.message || "Failed to send payment reminder"
-      );
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.message || "Failed to send payment reminder"
+        : "Failed to send payment reminder";
+      toast.error(message);
     } finally {
       setSendingReminder(null);
       setShowConfirmDialog(false);
@@ -553,13 +547,14 @@ export default function UsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          {user.profileImage ? (
+                          {isValidImageSrc(user.profileImage) ? (
                             <Image
-                              src={user.profileImage}
+                              src={user.profileImage as string}
                               alt={user.name}
                               width={40}
                               height={40}
-                              className="rounded-full"
+                              className="rounded-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
