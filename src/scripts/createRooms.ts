@@ -7,44 +7,50 @@ import * as url from "url";
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from .env.local
-config({ path: path.resolve(__dirname, "../../../.env.local") });
+// Load environment variables from project .env.local (two levels up from src/scripts)
+config({ path: path.resolve(__dirname, "../../.env.local") });
 
 import mongoose from "mongoose";
-import { connectToDatabase } from "../app/lib/db";
-import Room from "../app/api/models/Room";
 
-// Configuration
-const FLOORS = 6;
-const ROOMS_PER_FLOOR = 17;
-const ROOM_TYPES: Record<number, "2-sharing" | "3-sharing"> = {
-  // Room numbers for each floor that are 3-sharing
-  // All other rooms will be 2-sharing
-  101: "3-sharing",
-  105: "3-sharing",
-  110: "3-sharing",
-  115: "3-sharing",
-  201: "3-sharing",
-  205: "3-sharing",
-  210: "3-sharing",
-  215: "3-sharing",
-  301: "3-sharing",
-  305: "3-sharing",
-  310: "3-sharing",
-  315: "3-sharing",
-  401: "3-sharing",
-  405: "3-sharing",
-  410: "3-sharing",
-  415: "3-sharing",
-  501: "3-sharing",
-  505: "3-sharing",
-  510: "3-sharing",
-  515: "3-sharing",
-  601: "3-sharing",
-  605: "3-sharing",
-  610: "3-sharing",
-  615: "3-sharing",
-};
+// --- Configuration (CLI/env overridable) ---
+// Simple arg parser for flags like --floors=6
+function getArg(name: string): string | undefined {
+  const prefix = name + "=";
+  const arg = process.argv.find((a) => a.startsWith(prefix));
+  if (arg) return arg.slice(prefix.length);
+  const idx = process.argv.indexOf(name);
+  if (
+    idx !== -1 &&
+    process.argv[idx + 1] &&
+    !process.argv[idx + 1].startsWith("--")
+  ) {
+    return process.argv[idx + 1];
+  }
+  return undefined;
+}
+
+const FLOORS = Number(getArg("--floors") || process.env.FLOORS || 6);
+const ROOMS_PER_FLOOR = Number(
+  getArg("--rooms") || process.env.ROOMS_PER_FLOOR || 12
+);
+const BUILDING: "A" | "B" = (
+  getArg("--building") ||
+  process.env.BUILDING ||
+  "A"
+).toUpperCase() as "A" | "B";
+
+// Provide a simple pattern for 3-sharing positions per floor, e.g., "1,5,10"
+const THREE_SHARING_POSITIONS: number[] = (() => {
+  const raw = getArg("--three") || process.env.THREE_SHARING_POS;
+  if (raw) {
+    return raw
+      .split(",")
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n) && n >= 1 && n <= ROOMS_PER_FLOOR);
+  }
+  // Default pattern: rooms 1, 5, and 10 are 3-sharing when available
+  return [1, 5, 10].filter((n) => n <= ROOMS_PER_FLOOR);
+})();
 
 // Pricing based on room type
 const PRICING: Record<"2-sharing" | "3-sharing", number> = {
@@ -67,6 +73,9 @@ const DEFAULT_AMENITIES = [
 async function createRooms() {
   try {
     console.log("Connecting to database...");
+    // Import after dotenv config to ensure env is loaded
+    const { connectToDatabase } = await import("../app/lib/db");
+    const { default: Room } = await import("../app/api/models/Room");
     await connectToDatabase();
     console.log("Connected to database successfully");
 
@@ -75,18 +84,32 @@ async function createRooms() {
     await Room.deleteMany({});
     console.log("Existing rooms cleared");
 
-    const roomsToCreate = [];
+    type NewRoom = {
+      building: "A" | "B";
+      roomNumber: string;
+      floor: number;
+      type: "2-sharing" | "3-sharing";
+      price: number;
+      capacity: number;
+      currentOccupancy: number;
+      amenities: string[];
+      status: "available" | "occupied" | "maintenance";
+    };
+    const roomsToCreate: NewRoom[] = [];
 
     // Create rooms for each floor
     for (let floor = 1; floor <= FLOORS; floor++) {
-      for (let roomNum = 1; roomNum <= ROOMS_PER_FLOOR; roomNum++) {
-        const roomNumber = `${floor}${roomNum.toString().padStart(2, "0")}`;
-        const roomNumberInt = parseInt(roomNumber);
-        const type = ROOM_TYPES[roomNumberInt] || "2-sharing";
-        const capacity = type === "2-sharing" ? 2 : 3;
+      for (let roomPos = 1; roomPos <= ROOMS_PER_FLOOR; roomPos++) {
+        const roomNumber = `${floor}${roomPos.toString().padStart(2, "0")}`;
+        const isThreeSharing = THREE_SHARING_POSITIONS.includes(roomPos);
+        const type: "2-sharing" | "3-sharing" = isThreeSharing
+          ? "3-sharing"
+          : "2-sharing";
+        const capacity = isThreeSharing ? 3 : 2;
         const price = PRICING[type];
 
         roomsToCreate.push({
+          building: BUILDING,
           roomNumber,
           floor,
           type,
