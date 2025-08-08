@@ -91,9 +91,9 @@ const Gallery = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="glass-effect p-8 md:p-12 rounded-lg"
+          className="glass-effect p-8 md:p-12 rounded-2xl gradient-ring"
         >
-          <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
+          <h2 className="section-title text-gradient title-accent mb-8">
             Photo Gallery
           </h2>
 
@@ -125,7 +125,7 @@ const Gallery = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card overflow-hidden aspect-square"
+                className="card overflow-hidden aspect-square gradient-ring"
               >
                 <div className="w-full h-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group relative">
                   <Image

@@ -47,15 +47,15 @@ const About = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="glass-effect p-8 md:p-12 rounded-lg"
+          className="glass-effect p-8 md:p-12 rounded-2xl gradient-ring"
         >
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="section-title text-gradient title-accent mb-4">
               Welcome to Comfort Stay PG
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Your premier accommodation choice in Hinjewadi Phase 1, Pune.
-              Opened in February 2025, our brand new facility is designed
+              Opened in July 2025, our brand new facility is designed
               specifically for female professionals and students, offering
               comfortable 2-sharing and 3-sharing rooms to suit your needs and
               budget.
@@ -69,9 +69,9 @@ const About = () => {
                   Comfort Stay PG
                 </span>
                 , an exclusive girls&apos; paying guest accommodation that
-                opened in February 2025 in the heart of Hinjewadi, Pune. Our
-                brand new building offers a perfect blend of comfort, security,
-                and modern amenities designed specifically for working women and
+                opened in July 2025 in the heart of Hinjewadi, Pune. Our brand
+                new building offers a perfect blend of comfort, security, and
+                modern amenities designed specifically for working women and
                 female students.
               </p>
               <p className="text-lg mb-6">

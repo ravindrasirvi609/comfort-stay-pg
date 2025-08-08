@@ -4,13 +4,13 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Facilities - Comfort Stay PG | Best Girls PG in Hinjewadi Phase 1",
   description:
-    "Discover our modern facilities at Comfort Stay PG in Hinjewadi Phase 1, Pune. Brand new building with comfortable 2 & 3 sharing rooms Opened February 2025.",
+    "Discover our modern facilities at Comfort Stay PG in Hinjewadi Phase 1, Pune. Brand new building with comfortable 2 & 3 sharing rooms Opened July 2025.",
   keywords:
     "girls PG facilities Hinjewadi, ladies PG amenities Pune, 2 sharing PG rooms, 3 sharing accommodation, Comfort Stay facilities, new PG Hinjewadi 2025",
   openGraph: {
     title: "Modern Facilities at Comfort Stay PG - New Girls PG in Hinjewadi",
     description:
-      "Brand new PG accommodation with premium 2 & 3 sharing rooms, high-speed WiFi, nutritious meals, and 24/7 security. Opened February 2025.",
+      "Brand new PG accommodation with premium 2 & 3 sharing rooms, high-speed WiFi, nutritious meals, and 24/7 security. Opened July 2025.",
     type: "website",
   },
 };
@@ -25,7 +25,7 @@ export default function FacilitiesPage() {
           </h1>
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
             Discover all the amenities and facilities available at our brand new
-            Comfort Stay PG opened in February 2025, designed to make your stay
+            Comfort Stay PG opened in July 2025, designed to make your stay
             comfortable and enjoyable.
           </p>
           <p className="text-base text-pink-600 dark:text-pink-400 font-medium mb-8 max-w-3xl mx-auto">
@@ -293,7 +293,7 @@ export default function FacilitiesPage() {
 
           <div className="mt-12 bg-white dark:bg-gray-800/50 rounded-2xl p-6 shadow-md text-center">
             <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white">
-              Brand New Building - Opened February 2025
+              Brand New Building - Opened July 2025
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
               Our PG is housed in a brand new building with modern design and

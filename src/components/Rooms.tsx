@@ -45,14 +45,13 @@ const Rooms = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="glass-effect p-8 md:p-12 rounded-lg"
+          className="glass-effect p-8 md:p-12 rounded-2xl gradient-ring"
         >
-          <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
+          <h2 className="section-title text-gradient title-accent mb-8">
             Room Types & Pricing
           </h2>
           <p className="text-center mb-8 text-gray-700 dark:text-gray-300">
-            Our brand new building opened in February 2025 with two room
-            options:
+            Our brand new building opened in July 2025 with two room options:
           </p>
           <div className="grid md:grid-cols-2 gap-6">
             {rooms.map((room, index) => (
@@ -62,7 +61,7 @@ const Rooms = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card overflow-hidden"
+                className="card overflow-hidden gradient-ring"
               >
                 <div
                   className={`${room.color} px-4 py-3 flex items-center justify-between`}
@@ -90,13 +89,26 @@ const Rooms = () => {
                       </li>
                     ))}
                   </ul>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full bg-pink-600 hover:bg-pink-700 transition-colors text-white py-2 px-4 rounded-lg"
-                  >
-                    Book Now
-                  </motion.button>
+                  <div className="flex gap-3">
+                    <motion.a
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      href="#contact"
+                      className="flex-1 btn-primary text-center"
+                    >
+                      Book Now
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      href="https://wa.me/919922538989?text=I%27m%20interested%20in%20the%20{room.type}%20room%20@%20Comfort%20Stay%20PG"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary"
+                    >
+                      WhatsApp
+                    </motion.a>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -107,7 +119,7 @@ const Rooms = () => {
             <br />
             <span className="font-semibold">
               Limited rooms still available in our brand new building that
-              opened in February 2025!
+              opened in July 2025!
             </span>
           </p>
         </motion.div>

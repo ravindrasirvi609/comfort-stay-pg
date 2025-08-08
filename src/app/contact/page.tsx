@@ -5,13 +5,13 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Contact Us - Comfort Stay PG | Best Girls PG in Hinjewadi Phase 1",
   description:
-    "Contact Comfort Stay PG in Hinjewadi Phase 1, Pune. New premium accommodation for women opened February 2025. Call us at 9922538989 to book your stay today.",
+    "Contact Comfort Stay PG in Hinjewadi Phase 1, Pune. New premium accommodation for women opened July 2025. Call us at 9922538989 to book your stay today.",
   keywords:
     "girls PG Hinjewadi, ladies PG Pune, Comfort Stay PG contact, Hinjewadi Phase 1 PG, working women accommodation Pune, affordable PG Hinjewadi, new PG Hinjewadi 2025",
   openGraph: {
     title: "Contact Comfort Stay PG - New Premium Girls PG in Hinjewadi",
     description:
-      "Brand new PG accommodation opened February 2025 with 2 & 3 sharing options. Contact us at 9922538989 for bookings and inquiries.",
+      "Brand new PG accommodation opened July 2025 with 2 & 3 sharing options. Contact us at 9922538989 for bookings and inquiries.",
     type: "website",
   },
 };
@@ -26,8 +26,8 @@ export default function ContactPage() {
           </h1>
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
             We&apos;re here to assist you with any queries about our brand new
-            accommodation opened in February 2025. Reach out to us for bookings
-            and we&apos;ll get back to you promptly.
+            accommodation opened in July 2025. Reach out to us for bookings and
+            we&apos;ll get back to you promptly.
           </p>
         </div>
       </section>
@@ -294,8 +294,8 @@ export default function ContactPage() {
               Schedule a Visit or Book Your Stay
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-300 mb-8">
-              Interested in our brand new PG opened in February 2025? Fill out
-              the form below to schedule a visit or book your 2 or 3 sharing
+              Interested in our brand new PG opened in July 2025? Fill out the
+              form below to schedule a visit or book your 2 or 3 sharing
               accommodation.
             </p>
 

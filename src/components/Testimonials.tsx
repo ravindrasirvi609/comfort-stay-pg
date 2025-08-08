@@ -10,7 +10,7 @@ const testimonials = [
     company: "TCS",
     rating: 5,
     comment:
-      "I moved into Comfort Stay PG when it opened in February 2025. As a woman working in IT, safety was my priority, and this place has excellent security measures. The rooms are clean, spacious, and the staff is incredibly supportive.",
+      "I moved into Comfort Stay PG when it opened in July 2025. As a woman working in IT, safety was my priority, and this place has excellent security measures. The rooms are clean, spacious, and the staff is incredibly supportive.",
   },
   {
     name: "Neha Gupta",
@@ -55,16 +55,16 @@ const Testimonials = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="glass-effect p-8 md:p-12 rounded-lg"
+          className="glass-effect p-8 md:p-12 rounded-2xl gradient-ring"
         >
-          <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
+          <h2 className="section-title text-gradient title-accent mb-8">
             What Our Residents Say
           </h2>
 
           <div className="text-center mb-8 text-gray-700 dark:text-gray-300">
             <p>
               Hear from our residents who have been with us since our opening in
-              February 2025. Experience these benefits by joining our community!
+              July 2025. Experience these benefits by joining our community!
             </p>
           </div>
 

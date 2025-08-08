@@ -98,12 +98,12 @@ const Amenities = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="glass-effect p-8 md:p-12 rounded-lg"
+          className="glass-effect p-8 md:p-12 rounded-2xl gradient-ring"
         >
-          <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
+          <h2 className="section-title text-gradient title-accent mb-10">
             Our Amenities
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {amenities.map((amenity, index) => (
               <motion.div
                 key={index}
@@ -111,7 +111,7 @@ const Amenities = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card p-4 text-center"
+                className="card stat-card p-4 text-center"
               >
                 <div className="mb-2 text-pink-600 dark:text-pink-400">
                   {amenity.icon}

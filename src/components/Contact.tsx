@@ -34,10 +34,11 @@ const Contact = () => {
       } else {
         toast.error(response.data.message || "Failed to submit inquiry");
       }
-    } catch (error: any) {
-      console.error("Contact submission error:", error);
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error("Contact submission error:", err);
       toast.error(
-        error.response?.data?.message ||
+        err.response?.data?.message ||
           "Failed to submit your inquiry. Please try again."
       );
     } finally {
@@ -60,9 +61,9 @@ const Contact = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="glass-effect p-8 md:p-12 rounded-lg"
+          className="glass-effect p-8 md:p-12 rounded-2xl gradient-ring"
         >
-          <h2 className="comfort-header text-3xl font-bold mb-8 text-center">
+          <h2 className="section-title text-gradient title-accent mb-8">
             Contact Us
           </h2>
 

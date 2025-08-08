@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, MapPin, Heart, Shield, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  MapPin,
+  Heart,
+  Shield,
+  Sparkles,
+  Phone,
+} from "lucide-react";
+import Image from "next/image";
 
 const Hero = () => {
   const featureAnimation = {
@@ -17,42 +25,36 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-pink-50 via-white to-pink-50/50 dark:from-pink-900/30 dark:via-purple-900/20 dark:to-pink-900/30" />
-
-      {/* Decorative elements */}
-      <div className="absolute top-[15%] right-[10%] w-72 h-72 bg-gradient-to-br from-pink-100/30 to-pink-50/10 rounded-full blur-3xl dark:from-pink-800/10 dark:to-purple-800/5"></div>
-      <div className="absolute bottom-[15%] left-[10%] w-80 h-80 bg-gradient-to-tr from-pink-100/30 to-pink-50/10 rounded-full blur-3xl dark:from-pink-800/10 dark:to-purple-800/5"></div>
+    <section className="relative min-h-[86vh] flex items-center overflow-hidden pt-20">
+      {/* Background Gradient & Mesh */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-pink-50 via-white to-pink-50/60 dark:from-pink-900/25 dark:via-purple-900/10 dark:to-pink-900/25" />
+      <div className="gradient-mesh" />
 
       {/* Content */}
       <div className="container mx-auto px-4 z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
+        <div className="grid lg:grid-cols-2 items-center gap-10 lg:gap-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="glass-effect p-8 md:p-12 rounded-2xl max-w-2xl shadow-xl"
+            className="glass-effect p-8 md:p-12 rounded-2xl max-w-2xl shadow-xl gradient-ring"
           >
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="comfort-header text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-gray-800 dark:text-white"
+              className="section-title text-gradient mb-4"
             >
-              Welcome to{" "}
-              <span className="text-pink-500 dark:text-pink-300">
-                Comfort Stay
-              </span>
+              Comfort Stay PG
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="comfort-subheading text-xl md:text-2xl mb-6 text-gray-600 dark:text-pink-200/90"
+              className="text-lg md:text-xl mb-6 text-gray-700 dark:text-pink-200/90"
             >
-              New Girls PG in Hinjewadi • Opened February 2025
+              Premium Girls PG in Hinjewadi • Opened July 2025
             </motion.p>
 
             <motion.p
@@ -64,6 +66,18 @@ const Hero = () => {
               Brand new facility now open with comfortable 2-sharing and
               3-sharing rooms.
             </motion.p>
+
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <span className="pill">
+                <Shield size={16} /> 24/7 Security
+              </span>
+              <span className="pill">
+                <Sparkles size={16} /> Premium Amenities
+              </span>
+              <span className="pill">
+                <MapPin size={16} /> Prime Location
+              </span>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -79,36 +93,58 @@ const Hero = () => {
               </p>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <a
-                href="#contact"
+            <div className="flex flex-wrap gap-3">
+              <motion.a
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                href="/contact"
+                onClick={(e) => {
+                  const el = document.getElementById("contact");
+                  if (el) {
+                    e.preventDefault();
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    // Update URL hash without page jump
+                    history.replaceState(null, "", "#contact");
+                  }
+                }}
                 className="btn-primary inline-flex items-center gap-2"
               >
                 Book Your Stay
                 <ArrowRight size={18} />
-              </a>
-            </motion.div>
+              </motion.a>
+              <motion.a
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.55 }}
+                href="https://wa.me/919922538989?text=Hi%20Comfort%20Stay%20PG%2C%20I'm%20interested%20in%20a%20room"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary inline-flex items-center gap-2"
+              >
+                WhatsApp Us
+                <Phone size={18} />
+              </motion.a>
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="w-full max-w-lg"
+            className="w-full max-w-xl lg:justify-self-end"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-2 gap-5">
               <motion.div
                 custom={0}
                 variants={featureAnimation}
                 initial="hidden"
                 animate="visible"
-                className="card p-6 bg-white/90 dark:bg-pink-900/20 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
+                className="card stat-card p-6 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
               >
                 <div className="w-14 h-14 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-4 shadow-inner">
                   <Shield
@@ -129,7 +165,7 @@ const Hero = () => {
                 variants={featureAnimation}
                 initial="hidden"
                 animate="visible"
-                className="card p-6 bg-white/90 dark:bg-pink-900/20 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
+                className="card stat-card p-6 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
               >
                 <div className="w-14 h-14 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-4 shadow-inner">
                   <Heart
@@ -141,7 +177,7 @@ const Hero = () => {
                   Brand New Building
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Modern facilities opened February 2025
+                  Modern facilities opened July 2025
                 </p>
               </motion.div>
 
@@ -150,7 +186,7 @@ const Hero = () => {
                 variants={featureAnimation}
                 initial="hidden"
                 animate="visible"
-                className="card p-6 bg-white/90 dark:bg-pink-900/20 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
+                className="card stat-card p-6 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
               >
                 <div className="w-14 h-14 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-4 shadow-inner">
                   <Sparkles
@@ -171,7 +207,7 @@ const Hero = () => {
                 variants={featureAnimation}
                 initial="hidden"
                 animate="visible"
-                className="card p-6 bg-white/90 dark:bg-pink-900/20 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
+                className="card stat-card p-6 shadow-lg hover:shadow-xl flex flex-col items-center text-center"
               >
                 <div className="w-14 h-14 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-4 shadow-inner">
                   <MapPin
@@ -186,6 +222,16 @@ const Hero = () => {
                   Walking distance to Hinjewadi IT Park
                 </p>
               </motion.div>
+            </div>
+            <div className="mt-6 hidden md:block overflow-hidden rounded-xl gradient-ring">
+              <Image
+                src="/gallery/building.jpg"
+                alt="Comfort Stay PG Building"
+                className="w-full h-56 object-cover"
+                width={800}
+                height={400}
+                priority
+              />
             </div>
           </motion.div>
         </div>

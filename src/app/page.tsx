@@ -7,6 +7,7 @@ import Location from "@/components/Location";
 import Testimonials from "@/components/Testimonials";
 import Contact from "@/components/Contact";
 import SEOHead from "@/components/SEOHead";
+import CTA from "@/components/CTA";
 import { Metadata } from "next";
 
 // Override default metadata for homepage
@@ -41,6 +42,7 @@ export default function Home() {
       <About />
       <Amenities />
       <Rooms />
+      <CTA />
       <Gallery />
       <Location />
       <Testimonials />
