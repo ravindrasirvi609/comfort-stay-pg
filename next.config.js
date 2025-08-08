@@ -10,6 +10,7 @@ const nextConfig = {
       "lh6.googleusercontent.com",
     ],
   },
+  
   webpack: (config) => {
     // Ignore source map files during build
     config.module.rules.push({
