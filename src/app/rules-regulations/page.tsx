@@ -154,7 +154,7 @@ export default function RulesAndRegulations() {
         "Monthly rent must be paid by the 5th of each month.",
         "Security deposit is equal to one month's rent and is refundable after deducting for damages, if any.",
         "Late payments will incur a penalty of 5% per week.",
-        "Payment can be made through online transfer, UPI, or at the reception.",
+        "Payment can be made through cash at the reception.",
         "Receipts will be provided for all payments.",
         "Early Departure Payment Policy: When a resident decides to leave the PG, they must pay the entire month's rent for that month, regardless of the departure date. Alternatively, they can choose to stay on a day-to-day basis with daily charges until the end of the month. For example, if a resident wants to leave on the 8th or 24th of a month, they must either pay the full month's rent or continue staying with daily charges.",
       ],

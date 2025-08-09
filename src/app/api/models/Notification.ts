@@ -31,6 +31,8 @@ const NotificationSchema = new Schema<INotification>(
         "NoticePeriod",
         "Notice",
         "Contact",
+        // Added missing type used in code & interface
+        "Checkout",
       ],
       default: "System",
     },
@@ -50,6 +52,8 @@ const NotificationSchema = new Schema<INotification>(
         "Room",
         "Notice",
         "ContactInquiry",
+        // Added missing related model used in code & interface
+        "UserArchive",
       ],
     },
 

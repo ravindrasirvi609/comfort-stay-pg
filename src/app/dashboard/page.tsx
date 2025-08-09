@@ -1,33 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
-import {
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaIdCard,
-  FaCalendarAlt,
-  FaDoorOpen,
-  FaBed,
-  FaRupeeSign,
-  FaBell,
-  FaExclamationCircle,
-  FaFileInvoiceDollar,
-  FaChevronRight,
-  FaCalendarTimes,
-  FaSignOutAlt,
-  FaDownload,
-  FaDoorClosed,
-  FaBookOpen,
-  FaStar,
-} from "react-icons/fa";
-import { motion } from "framer-motion";
-import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
+import {
+  FaBell,
+  FaBookOpen,
+  FaCalendarAlt,
+  FaCalendarTimes,
+  FaDoorClosed,
+  FaDoorOpen,
+  FaDownload,
+  FaExclamationCircle,
+  FaRupeeSign,
+  FaSignOutAlt,
+  FaChevronRight,
+  FaBed,
+  FaIdCard,
+  FaFileInvoiceDollar,
+} from "react-icons/fa";
+import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import ExitSurvey from "@/components/ExitSurvey";
 
 interface User {
@@ -101,7 +97,7 @@ interface Notice {
   };
 }
 
-export default function UserProfilePage() {
+export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -109,7 +105,7 @@ export default function UserProfilePage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [activeTab, setActiveTab] = useState("overview");
+  // UI state
   const [roomDetails, setRoomDetails] = useState<{
     _id: string;
     roomNumber: string;
@@ -130,75 +126,110 @@ export default function UserProfilePage() {
   const [isCompleteCheckout, setIsCompleteCheckout] = useState(false);
 
   useEffect(() => {
-    // Fetch dashboard data
-    const fetchProfileData = async () => {
+    const load = async () => {
       try {
         setLoading(true);
+        const [userRes, payRes, compRes, noticeRes] = await Promise.all([
+          axios.get("/api/auth/me"),
+          axios.get("/api/payments"),
+          axios.get("/api/complaints"),
+          axios.get("/api/notices"),
+        ]);
 
-        // Fetch current user
-        const userResponse = await axios.get("/api/auth/me");
-        if (userResponse.data.success) {
-          const userData = userResponse.data.user;
-          console.log("User data:", userData);
-          setUser(userData);
-
-          // Fetch room details if roomId exists
-          if (userData.roomId && typeof userData.roomId === "object") {
-            console.log("Room ID is an object:", userData.roomId);
-            setRoomDetails(userData.roomId);
-          } else if (userData.roomId) {
+        if (userRes.data.success) {
+          const u: User = userRes.data.user;
+          setUser(u);
+          if (u.roomId && typeof u.roomId === "object") {
+            setRoomDetails(u.roomId);
+          } else if (u.roomId) {
             try {
-              console.log("Fetching room details for roomId:", userData.roomId);
-              const roomResponse = await axios.get(
-                `/api/rooms/${userData.roomId}`
-              );
-              console.log("Room API response:", roomResponse.data);
-
-              if (roomResponse.data.success && roomResponse.data.room) {
-                // Extract relevant fields for our component
-                const roomData = {
-                  _id: roomResponse.data.room._id,
-                  roomNumber: roomResponse.data.room.roomNumber,
-                  type: roomResponse.data.room.type,
-                  price: roomResponse.data.room.price,
-                };
-                console.log("Setting room details:", roomData);
-                setRoomDetails(roomData);
+              const roomRes = await axios.get(`/api/rooms/${u.roomId}`);
+              if (roomRes.data.success && roomRes.data.room) {
+                setRoomDetails({
+                  _id: roomRes.data.room._id,
+                  roomNumber: roomRes.data.room.roomNumber,
+                  type: roomRes.data.room.type,
+                  price: roomRes.data.room.price,
+                });
               }
-            } catch (err) {
-              console.error("Error fetching room details:", err);
-            }
+            } catch {}
           }
         }
 
-        // Fetch payments
-        const paymentsResponse = await axios.get("/api/payments");
-        if (paymentsResponse.data.success) {
-          setPayments(paymentsResponse.data.payments || []);
-        }
-
-        // Fetch complaints
-        const complaintsResponse = await axios.get("/api/complaints");
-        if (complaintsResponse.data.success) {
-          setComplaints(complaintsResponse.data.complaints || []);
-        }
-
-        // Fetch notices
-        const noticesResponse = await axios.get("/api/notices");
-        if (noticesResponse.data.success) {
-          setNotices(noticesResponse.data.notices || []);
-        }
+        if (payRes.data.success) setPayments(payRes.data.payments || []);
+        if (compRes.data.success) setComplaints(compRes.data.complaints || []);
+        if (noticeRes.data.success) setNotices(noticeRes.data.notices || []);
 
         setLoading(false);
-      } catch (err: unknown) {
-        console.error("Error fetching profile data:", err);
-        setError("Failed to load profile data");
+      } catch {
+        setError("Failed to load dashboard");
         setLoading(false);
       }
     };
-
-    fetchProfileData();
+    load();
   }, []);
+
+  // Derived memoized values (must appear before any early returns to satisfy hooks rules)
+  const currentMonth = useMemo(
+    () =>
+      new Date().toLocaleString("default", { month: "long", year: "numeric" }),
+    []
+  );
+
+  const currentMonthPayment = useMemo(
+    () =>
+      payments.find(
+        (p) =>
+          p.month === currentMonth ||
+          (Array.isArray(p.months) && p.months.includes(currentMonth))
+      ),
+    [payments, currentMonth]
+  );
+
+  const lastPaid = useMemo(
+    () =>
+      [...payments]
+        .filter((p) => p.paymentStatus?.toLowerCase() === "paid")
+        .sort(
+          (a, b) =>
+            new Date(b.paymentDate).getTime() -
+            new Date(a.paymentDate).getTime()
+        )[0],
+    [payments]
+  );
+
+  const nextDuePayment = useMemo(
+    () =>
+      [...payments]
+        .filter((p) =>
+          ["due", "overdue", "partial"].includes(
+            (p.paymentStatus || "").toLowerCase()
+          )
+        )
+        .sort((a, b) => {
+          const ad = a.dueDate
+            ? new Date(a.dueDate).getTime()
+            : Number.MAX_SAFE_INTEGER;
+          const bd = b.dueDate
+            ? new Date(b.dueDate).getTime()
+            : Number.MAX_SAFE_INTEGER;
+          return ad - bd;
+        })[0],
+    [payments]
+  );
+
+  const moveIn = user?.moveInDate ? new Date(user.moveInDate) : null;
+  const monthsStayed = moveIn
+    ? Math.max(
+        0,
+        (new Date().getFullYear() - moveIn.getFullYear()) * 12 +
+          (new Date().getMonth() - moveIn.getMonth())
+      )
+    : 0;
+
+  const activeComplaints = complaints.filter(
+    (c) => (c.status || "").toLowerCase() !== "resolved"
+  );
 
   const handleNoticePeriodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -377,9 +408,9 @@ export default function UserProfilePage() {
     return (
       <div className="min-h-screen flex justify-center items-center">
         <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading your profile...
+            Loading your dashboard…
           </p>
         </div>
       </div>
@@ -410,894 +441,585 @@ export default function UserProfilePage() {
     );
   }
 
-  // Get current month for displaying payment status
-  const currentMonth = new Date().toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
+  // (Duplicate derived variable block removed; variables declared earlier before early returns)
 
-  // Find payment for current month by checking both month field and months array
-  const currentMonthPayment = payments.find(
-    (payment) =>
-      payment.month === currentMonth ||
-      (payment.months &&
-        Array.isArray(payment.months) &&
-        payment.months.includes(currentMonth))
-  );
+  // Helpers
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
 
+  const classifyNotice = (title: string, description: string) => {
+    const text = `${title} ${description}`.toLowerCase();
+    if (/(emergency|outage|power|water shutdown|urgent|fire|leak)/.test(text)) {
+      return {
+        label: "Emergency",
+        badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+      };
+    }
+    if (/(maintenance|repair|router|wifi|cleaning)/.test(text)) {
+      return {
+        label: "Maintenance",
+        badge:
+          "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+      };
+    }
+    if (/(rent|payment|due|fees)/.test(text)) {
+      return {
+        label: "Rent",
+        badge:
+          "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+      };
+    }
+    if (/(event|festival|movie|dinner|party)/.test(text)) {
+      return {
+        label: "Event",
+        badge:
+          "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+      };
+    }
+    return {
+      label: "General",
+      badge: "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
+    };
+  };
+
+  // Return main dashboard UI
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Profile Header Section */}
+      {/* Header / Welcome Bar */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="backdrop-blur-lg bg-gradient-to-r from-pink-500/10 via-indigo-300/10 to-purple-600/10 dark:from-pink-500/10 dark:via-indigo-500/5 dark:to-purple-600/10 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl hover:shadow-pink-200/20 dark:hover:shadow-pink-700/20 transition-all duration-300 p-8 mb-8"
+        className="rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl p-6 md:p-8 mb-8 backdrop-blur-lg bg-gradient-to-r from-pink-500/10 via-indigo-300/10 to-purple-600/10 dark:from-pink-500/10 dark:via-indigo-500/5 dark:to-purple-600/10"
       >
-        <div className="flex flex-col md:flex-row md:items-center">
-          {/* Profile Image */}
-          <motion.div
-            className="mb-4 md:mb-0 md:mr-8"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-pink-500 via-pink-400 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white/80 dark:border-gray-800/80 shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/80 dark:border-gray-800/80 shadow-lg bg-white/60 dark:bg-gray-800/60">
               {user?.profileImage && user.profileImage.trim() !== "" ? (
                 <Image
                   src={user.profileImage}
                   alt={user?.name || "User"}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
-                  width={100}
-                  height={100}
                 />
               ) : (
                 <Image
-                  src="/default-avatar.png"
-                  alt="Default Avatar"
+                  src="/logo.png"
+                  alt="Avatar"
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
-                  width={100}
-                  height={100}
                 />
               )}
             </div>
-          </motion.div>
-
-          {/* User Info */}
-          <motion.div
-            className="flex-1"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400">
-              {user?.name}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-3">
-              <motion.div
-                className="flex items-center px-3 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
-                whileHover={{
-                  scale: 1.05,
-                  backgroundColor: "rgba(255,255,255,0.7)",
-                }}
-              >
-                <FaIdCard className="mr-2 text-pink-500 dark:text-pink-400" />
-                <span className="font-medium">{user?.pgId}</span>
-              </motion.div>
-              <motion.div
-                className="flex items-center px-3 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
-                whileHover={{
-                  scale: 1.05,
-                  backgroundColor: "rgba(255,255,255,0.7)",
-                }}
-              >
-                <FaDoorOpen className="mr-2 text-purple-500 dark:text-purple-400" />
-                <span className="font-medium">
-                  Room{" "}
-                  {roomDetails
-                    ? roomDetails.roomNumber
-                    : typeof user?.roomId === "object" &&
-                        user?.roomId?.roomNumber
-                      ? user.roomId.roomNumber
-                      : "Not Assigned"}
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {greeting()}, {user?.name?.split(" ")[0]}.
+              </p>
+              <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 dark:from-pink-400 dark:via-purple-400 dark:to-indigo-400">
+                Here’s your PG update for today
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/70 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
+                  <FaIdCard className="mr-2 text-pink-500" />{" "}
+                  {user?.pgId || "—"}
                 </span>
-              </motion.div>
-              {user?.bedNumber && (
-                <motion.div
-                  className="flex items-center px-3 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
-                  whileHover={{
-                    scale: 1.05,
-                    backgroundColor: "rgba(255,255,255,0.7)",
-                  }}
-                >
-                  <FaBed className="mr-2 text-indigo-500 dark:text-indigo-400" />
-                  <span className="font-medium">Bed #{user.bedNumber}</span>
-                </motion.div>
-              )}
-              {user?.isOnNoticePeriod && user?.lastStayingDate && (
-                <motion.div
-                  className="flex items-center px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/30 shadow-sm"
-                  whileHover={{ scale: 1.05 }}
-                  initial={{ x: 10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <FaCalendarTimes className="mr-2" />
-                  <span className="font-medium">
-                    Leaving on{" "}
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/70 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
+                  <FaDoorOpen className="mr-2 text-purple-500" /> Room{" "}
+                  {roomDetails?.roomNumber ||
+                    (typeof user?.roomId === "object" &&
+                      user?.roomId?.roomNumber) ||
+                    "Not Assigned"}
+                </span>
+                {user?.bedNumber && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/70 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
+                    <FaBed className="mr-2 text-indigo-500" /> Bed #
+                    {user.bedNumber}
+                  </span>
+                )}
+                {user?.isOnNoticePeriod && user?.lastStayingDate && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/30">
+                    <FaCalendarTimes className="mr-2" /> Leaving on{" "}
                     {new Date(user.lastStayingDate).toLocaleDateString("en-IN")}
                   </span>
-                </motion.div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 mt-4">
-              <Link
-                href="/rules-regulations"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                <FaBookOpen className="mr-2" />
-                Rules & Regulations
-              </Link>
-
-              {!user?.isOnNoticePeriod && !user?.moveOutDate && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsNoticePeriodDialogOpen(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  <FaSignOutAlt className="mr-2" />
-                  Submit Notice
-                </motion.button>
-              )}
-              {user?.isOnNoticePeriod && !user?.moveOutDate && (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsWithdrawDialogOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    <FaCalendarAlt className="mr-2" />
-                    Withdraw Notice
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsCheckoutDialogOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    <FaDoorClosed className="mr-2" />
-                    Checkout Now
-                  </motion.button>
-                </>
-              )}
-              {user?.moveOutDate && (
-                <div className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                  <FaDoorClosed className="mr-2" />
-                  Checked out on{" "}
-                  {new Date(user.moveOutDate).toLocaleDateString("en-IN")}
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Payment Status Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-            className="mt-6 md:mt-0 md:ml-4"
-          >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className={`rounded-xl p-5 shadow-lg ${
-                currentMonthPayment
-                  ? currentMonthPayment.paymentStatus === "Paid"
-                    ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 border border-green-200 dark:border-green-800/50"
-                    : currentMonthPayment.paymentStatus === "Partial"
-                      ? "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800/50"
-                      : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 border border-red-200 dark:border-red-800/50"
-                  : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 border border-red-200 dark:border-red-800/50"
-              }`}
-            >
-              <div className="flex items-center mb-2">
-                <FaRupeeSign
-                  className={`mr-2 ${
-                    currentMonthPayment
-                      ? currentMonthPayment.paymentStatus === "Paid"
-                        ? "text-green-600 dark:text-green-400"
-                        : currentMonthPayment.paymentStatus === "Partial"
-                          ? "text-yellow-600 dark:text-yellow-400"
-                          : "text-red-600 dark:text-red-400"
-                      : "text-red-600 dark:text-red-400"
-                  }`}
-                />
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {currentMonth} Rent
-                </h3>
+                )}
               </div>
-              <p
-                className={`text-2xl font-bold ${
-                  currentMonthPayment
-                    ? currentMonthPayment.paymentStatus === "Paid"
-                      ? "text-green-700 dark:text-green-400"
-                      : currentMonthPayment.paymentStatus === "Partial"
-                        ? "text-yellow-700 dark:text-yellow-400"
-                        : "text-red-700 dark:text-red-400"
-                    : "text-red-700 dark:text-red-400"
-                }`}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 md:gap-3">
+            <Link
+              href="/rules-regulations"
+              className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+            >
+              <FaBookOpen className="mr-2" /> Rules
+            </Link>
+            {!user?.isOnNoticePeriod && !user?.moveOutDate && (
+              <button
+                onClick={() => setIsNoticePeriodDialogOpen(true)}
+                className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
               >
-                {currentMonthPayment
-                  ? currentMonthPayment.paymentStatus
-                  : "Due"}
-              </p>
-              <p className="text-sm mt-1 font-medium">
-                {currentMonthPayment
-                  ? `Paid on ${new Date(currentMonthPayment.paymentDate).toLocaleDateString()}`
-                  : roomDetails?.price
-                    ? `₹${roomDetails.price.toLocaleString("en-IN")} due`
-                    : typeof user?.roomId === "object" && user?.roomId?.price
-                      ? `₹${user.roomId.price.toLocaleString("en-IN")} due`
-                      : ""}
-              </p>
-              {!currentMonthPayment && (
-                <div className="mt-2 pt-2 border-t border-red-200 dark:border-red-800/30">
-                  <Link
-                    href="/dashboard/payments/new"
-                    className="text-xs text-red-700 dark:text-red-400 font-medium hover:underline flex items-center"
-                  >
-                    Pay Now <FaChevronRight className="ml-1 text-xs" />
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
+                <FaSignOutAlt className="mr-2" /> Submit Notice
+              </button>
+            )}
+            {user?.isOnNoticePeriod && !user?.moveOutDate && (
+              <>
+                <button
+                  onClick={() => setIsWithdrawDialogOpen(true)}
+                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                >
+                  <FaCalendarAlt className="mr-2" /> Withdraw Notice
+                </button>
+                <button
+                  onClick={() => setIsCheckoutDialogOpen(true)}
+                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                >
+                  <FaDoorClosed className="mr-2" /> Checkout
+                </button>
+              </>
+            )}
+            {user?.moveOutDate && (
+              <div className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                <FaDoorClosed className="mr-2" /> Checked out on{" "}
+                {new Date(user.moveOutDate).toLocaleDateString("en-IN")}
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
 
-      {/* Navigation Tabs */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="flex overflow-x-auto mb-8 backdrop-blur-md bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-md hover:shadow-lg transition-shadow duration-300"
-      >
-        {["overview", "payments", "complaints", "notices"].map((tab) => (
-          <motion.button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-4 px-6 text-center font-medium transition-all duration-200 ${
-              activeTab === tab
-                ? "text-white bg-gradient-to-r from-pink-500 to-purple-600 shadow-md"
-                : "text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-gray-700/50"
-            }`}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+      {/* Quick Alerts */}
+      <div className="space-y-3 mb-6">
+        {!currentMonthPayment && (
+          <div className="flex items-start gap-3 p-4 rounded-lg border bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900/40">
+            <FaExclamationCircle className="mt-0.5 text-red-600 dark:text-red-400" />
+            <div className="flex-1">
+              <p className="font-medium text-red-800 dark:text-red-300">
+                Rent due — Pay now
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-400">
+                Your {currentMonth} rent{" "}
+                {roomDetails?.price
+                  ? `of ₹${roomDetails.price.toLocaleString("en-IN")}`
+                  : ""}{" "}
+                is pending.
+              </p>
+            </div>
+            <Link
+              href="#payments"
+              className="text-sm font-medium text-red-700 dark:text-red-300 hover:underline flex items-center"
+            >
+              Pay Now <FaChevronRight className="ml-1 text-xs" />
+            </Link>
+          </div>
+        )}
+        {/* Show first emergency/maintenance notice as alert */}
+        {(() => {
+          const urgent = notices.find((n) =>
+            /(emergency|outage|water|power|maintenance)/i.test(
+              `${n.title} ${n.description}`
+            )
+          );
+          if (!urgent) return null;
+          const c = classifyNotice(urgent.title, urgent.description);
+          return (
+            <div
+              className={`flex items-start gap-3 p-4 rounded-lg border ${c.label === "Emergency" ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900/40" : c.label === "Maintenance" ? "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-900/40" : "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-900/40"}`}
+            >
+              <FaBell className="mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium">{urgent.title}</p>
+                <p className="text-sm opacity-80 line-clamp-2">
+                  {urgent.description}
+                </p>
+              </div>
+              <Link
+                href="#notices"
+                className="text-sm font-medium hover:underline flex items-center"
+              >
+                View <FaChevronRight className="ml-1 text-xs" />
+              </Link>
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
+        <div className="rounded-xl p-4 border bg-white/60 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-card">
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <FaRupeeSign className="mr-2 text-green-600" /> Rent Status
+          </div>
+          <div
+            className={`mt-2 text-xl font-bold ${currentMonthPayment?.paymentStatus === "Paid" ? "text-green-700 dark:text-green-400" : currentMonthPayment ? (currentMonthPayment.paymentStatus === "Partial" ? "text-amber-700 dark:text-amber-400" : "text-red-700 dark:text-red-400") : "text-red-700 dark:text-red-400"}`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </motion.button>
-        ))}
-      </motion.div>
+            {currentMonthPayment
+              ? currentMonthPayment.paymentStatus
+              : "Pending"}
+          </div>
+          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+            {currentMonthPayment
+              ? `Paid on ${new Date(currentMonthPayment.paymentDate).toLocaleDateString("en-IN")}`
+              : "Tap to pay"}
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border bg-white/60 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-card">
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <FaCalendarAlt className="mr-2 text-indigo-600" /> Next Due
+          </div>
+          <div className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
+            {nextDuePayment?.dueDate
+              ? new Date(nextDuePayment.dueDate).toLocaleDateString("en-IN")
+              : currentMonthPayment
+                ? "—"
+                : "Due now"}
+          </div>
+          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+            {nextDuePayment?.amount
+              ? `₹${nextDuePayment.amount.toLocaleString("en-IN")}`
+              : roomDetails?.price
+                ? `₹${roomDetails.price.toLocaleString("en-IN")}`
+                : ""}
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border bg-white/60 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-card">
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <BiSolidMessageSquareDetail className="mr-2 text-purple-600" />{" "}
+            Complaints
+          </div>
+          <div className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
+            {activeComplaints.length} Active
+          </div>
+          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+            {complaints.length} total
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border bg-white/60 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-card">
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <FaBell className="mr-2 text-pink-600" /> Notices
+          </div>
+          <div className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
+            {notices.length}
+          </div>
+          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+            Recent updates
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border bg-white/60 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-card">
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <FaCalendarAlt className="mr-2 text-emerald-600" /> Stay Duration
+          </div>
+          <div className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
+            {moveIn ? `${monthsStayed} months` : "—"}
+          </div>
+          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+            {moveIn
+              ? `Since ${moveIn.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}`
+              : "Move-in not set"}
+          </p>
+        </div>
+      </div>
 
-      {/* Content based on active tab */}
+      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {activeTab === "overview" && (
-          <>
-            {/* Roommate Conflict Resolution Warning */}
-            {/* <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="lg:col-span-3 mb-6"
-            >
-              <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-lg shadow-sm">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <FaExclamationCircle className="h-5 w-5 text-amber-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                      Important Notice: Roommate Conflict Resolution
-                    </h3>
-                    <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
-                      <p>
-                        If you experience any issues with your roommate's
-                        behavior, please:
-                      </p>
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>
-                          Do not engage in direct conflicts or confrontations
-                        </li>
-                        <li>Report the matter directly to the PG office</li>
-                        <li>
-                          Let the management handle the situation professionally
-                        </li>
-                        <li>
-                          Remember: Getting involved in conflicts may make you
-                          equally responsible
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div> */}
-
-            {/* Notice Period Policy Warning */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="lg:col-span-3 mb-6"
-            >
-              <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg shadow-sm">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <FaCalendarAlt className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      Notice Period Policy
-                    </h3>
-                    <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                      <p className="mb-2">
-                        When planning to leave the PG, please note our notice
-                        period policy:
-                      </p>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li>Minimum notice period required: 15 days</li>
-                        <li>
-                          If notice period is more than 15 days: ₹1500 refund
-                          from booking amount
-                        </li>
-                        <li>
-                          If notice period is less than 15 days: No refund will
-                          be provided
-                        </li>
-                      </ul>
-                      <p className="mt-2 text-blue-600 dark:text-blue-400">
-                        Please plan your departure accordingly to ensure you
-                        receive the refund.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Personal Information Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="backdrop-blur-lg bg-gradient-to-br from-white/80 to-white/50 dark:from-gray-800/80 dark:to-gray-800/50 rounded-xl border border-white/30 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:col-span-1"
-            >
-              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 mb-6 flex items-center">
-                <div className="p-2 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white mr-3">
-                  <FaUser />
-                </div>
-                Personal Information
-              </h2>
-
-              <div className="space-y-5">
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                >
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Full Name
-                  </h3>
-                  <p className="text-gray-900 dark:text-white font-medium">
-                    {user?.name}
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                >
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    <div className="flex items-center">
-                      <FaEnvelope className="mr-2 text-pink-500 dark:text-pink-400" />
-                      Email Address
-                    </div>
-                  </h3>
-                  <p className="text-gray-900 dark:text-white">{user?.email}</p>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                >
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    <div className="flex items-center">
-                      <FaPhone className="mr-2 text-purple-500 dark:text-purple-400" />
-                      Phone Number
-                    </div>
-                  </h3>
-                  <p className="text-gray-900 dark:text-white">{user?.phone}</p>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                >
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    <div className="flex items-center">
-                      <FaIdCard className="mr-2 text-indigo-500 dark:text-indigo-400" />
-                      PG ID
-                    </div>
-                  </h3>
-                  <p className="text-gray-900 dark:text-white">{user?.pgId}</p>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                >
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    <div className="flex items-center">
-                      <FaCalendarAlt className="mr-2 text-pink-500 dark:text-pink-400" />
-                      Move-in Date
-                    </div>
-                  </h3>
-                  <p className="text-gray-900 dark:text-white">
-                    {new Date(user?.moveInDate || "").toLocaleDateString(
-                      "en-IN",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
-                  </p>
-                </motion.div>
-
-                {user?.guardianMobileNumber && (
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      <div className="flex items-center">
-                        <FaPhone className="mr-2 text-indigo-500 dark:text-indigo-400" />
-                        Emergency Contact
-                      </div>
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {user.guardianMobileNumber}
-                    </p>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Room Information Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="backdrop-blur-lg bg-gradient-to-br from-white/80 to-white/50 dark:from-gray-800/80 dark:to-gray-800/50 rounded-xl border border-white/30 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:col-span-1"
-            >
-              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 mb-6 flex items-center">
-                <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white mr-3">
-                  <FaDoorOpen />
-                </div>
-                Room Information
-              </h2>
-
-              {roomDetails ? (
-                <div className="space-y-5">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-r from-purple-500/10 to-indigo-600/10 dark:from-purple-500/5 dark:to-indigo-600/5 rounded-lg p-6 border border-purple-200 dark:border-purple-900/30 mb-6 text-center shadow-md"
-                  >
-                    <h3 className="font-bold text-3xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 mb-2">
-                      Room {roomDetails.roomNumber || "Not assigned"}
-                    </h3>
-                    <div className="flex justify-center mb-2 text-yellow-400">
-                      <FaStar />
-                      <FaStar />
-                      <FaStar />
-                      <FaStar />
-                      <FaStar />
-                    </div>
-                    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/70 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 text-sm font-medium border border-purple-100 dark:border-purple-900/30 shadow-sm">
-                      {roomDetails.type
-                        ? `${roomDetails.type.charAt(0).toUpperCase() + roomDetails.type.slice(1)} Room`
-                        : "Room"}
-                      {user?.bedNumber ? ` • Bed #${user.bedNumber}` : ""}
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Room Type
-                    </h3>
-                    <p className="text-gray-900 dark:text-white capitalize flex items-center">
-                      <FaDoorOpen className="mr-2 text-purple-500" />
-                      {roomDetails.type || "Not specified"}
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      <div className="flex items-center">
-                        <FaRupeeSign className="mr-2 text-indigo-500 dark:text-indigo-400" />
-                        Monthly Rent
-                      </div>
-                    </h3>
-                    <p className="text-gray-900 dark:text-white font-medium">
-                      {roomDetails.price
-                        ? `₹${roomDetails.price.toLocaleString("en-IN")}`
-                        : "₹"}
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      <div className="flex items-center">
-                        <FaBed className="mr-2 text-purple-500 dark:text-purple-400" />
-                        Bed Number
-                      </div>
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {user?.bedNumber || "Not assigned"}
-                    </p>
-                  </motion.div>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-6 mb-6 shadow-sm text-center"
-                  >
-                    <div className="bg-yellow-100 dark:bg-yellow-800/30 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FaExclamationCircle className="text-yellow-600 dark:text-yellow-400 text-xl" />
-                    </div>
-                    <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                      No Room Assigned
-                    </h3>
-                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                      Please contact the administration to get a room assigned
-                      to you.
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Room
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      Not assigned
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Room Type
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      Not specified
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      <div className="flex items-center">
-                        <FaRupeeSign className="mr-2 text-indigo-500 dark:text-indigo-400" />
-                        Monthly Rent
-                      </div>
-                    </h3>
-                    <p className="text-gray-900 dark:text-white font-medium">
-                      ₹
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="p-3 rounded-lg bg-white/70 dark:bg-gray-700/30 hover:bg-white/90 dark:hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      <div className="flex items-center">
-                        <FaBed className="mr-2 text-purple-500 dark:text-purple-400" />
-                        Bed Number
-                      </div>
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {user?.bedNumber || "Not assigned"}
-                    </p>
-                  </motion.div>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-
-        {activeTab === "payments" && (
-          <div className="lg:col-span-3">
-            <div className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Payments Section */}
+          <section
+            id="payments"
+            className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center">
-                  <FaFileInvoiceDollar className="mr-3 text-pink-600" />
-                  Payment History
+                  <FaFileInvoiceDollar className="mr-3 text-pink-600" />{" "}
+                  Payments
                 </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Last paid:{" "}
+                  {lastPaid
+                    ? `${new Date(lastPaid.paymentDate).toLocaleDateString("en-IN")}`
+                    : "—"}
+                </p>
               </div>
-
-              {payments.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead>
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Month
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Payment Date
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/30 dark:bg-gray-800/30">
-                      {payments.map((payment) => (
-                        <tr
-                          key={payment._id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                        >
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {payment.month ||
-                              (payment.months && payment.months.join(", "))}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                            ₹{payment.amount.toLocaleString("en-IN")}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 rounded text-xs font-medium ${
-                                payment.paymentStatus === "Paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                                  : payment.paymentStatus === "Partial"
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
-                              }`}
-                            >
-                              {payment.paymentStatus}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {new Date(payment.paymentDate).toLocaleDateString(
-                              "en-IN",
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <Link
-                              href={`/api/payments/${payment._id}/receipt`}
-                              className="inline-flex items-center px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium transition-all duration-200"
-                            >
-                              <FaDownload className="mr-1" />
-                              Download
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="bg-gray-100 dark:bg-gray-800 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaFileInvoiceDollar className="text-gray-400 dark:text-gray-500 text-3xl" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No payment records
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-                    You don&apos;t have any payment records yet. Once you make
-                    payments, they will appear here.
-                  </p>
-                  <Link
-                    href="/dashboard/payments/new"
-                    className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-all duration-200 text-sm font-medium"
-                  >
-                    Make Your First Payment
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "complaints" && (
-          <div className="lg:col-span-3">
-            <div className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center">
-                  <BiSolidMessageSquareDetail className="mr-3 text-pink-600" />
-                  My Complaints
-                </h2>
-
+              {!currentMonthPayment && (
                 <Link
-                  href="/dashboard/complaints/new"
-                  className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-all duration-200 text-sm font-medium"
+                  href="#"
+                  className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-sm font-medium"
                 >
-                  New Complaint
+                  Pay Now
                 </Link>
-              </div>
-
-              {complaints.length > 0 ? (
-                <div className="space-y-4">
-                  {complaints.map((complaint) => (
-                    <div
-                      key={complaint._id}
-                      className="bg-white/70 dark:bg-gray-800/70 rounded-lg border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="mb-3 md:mb-0">
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                            {complaint.title}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                            {complaint.description}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col md:items-end space-y-2">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
-                              complaint.status === "Open"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                                : complaint.status === "In Progress"
-                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
-                                  : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                            }`}
-                          >
-                            {complaint.status}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(complaint.createdAt).toLocaleDateString(
-                              "en-IN",
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                        <Link
-                          href={`/dashboard/complaints/${complaint._id}`}
-                          className="text-pink-600 hover:text-pink-700 dark:text-pink-500 dark:hover:text-pink-400 text-sm font-medium flex items-center"
-                        >
-                          View Details
-                          <FaChevronRight className="ml-1 text-xs" />
-                        </Link>
-                      </div> */}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="bg-gray-100 dark:bg-gray-800 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BiSolidMessageSquareDetail className="text-gray-400 dark:text-gray-500 text-3xl" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No complaints yet
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-                    You haven&apos;t filed any complaints yet. If you encounter
-                    any issues with your accommodation, please let us know.
-                  </p>
-                  <Link
-                    href="/dashboard/complaints/new"
-                    className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-all duration-200 text-sm font-medium"
-                  >
-                    Report an Issue
-                  </Link>
-                </div>
               )}
             </div>
-          </div>
-        )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Amount
+                </p>
+                <p className="text-lg font-semibold">
+                  {roomDetails?.price
+                    ? `₹${roomDetails.price.toLocaleString("en-IN")}`
+                    : lastPaid?.amount
+                      ? `₹${lastPaid.amount.toLocaleString("en-IN")}`
+                      : "—"}
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Next Due
+                </p>
+                <p className="text-lg font-semibold">
+                  {nextDuePayment?.dueDate
+                    ? new Date(nextDuePayment.dueDate).toLocaleDateString(
+                        "en-IN"
+                      )
+                    : currentMonthPayment
+                      ? "—"
+                      : "Due now"}
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Modes
+                </p>
+                <p className="text-sm">Cash Only</p>
+              </div>
+            </div>
 
-        {activeTab === "notices" && (
-          <div className="lg:col-span-3">
-            <div className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center mb-6">
-                <FaBell className="mr-3 text-pink-600" />
-                Notices & Announcements
-              </h2>
+            {payments.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Month
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Payment Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/30 dark:bg-gray-800/30">
+                    {payments.map((payment) => (
+                      <tr
+                        key={payment._id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {payment.month ||
+                            (payment.months && payment.months.join(", "))}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                          ₹{payment.amount.toLocaleString("en-IN")}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${payment.paymentStatus === "Paid" ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : payment.paymentStatus === "Partial" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300" : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"}`}
+                          >
+                            {payment.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {new Date(payment.paymentDate).toLocaleDateString(
+                            "en-IN",
+                            { year: "numeric", month: "short", day: "numeric" }
+                          )}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <Link
+                            href={`/api/payments/${payment._id}/receipt`}
+                            className="inline-flex items-center px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium"
+                          >
+                            <FaDownload className="mr-1" /> Download
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="bg-gray-100 dark:bg-gray-800 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaFileInvoiceDollar className="text-gray-400 dark:text-gray-500 text-2xl" />
+                </div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No payment records
+                </p>
+              </div>
+            )}
+          </section>
 
-              {notices.length > 0 ? (
-                <div className="space-y-6">
-                  {notices.map((notice) => (
+          {/* Notices & Announcements */}
+          <section
+            id="notices"
+            className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6"
+          >
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center mb-4">
+              <FaBell className="mr-3 text-pink-600" /> Notices & Announcements
+            </h2>
+            {notices.length > 0 ? (
+              <div className="space-y-4">
+                {notices.slice(0, 6).map((notice) => {
+                  const c = classifyNotice(notice.title, notice.description);
+                  return (
                     <div
                       key={notice._id}
-                      className="bg-white/70 dark:bg-gray-800/70 rounded-lg border-l-4 border-pink-500 border-t border-r border-b  dark:border-gray-700 p-5 hover:shadow-md transition-all duration-200"
+                      className="bg-white/70 dark:bg-gray-800/70 rounded-lg border border-gray-100 dark:border-gray-700 p-4"
                     >
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                          {notice.title}
-                        </h3>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-medium ${c.badge}`}
+                            >
+                              {c.label}
+                            </span>
+                            <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                              {notice.title}
+                            </h3>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                            {notice.description}
+                          </p>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                           {new Date(notice.createdAt).toLocaleDateString(
                             "en-IN",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
+                            { year: "numeric", month: "short", day: "numeric" }
                           )}
                         </span>
                       </div>
-
-                      <p className="text-gray-600 dark:text-gray-400 mt-3 mb-3">
-                        {notice.description}
-                      </p>
-
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-3">
                         Posted by:{" "}
-                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                        <span className="font-medium">
                           {notice.createdBy.name}
                         </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="bg-gray-100 dark:bg-gray-800 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaBell className="text-gray-400 dark:text-gray-500 text-3xl" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No notices available
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                    There are no notices or announcements at the moment. Check
-                    back later for updates.
-                  </p>
-                </div>
-              )}
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">
+                No notices right now.
+              </p>
+            )}
+          </section>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-8">
+          {/* Complaints / Requests */}
+          <section
+            id="complaints"
+            className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center">
+                <BiSolidMessageSquareDetail className="mr-3 text-pink-600" />{" "}
+                Complaints
+              </h2>
+              <Link
+                href="/dashboard/complaints/new"
+                className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium"
+              >
+                New
+              </Link>
             </div>
-          </div>
-        )}
+            {complaints.length > 0 ? (
+              <div className="space-y-3">
+                {complaints.slice(0, 4).map((complaint) => (
+                  <div
+                    key={complaint._id}
+                    className="bg-white/70 dark:bg-gray-800/70 rounded-lg border border-gray-100 dark:border-gray-700 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-medium">
+                          {complaint.title}
+                        </h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          {complaint.description}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${complaint.status === "Open" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300" : complaint.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300" : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"}`}
+                        >
+                          {complaint.status}
+                        </span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                          {new Date(complaint.createdAt).toLocaleDateString(
+                            "en-IN",
+                            { month: "short", day: "numeric" }
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">
+                No complaints yet.
+              </p>
+            )}
+          </section>
+
+          {/* Events / Activities (placeholder) */}
+          <section className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">
+              Events & Activities
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              No upcoming events.
+            </p>
+          </section>
+
+          {/* House Rules & Emergency Info */}
+          <section className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+              Important Info
+            </h2>
+            <div className="space-y-4">
+              <Link
+                href="/rules-regulations"
+                className="block p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition"
+              >
+                📘 House Rules & Regulations
+              </Link>
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
+                <p className="font-medium mb-2">Emergency Contacts</p>
+                <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                  <li>Warden: {user?.guardianMobileNumber || "—"}</li>
+                  <li>Security: 100</li>
+                  <li>Ambulance: 108</li>
+                  <li>Nearest Hospital: See notice board</li>
+                </ul>
+              </div>
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
+                <p className="font-medium mb-2">WiFi</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Check latest WiFi details in notices.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       {/* Notice Period Dialog */}

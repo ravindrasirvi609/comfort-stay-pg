@@ -6,6 +6,13 @@ import { Star } from "lucide-react";
 
 interface ExitSurveyProps {
   userId: string;
+  /**
+   * If provided, the component will NOT directly call the checkout update API.
+   * Instead it will pass the collected survey data back to the parent so the parent
+   * can decide whether to perform the initial checkout (POST) or something else.
+   * When omitted, the component assumes the checkout already happened and will
+   * send a PUT /api/users/:id/checkout to attach the exit survey to an archive record.
+   */
   onComplete?: (surveyData?: SurveyData) => void;
   onCancel?: () => void;
   isAdmin?: boolean;
@@ -79,35 +86,32 @@ const ExitSurvey: React.FC<ExitSurveyProps> = ({
     setIsSubmitting(true);
 
     try {
-      // If user is currently checking out (not submitting survey later)
-      if (isAdmin) {
-        // If admin is collecting the survey, return the data to be included in checkout
-        if (onComplete) {
-          onComplete(surveyData);
-        }
-        return;
+      // Case 1: Admin collecting survey as part of checkout OR parent wants raw data to do initial POST
+      if (isAdmin || onComplete) {
+        onComplete?.(surveyData);
+        return; // Parent will handle API (initial checkout) or admin flow
       }
 
-      // For users submitting survey after checkout
+      // Case 2: User submitting survey AFTER checkout (archive already exists) -> send PUT
       const response = await axios.put(`/api/users/${userId}/checkout`, {
         exitSurvey: surveyData,
       });
 
       if (response.data.success) {
         toast.success("Thank you for your feedback!");
-        if (onComplete) {
-          onComplete();
-        } else {
-          router.push("/dashboard");
-        }
+        router.push("/dashboard");
       } else {
         toast.error(response.data.message || "Failed to submit feedback");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting exit survey:", error);
-      toast.error(
-        error.response?.data?.message || "Error submitting exit survey"
-      );
+      if (axios.isAxiosError(error)) {
+        toast.error(
+          error.response?.data?.message || "Error submitting exit survey"
+        );
+      } else {
+        toast.error("Error submitting exit survey");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -120,11 +124,9 @@ const ExitSurvey: React.FC<ExitSurveyProps> = ({
   };
 
   const StarRating = ({
-    name,
     value,
     onChange,
   }: {
-    name: string;
     value: number;
     onChange: (value: number) => void;
   }) => {
@@ -165,11 +167,13 @@ const ExitSurvey: React.FC<ExitSurveyProps> = ({
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="overallExperience"
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Overall Experience
                 </label>
                 <StarRating
-                  name="overallExperience"
                   value={surveyData.overallExperience}
                   onChange={(value) =>
                     handleRatingChange("overallExperience", value)
@@ -178,55 +182,65 @@ const ExitSurvey: React.FC<ExitSurveyProps> = ({
               </div>
 
               <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="cleanliness"
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Cleanliness
                 </label>
                 <StarRating
-                  name="cleanliness"
                   value={surveyData.cleanliness}
                   onChange={(value) => handleRatingChange("cleanliness", value)}
                 />
               </div>
 
               <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="facilities"
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Facilities
                 </label>
                 <StarRating
-                  name="facilities"
                   value={surveyData.facilities}
                   onChange={(value) => handleRatingChange("facilities", value)}
                 />
               </div>
 
               <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="staff"
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Staff Behavior
                 </label>
                 <StarRating
-                  name="staff"
                   value={surveyData.staff}
                   onChange={(value) => handleRatingChange("staff", value)}
                 />
               </div>
 
               <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="foodQuality"
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Food Quality
                 </label>
                 <StarRating
-                  name="foodQuality"
                   value={surveyData.foodQuality}
                   onChange={(value) => handleRatingChange("foodQuality", value)}
                 />
               </div>
 
               <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="valueForMoney"
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Value for Money
                 </label>
                 <StarRating
-                  name="valueForMoney"
                   value={surveyData.valueForMoney}
                   onChange={(value) =>
                     handleRatingChange("valueForMoney", value)

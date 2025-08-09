@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import Link from "next/link";
 import {
@@ -25,29 +25,23 @@ import {
   FiCalendar,
   FiRefreshCw,
   FiBell,
-  FiChevronsUp,
   FiTrendingUp,
   FiTrendingDown,
-  FiInfo,
   FiMessageSquare,
   FiCheckCircle,
   FiMonitor,
   FiClipboard,
   FiSettings,
   FiDollarSign,
+  FiArrowUpRight,
 } from "react-icons/fi";
 import {
-  RiWechatLine,
   RiUserLocationLine,
   RiLineChartLine,
   RiPieChartLine,
   RiBarChartLine,
-  RiCurrencyLine,
 } from "react-icons/ri";
-import { Inter } from "next/font/google";
 import NoticeUsersList from "@/components/admin/NoticeUsersList";
-
-const inter = Inter({ subsets: ["latin"] });
 
 interface DashboardStats {
   totalUsers: number;
@@ -155,6 +149,63 @@ export default function AdminDashboard() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
 
+  // Derived: last 30 days new users
+  const newUsersLast30 = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    return allUsers.filter((u) => {
+      if (!u.joinDate) return false;
+      const d = new Date(u.joinDate);
+      return !isNaN(d.getTime()) && d >= cutoff;
+    }).length;
+  }, [allUsers]);
+
+  // Derived: complaint resolution metrics
+  const { resolutionRate, avgResolutionDays, resolvedComplaintsCount } =
+    useMemo(() => {
+      const total = allComplaints.length;
+      const resolved = allComplaints.filter((c) => c.status === "Resolved");
+      const resolutionRate =
+        total === 0 ? 0 : Math.round((resolved.length / total) * 100);
+
+      // Average resolution time in days for resolved complaints
+      const days: number[] = resolved
+        .map((c) => {
+          if (!c.resolvedAt) return null;
+          const start = new Date(c.createdAt);
+          const end = new Date(c.resolvedAt);
+          if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+          const diffMs = end.getTime() - start.getTime();
+          return Math.max(0, diffMs / (1000 * 60 * 60 * 24));
+        })
+        .filter((v): v is number => v !== null);
+
+      const avgResolutionDays = days.length
+        ? Math.max(
+            0.1,
+            Number((days.reduce((a, b) => a + b, 0) / days.length).toFixed(1))
+          )
+        : 0;
+
+      return {
+        resolutionRate,
+        avgResolutionDays,
+        resolvedComplaintsCount: resolved.length,
+      };
+    }, [allComplaints]);
+
+  // Derived: current month payments count for quick insight
+  const currentMonthPaymentsCount = useMemo(() => {
+    const now = new Date();
+    const currentMonthLabel = now.toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
+    return allPayments.filter(
+      (p) => p.month === currentMonthLabel && p.paymentStatus === "Paid"
+    ).length;
+  }, [allPayments]);
+
   // Function to refresh dashboard data
   const refreshDashboard = async () => {
     setRefreshing(true);
@@ -163,7 +214,7 @@ export default function AdminDashboard() {
   };
 
   // Fetch dashboard data
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -326,7 +377,7 @@ export default function AdminDashboard() {
       setError("Failed to load dashboard data. Please try again.");
       setLoading(false);
     }
-  };
+  }, []);
 
   // Generate revenue data for the last 6 months
   const generateRevenueData = (payments: Payment[]) => {
@@ -424,7 +475,7 @@ export default function AdminDashboard() {
     );
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (
@@ -474,14 +525,14 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="max-[1600px] mx-auto px-4 py-6">
+    <div className="max-w-[1600px] mx-auto px-4 py-6">
       {/* Dashboard Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl shadow-xl p-6 mb-8 text-white">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold">Admin Dashboard</h1>
             <p className="mt-2 text-purple-100">
-              Welcome back! Here's what's happening today
+              Welcome back! Here&apos;s what&apos;s happening today
             </p>
           </div>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
@@ -518,6 +569,14 @@ export default function AdminDashboard() {
                 </>
               )}
             </button>
+            <button
+              onClick={() => window.print()}
+              className="hidden sm:flex items-center space-x-2 bg-purple-500/30 text-white px-4 py-2 rounded-lg hover:bg-purple-500/40 transition-all duration-200"
+              title="Print or save this report"
+            >
+              <FiArrowUpRight className="h-4 w-4" />
+              <span>Export</span>
+            </button>
             <div className="flex items-center bg-purple-500/30 px-4 py-2 rounded-lg">
               <FiCalendar className="h-4 w-4 mr-2" />
               <span>
@@ -527,6 +586,73 @@ export default function AdminDashboard() {
                   year: "numeric",
                 })}
               </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* At-a-glance insights */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                New Users (30d)
+              </p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {newUsersLast30}
+              </h3>
+            </div>
+            <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
+              <FiUsers className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Complaints Resolved
+              </p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {resolvedComplaintsCount}
+              </h3>
+              <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                {resolutionRate}% rate
+              </span>
+            </div>
+            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+              <FiCheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Avg Resolution Time
+              </p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {avgResolutionDays ? `${avgResolutionDays}d` : "—"}
+              </h3>
+            </div>
+            <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <FiClipboard className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Payments This Month
+              </p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {currentMonthPaymentsCount}
+              </h3>
+            </div>
+            <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+              <FiDollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
@@ -621,6 +747,25 @@ export default function AdminDashboard() {
               <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
                 <FiDollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
+            </div>
+            {/* Sparkline */}
+            <div className="mt-4 h-12">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={revenueData}
+                  margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                >
+                  <XAxis dataKey="name" hide />
+                  <YAxis hide />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#16a34a"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
@@ -900,9 +1045,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"> */}
-      {/* Quick Actions */}
-      {/* <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
               <FiSettings className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
@@ -957,21 +1101,93 @@ export default function AdminDashboard() {
 
             <Link
               href="/admin/notices"
-              className="flex items-center p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-700 dark:text-blue-300"
+              className="flex items-center p-4 rounded-lg bg-pink-50 dark:bg-pink-900/20 hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors text-pink-700 dark:text-pink-300"
             >
-              <div className="h-10 w-10 flex items-center justify-center bg-blue-200 dark:bg-blue-800 rounded-full mr-3">
-                <FiBell className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+              <div className="h-10 w-10 flex items-center justify-center bg-pink-200 dark:bg-pink-800 rounded-full mr-3">
+                <FiBell className="h-5 w-5 text-pink-700 dark:text-pink-300" />
               </div>
               <div>
                 <h3 className="font-medium">Manage Notices</h3>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
+                <p className="text-xs text-pink-600 dark:text-pink-400">
                   Create & manage announcements
                 </p>
               </div>
             </Link>
           </div>
-        </div> */}
-      {/* </div> */}
+        </div>
+
+        {/* Activity Feed */}
+        <div className="col-span-1 lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+              <FiMonitor className="h-5 w-5 text-indigo-600 mr-2" />
+              Activity Feed
+            </h2>
+          </div>
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+            {[
+              // recent payments
+              ...allPayments
+                .filter((p) => p.paymentDate)
+                .map((p) => ({
+                  type: "payment" as const,
+                  date: new Date(p.paymentDate),
+                  title: `${p.userId?.name || "Unknown"} paid ₹${p.amount.toLocaleString("en-IN")}`,
+                  subtitle: p.month,
+                  href: "/admin/payments",
+                })),
+              // complaints
+              ...allComplaints.map((c) => ({
+                type: "complaint" as const,
+                date: new Date(c.createdAt),
+                title: `${c.userId?.name || "User"} raised: ${c.title}`,
+                subtitle: c.status,
+                href: `/admin/complaints?id=${c._id}`,
+              })),
+              // new users
+              ...allUsers
+                .filter((u) => !!u.joinDate)
+                .map((u) => ({
+                  type: "user" as const,
+                  date: new Date(u.joinDate as string),
+                  title: `New user joined: ${u.name}`,
+                  subtitle: u.pgId,
+                  href: `/admin/users/${u._id}`,
+                })),
+            ]
+              .filter((i) => !isNaN(i.date.getTime()))
+              .sort((a, b) => b.date.getTime() - a.date.getTime())
+              .slice(0, 8)
+              .map((item, idx) => (
+                <li key={idx} className="py-3 flex items-start">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center mr-3 bg-gray-100 dark:bg-gray-700">
+                    {item.type === "payment" ? (
+                      <FiDollarSign className="h-4 w-4 text-green-600" />
+                    ) : item.type === "complaint" ? (
+                      <FiAlertCircle className="h-4 w-4 text-amber-600" />
+                    ) : (
+                      <FiUsers className="h-4 w-4 text-purple-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 dark:text-white truncate">
+                      {item.title}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.subtitle}
+                    </p>
+                  </div>
+                  <Link
+                    href={item.href}
+                    className="text-indigo-600 dark:text-indigo-400 text-sm ml-3 whitespace-nowrap"
+                  >
+                    View
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </div>
+      </div>
 
       {/* Users on Notice Period Section */}
       <div className="mt-8">
