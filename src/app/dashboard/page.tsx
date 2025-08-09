@@ -1006,7 +1006,6 @@ export default function DashboardPage() {
                 <p className="font-medium mb-2">Emergency Contacts</p>
                 <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
                   <li>Warden: 9823477183 </li>
-                  <li>Security: 100</li>
                   <li>Ambulance: 108</li>
                   <li>
                     Nearest Hospital: Phone: 1800-210-4949 (Ruby Hall Clinic)
