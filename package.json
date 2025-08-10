@@ -9,7 +9,9 @@
     "lint": "next lint",
     "create-rooms": "npx tsx src/scripts/createRooms.ts",
     "create-manager": "npx tsx src/scripts/createManager.ts",
-    "create-manager-debug": "npx tsx src/scripts/createManagerDebug.ts"
+    "create-manager-debug": "npx tsx src/scripts/createManagerDebug.ts",
+      "register-admin": "npx tsx src/scripts/registerAdmin.ts"
+
 
 
   },

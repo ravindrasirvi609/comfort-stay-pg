@@ -67,7 +67,11 @@ interface User {
   pgId: string;
   role: string;
   isActive: boolean;
-  joinDate?: string;
+  // Note: Original code referenced joinDate which doesn't exist in the User model.
+  // We'll derive a "join" timestamp using (in order): approvalDate, moveInDate, createdAt.
+  approvalDate?: string;
+  moveInDate?: string;
+  createdAt?: string; // from mongoose timestamps
   state?: string;
 }
 
@@ -149,16 +153,23 @@ export default function AdminDashboard() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
 
-  // Derived: last 30 days new users
+  // Helper: get canonical join date for a user
+  const getUserJoinDate = useCallback((u: User): Date | null => {
+    const dateStr = u.approvalDate || u.moveInDate || u.createdAt;
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  // Derived: last 30 days new users (based on approvalDate -> moveInDate -> createdAt)
   const newUsersLast30 = useMemo(() => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);
     return allUsers.filter((u) => {
-      if (!u.joinDate) return false;
-      const d = new Date(u.joinDate);
-      return !isNaN(d.getTime()) && d >= cutoff;
+      const d = getUserJoinDate(u);
+      return d !== null && d >= cutoff;
     }).length;
-  }, [allUsers]);
+  }, [allUsers, getUserJoinDate]);
 
   // Derived: complaint resolution metrics
   const { resolutionRate, avgResolutionDays, resolvedComplaintsCount } =
@@ -1144,15 +1155,16 @@ export default function AdminDashboard() {
                 subtitle: c.status,
                 href: `/admin/complaints?id=${c._id}`,
               })),
-              // new users
+              // new users (using derived join date)
               ...allUsers
-                .filter((u) => !!u.joinDate)
-                .map((u) => ({
+                .map((u) => ({ user: u, date: getUserJoinDate(u) }))
+                .filter((entry) => entry.date !== null)
+                .map((entry) => ({
                   type: "user" as const,
-                  date: new Date(u.joinDate as string),
-                  title: `New user joined: ${u.name}`,
-                  subtitle: u.pgId,
-                  href: `/admin/users/${u._id}`,
+                  date: entry.date as Date,
+                  title: `New user joined: ${entry.user.name}`,
+                  subtitle: entry.user.pgId,
+                  href: `/admin/users/${entry.user._id}`,
                 })),
             ]
               .filter((i) => !isNaN(i.date.getTime()))

@@ -85,8 +85,18 @@ export async function comparePassword(
 }
 
 // Generate JWT token - Edge compatible
-export async function generateToken(user: UserData): Promise<string> {
-  // Create a JWT using jose library (Edge compatible)
+export async function generateToken(
+  user: UserData,
+  options?: { expiresIn?: string }
+): Promise<string> {
+  // Decide expiration: provided overrides role-based default
+  let expiresIn = options?.expiresIn;
+  if (!expiresIn) {
+    // Admin tokens short (1 day), standard users longer (30 days)
+    // Any other roles default to 1 day for safety
+    expiresIn = user.role === "admin" ? "1d" : "30d";
+  }
+
   const token = await new SignJWT({
     _id: user._id,
     name: user.name,
@@ -96,7 +106,7 @@ export async function generateToken(user: UserData): Promise<string> {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("1d")
+    .setExpirationTime(expiresIn)
     .sign(JWT_SECRET_BYTES);
 
   return token;

@@ -16,38 +16,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle fixed admin credentials
-    if (email === "comfortstaypg@gmail.com" && password === "Comfort@189") {
-      // Generate JWT token for hardcoded admin
-      const token = await generateToken({
-        _id: "admin_id_123456789",
-        name: "ComfortStay Admin",
-        email: "comfortstaypg@gmail.com",
-        role: "admin",
-        pgId: "ADMIN123",
-      });
-
-      // Set cookie
-      const cookieStore = await cookies();
-      cookieStore.set("token", token, {
-        httpOnly: true,
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 1 day
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Login successful",
-        user: {
-          _id: "admin_id_123456789",
-          name: "ComfortStay Admin",
-          email: "comfortstaypg@gmail.com",
-          role: "admin",
-        },
-      });
-    }
-
     await connectToDatabase();
 
     // Find user by email with case-insensitive search
@@ -80,22 +48,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token
-    const token = await generateToken({
-      _id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      pgId: user.pgId,
-    });
+    // Generate JWT token (admin: 1 day, others: 30 days)
+    const isAdmin = user.role === "admin";
+    const token = await generateToken(
+      {
+        _id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        pgId: user.pgId,
+      },
+      { expiresIn: isAdmin ? "1d" : "30d" }
+    );
 
-    // Set cookie
+    // Set cookie with matching maxAge
     const cookieStore = await cookies();
     cookieStore.set("token", token, {
       httpOnly: true,
       path: "/",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24, // 1 day
+      maxAge: isAdmin ? 60 * 60 * 24 : 60 * 60 * 24 * 30, // 1 day for admin, 30 days for users
     });
 
     return NextResponse.json({
