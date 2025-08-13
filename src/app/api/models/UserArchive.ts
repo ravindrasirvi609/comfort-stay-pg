@@ -3,6 +3,7 @@ import { IUser } from "../interfaces/models";
 
 // Adding additional fields specific to archive
 interface IUserArchive extends IUser {
+  userId?: mongoose.Types.ObjectId;
   archiveReason: string;
   archiveDate: Date;
   exitSurveyCompleted: boolean;
@@ -30,6 +31,7 @@ interface IUserArchive extends IUser {
 const UserArchiveSchema = new Schema<IUserArchive>(
   {
     // Include all fields from User model
+    userId: { type: Schema.Types.ObjectId, ref: "User" }, // original user reference
     name: { type: String, required: true },
     email: { type: String, required: true },
     phone: { type: String, required: true },

@@ -41,8 +41,6 @@ export async function POST(
       archiveReason = "Completed Stay",
       exitSurvey = null,
       skipSurvey = false,
-      refundAmount = 0,
-      refundMethod = null,
       adminComments = "",
     } = body;
 
@@ -89,6 +87,7 @@ export async function POST(
     // Create archive record with appropriate fields
     const archiveRecord = new UserArchive({
       ...userToCheckout.toObject(),
+      userId: userToCheckout._id,
       archiveReason,
       archiveDate: new Date(),
       exitSurveyCompleted: !!exitSurvey || skipSurvey,
@@ -126,13 +125,13 @@ export async function POST(
       message: "User has been successfully checked out",
       archiveId: archiveRecord._id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error checking out user:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error",
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -189,13 +188,13 @@ export async function GET(
         moveOutDate: archiveRecord.moveOutDate,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error retrieving checkout details:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error",
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -262,13 +261,13 @@ export async function PUT(
       success: true,
       message: "Exit survey submitted successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating checkout details:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error",
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

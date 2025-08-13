@@ -50,6 +50,8 @@ export interface IUser {
  * User Archive model interface
  */
 export interface IUserArchive extends IUser {
+  // Reference to the original (still existing) user document
+  userId?: string; // stored for reliable linkage (email might change)
   archiveReason:
     | "Completed Stay"
     | "Early Departure"

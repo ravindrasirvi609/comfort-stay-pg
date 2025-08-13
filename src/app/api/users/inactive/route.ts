@@ -7,6 +7,7 @@ import Payment from "@/app/api/models/Payment";
 import { NextRequest } from "next/server";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import { format } from "date-fns";
+import UserArchive from "@/app/api/models/UserArchive";
 
 export async function GET(request: NextRequest) {
   // Redirect to the archives API since all deactivated users are now in archives
@@ -42,6 +43,7 @@ export async function PUT(request: NextRequest) {
       roomId,
       checkInDate,
       clearNoticePeriod = true,
+      archiveId, // optional: if provided, remove or mark archive as reactivated
       // Payment related fields
       collectDeposit = false,
       depositAmount = 0,
@@ -114,6 +116,17 @@ export async function PUT(request: NextRequest) {
 
       // Save user changes
       await userToActivate.save();
+
+      // If archiveId provided, delete that archive entry (or mark if future needs)
+      if (archiveId) {
+        const archiveRecord = await UserArchive.findOne({
+          _id: archiveId,
+          userId: userToActivate._id,
+        });
+        if (archiveRecord) {
+          await archiveRecord.deleteOne();
+        }
+      }
 
       // Create payment entries if requested
       const payments = [];

@@ -4,7 +4,6 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 import Room from "@/app/api/models/Room";
 import UserArchive from "@/app/api/models/UserArchive";
-import mongoose from "mongoose";
 import { differenceInDays } from "date-fns";
 
 // Get a single user
@@ -181,24 +180,25 @@ export async function PUT(
           role: savedUser.role,
         },
       });
-    } catch (saveError: any) {
+    } catch (saveError: unknown) {
       console.error("Error saving user:", saveError);
       return NextResponse.json(
         {
           success: false,
           message: "Failed to save user data",
-          error: saveError.message,
+          error:
+            saveError instanceof Error ? saveError.message : "Unknown error",
         },
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Update user error:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error",
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -294,6 +294,7 @@ export async function DELETE(
         archiveRecord.isActive = false;
         archiveRecord.isOnNoticePeriod = false;
         archiveRecord.keyIssued = keyIssued || false;
+        archiveRecord.userId = userToDelete._id; // ensure linkage
 
         if (depositReturn) {
           archiveRecord.depositReturn = {
