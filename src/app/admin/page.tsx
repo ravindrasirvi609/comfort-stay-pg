@@ -12,13 +12,13 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
   BarChart,
   Bar,
   AreaChart,
   Area,
+  CartesianGrid,
 } from "recharts";
 import {
   FiUsers,
@@ -45,6 +45,7 @@ import {
 } from "react-icons/ri";
 import NoticeUsersList from "@/components/admin/NoticeUsersList";
 
+// -------------------- Type Definitions (clean) --------------------
 interface DashboardStats {
   totalUsers: number;
   totalRooms: number;
@@ -52,7 +53,7 @@ interface DashboardStats {
   availableRooms: number;
   pendingComplaints: number;
   rentCollected: number;
-  usersWithDues: number;
+  usersWithDues: number; // added property used elsewhere
   occupancyRate: number;
   previousMonthRent?: number;
 }
@@ -69,11 +70,10 @@ interface User {
   pgId: string;
   role: string;
   isActive: boolean;
-  // Note: Original code referenced joinDate which doesn't exist in the User model.
-  // We'll derive a "join" timestamp using (in order): approvalDate, moveInDate, createdAt.
+  // canonical date fields for registration trend
   approvalDate?: string;
   moveInDate?: string;
-  createdAt?: string; // from mongoose timestamps
+  createdAt?: string;
   state?: string;
 }
 
@@ -177,6 +177,9 @@ export default function AdminDashboard() {
   const [registrationMode, setRegistrationMode] = useState<
     "daily" | "cumulative"
   >("daily");
+  const [registrationTimeframe, setRegistrationTimeframe] = useState<
+    "30d" | "12m"
+  >("30d");
   const registrationsLast30Days = useMemo(() => {
     const today = new Date();
     const start = new Date();
@@ -214,6 +217,38 @@ export default function AdminDashboard() {
         }),
         daily,
         cumulative: running,
+      };
+    });
+  }, [allUsers, getUserJoinDate]);
+
+  // Monthly registrations for last 12 months (including current)
+  const registrationsLast12Months = useMemo(() => {
+    const now = new Date();
+    const months: { year: number; month: number }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ year: d.getFullYear(), month: d.getMonth() });
+    }
+    const counts: number[] = new Array(months.length).fill(0);
+    allUsers.forEach((u) => {
+      const jd = getUserJoinDate(u);
+      if (!jd) return;
+      // find index
+      months.forEach((m, idx) => {
+        if (jd.getFullYear() === m.year && jd.getMonth() === m.month) {
+          counts[idx] += 1;
+        }
+      });
+    });
+    let cumulative = 0;
+    return months.map((m, idx) => {
+      cumulative += counts[idx];
+      const date = new Date(m.year, m.month, 1);
+      return {
+        iso: `${m.year}-${String(m.month + 1).padStart(2, "0")}`,
+        label: date.toLocaleDateString("en-IN", { month: "short" }),
+        daily: counts[idx], // reuse property name for existing chart logic
+        cumulative,
       };
     });
   }, [allUsers, getUserJoinDate]);
@@ -274,8 +309,8 @@ export default function AdminDashboard() {
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
     try {
-      setLoading(true);
       setError("");
+      setLoading(true);
 
       // Use Promise.all to fetch data concurrently
       const [
@@ -303,17 +338,11 @@ export default function AdminDashboard() {
           stateCounts[user.state] = (stateCounts[user.state] || 0) + 1;
         }
       });
-
-      const stateDistributionData = Object.entries(stateCounts).map(
-        ([state, count]) => ({
-          state,
-          count,
-        })
-      );
-
-      // Sort by count in descending order
+      // Build array from map
+      const stateDistributionData: StateDistribution[] = Object.keys(
+        stateCounts
+      ).map((state) => ({ state, count: stateCounts[state] }));
       stateDistributionData.sort((a, b) => b.count - a.count);
-
       setStateDistribution(stateDistributionData);
 
       // Store complete data sets
@@ -965,7 +994,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Registration Trend Chart */}
+      {/* Registration Trend Chart (30D vs 12M) */}
       <div className="grid grid-cols-1 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
@@ -973,25 +1002,49 @@ export default function AdminDashboard() {
               <FiUsers className="h-5 w-5 text-purple-600 mr-2" />
               User Registrations
             </h2>
-            <div className="flex items-center space-x-2 text-xs bg-gray-100 dark:bg-gray-700 rounded-full p-1">
-              {(["daily", "cumulative"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setRegistrationMode(mode)}
-                  className={`px-3 py-1 rounded-full transition-colors ${registrationMode === mode ? "bg-purple-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
-                >
-                  {mode === "daily" ? "Daily" : "Cumulative"}
-                </button>
-              ))}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex items-center space-x-2 text-xs bg-gray-100 dark:bg-gray-700 rounded-full p-1">
+                {(["30d", "12m"] as const).map((tf) => (
+                  <button
+                    key={tf}
+                    onClick={() => setRegistrationTimeframe(tf)}
+                    className={`px-3 py-1 rounded-full transition-colors ${registrationTimeframe === tf ? "bg-purple-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+                  >
+                    {tf === "30d" ? "30D" : "12M"}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center space-x-2 text-xs bg-gray-100 dark:bg-gray-700 rounded-full p-1">
+                {(["daily", "cumulative"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setRegistrationMode(mode)}
+                    className={`px-3 py-1 rounded-full transition-colors ${registrationMode === mode ? "bg-purple-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+                  >
+                    {mode === "daily"
+                      ? registrationTimeframe === "30d"
+                        ? "Daily"
+                        : "Monthly"
+                      : "Cumulative"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-            Last 30 days (based on approvalDate → moveInDate → createdAt)
+            {registrationTimeframe === "30d"
+              ? "Last 30 days (day-wise)"
+              : "Last 12 months (month-wise)"}{" "}
+            (based on approvalDate → moveInDate → createdAt)
           </p>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={registrationsLast30Days}
+                data={
+                  registrationTimeframe === "30d"
+                    ? registrationsLast30Days
+                    : registrationsLast12Months
+                }
                 margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
               >
                 <defs>
@@ -1005,14 +1058,16 @@ export default function AdminDashboard() {
                   dataKey="label"
                   stroke="#94a3b8"
                   fontSize={11}
-                  interval={3}
+                  interval={registrationTimeframe === "30d" ? 3 : 0}
                 />
                 <YAxis stroke="#94a3b8" allowDecimals={false} />
                 <Tooltip
                   formatter={(value: any) => [
                     value,
                     registrationMode === "daily"
-                      ? "Registrations"
+                      ? registrationTimeframe === "30d"
+                        ? "Daily Registrations"
+                        : "Monthly Registrations"
                       : "Cumulative",
                   ]}
                   labelFormatter={(lbl) => `Date: ${lbl}`}
@@ -1030,7 +1085,9 @@ export default function AdminDashboard() {
                   }
                   name={
                     registrationMode === "daily"
-                      ? "Daily Registrations"
+                      ? registrationTimeframe === "30d"
+                        ? "Daily Registrations"
+                        : "Monthly Registrations"
                       : "Cumulative Registrations"
                   }
                   stroke="#8b5cf6"
