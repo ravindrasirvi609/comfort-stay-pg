@@ -197,33 +197,55 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update query
-    let updateResult;
-
-    if (markAll) {
-      // Mark all user's notifications as read
-      updateResult = await Notification.updateMany(
-        { userId: user._id, isRead: false, isActive: true },
-        { $set: { isRead: true } }
-      );
-    } else {
-      // Mark specific notifications as read
-      updateResult = await Notification.updateMany(
-        {
-          _id: { $in: notificationIds },
-          userId: user._id, // Ensure user can only mark their own notifications
-          isActive: true,
-        },
-        { $set: { isRead: true } }
-      );
+    // Build flexible userId criteria (same logic as in GET) to handle ObjectId vs string storage
+    let userIdCriteria: any = user._id;
+    let possibleObjectId: any = null;
+    if (typeof user._id === "string" && /^[a-fA-F0-9]{24}$/.test(user._id)) {
+      try {
+        const { Types } = await import("mongoose");
+        possibleObjectId = new Types.ObjectId(user._id);
+        userIdCriteria = { $in: [user._id, possibleObjectId] };
+      } catch (convErr) {
+        console.warn(
+          "[Notifications PUT] Failed to build ObjectId variant",
+          convErr
+        );
+      }
     }
 
-    // Get unread count after update
-    const unreadCount = await Notification.countDocuments({
-      userId: user._id,
-      isActive: true,
-      isRead: false,
+    // If admin, include legacy hardcoded admin id
+    if (user.role === "admin") {
+      const hardcodedAdminId = "admin_id_123456789";
+      if (
+        userIdCriteria &&
+        typeof userIdCriteria === "object" &&
+        "$in" in userIdCriteria
+      ) {
+        userIdCriteria = { $in: [...userIdCriteria.$in, hardcodedAdminId] };
+      } else {
+        userIdCriteria = { $in: [userIdCriteria, hardcodedAdminId] };
+      }
+    }
+
+    // Construct update filter
+    let updateFilter: Record<string, any> = { isActive: true };
+    if (markAll) {
+      updateFilter.userId = userIdCriteria;
+      updateFilter.isRead = false;
+    } else {
+      updateFilter._id = { $in: notificationIds };
+      updateFilter.userId = userIdCriteria;
+    }
+
+    // Perform update
+    const updateResult = await Notification.updateMany(updateFilter, {
+      $set: { isRead: true },
     });
+
+    // Build unread count filter with same flexible criteria
+    let unreadFilter: Record<string, any> = { isActive: true, isRead: false };
+    unreadFilter.userId = userIdCriteria;
+    const unreadCount = await Notification.countDocuments(unreadFilter);
 
     return NextResponse.json({
       success: true,
