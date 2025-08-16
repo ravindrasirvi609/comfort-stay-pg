@@ -17,6 +17,8 @@ import {
   Legend,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
 } from "recharts";
 import {
   FiUsers,
@@ -169,6 +171,51 @@ export default function AdminDashboard() {
       const d = getUserJoinDate(u);
       return d !== null && d >= cutoff;
     }).length;
+  }, [allUsers, getUserJoinDate]);
+
+  // Registrations trend (last 30 days) daily & cumulative datasets
+  const [registrationMode, setRegistrationMode] = useState<
+    "daily" | "cumulative"
+  >("daily");
+  const registrationsLast30Days = useMemo(() => {
+    const today = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 29); // inclusive range 30 days
+
+    // Pre-seed all days to keep chart continuous
+    const orderedDates: string[] = [];
+    const dayCursor = new Date(start);
+    while (dayCursor <= today) {
+      orderedDates.push(dayCursor.toISOString().slice(0, 10));
+      dayCursor.setDate(dayCursor.getDate() + 1);
+    }
+
+    const counts: Record<string, number> = Object.fromEntries(
+      orderedDates.map((d) => [d, 0])
+    );
+
+    allUsers.forEach((u) => {
+      const jd = getUserJoinDate(u);
+      if (jd && jd >= start && jd <= today) {
+        const key = jd.toISOString().slice(0, 10);
+        if (counts[key] !== undefined) counts[key] += 1;
+      }
+    });
+
+    let running = 0;
+    return orderedDates.map((iso) => {
+      const daily = counts[iso];
+      running += daily;
+      return {
+        iso,
+        label: new Date(iso).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+        }),
+        daily,
+        cumulative: running,
+      };
+    });
   }, [allUsers, getUserJoinDate]);
 
   // Derived: complaint resolution metrics
@@ -913,6 +960,86 @@ export default function AdminDashboard() {
                   activeDot={{ r: 6, stroke: "#d946ef", strokeWidth: 2 }}
                 />
               </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Registration Trend Chart */}
+      <div className="grid grid-cols-1 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+              <FiUsers className="h-5 w-5 text-purple-600 mr-2" />
+              User Registrations
+            </h2>
+            <div className="flex items-center space-x-2 text-xs bg-gray-100 dark:bg-gray-700 rounded-full p-1">
+              {(["daily", "cumulative"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setRegistrationMode(mode)}
+                  className={`px-3 py-1 rounded-full transition-colors ${registrationMode === mode ? "bg-purple-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+                >
+                  {mode === "daily" ? "Daily" : "Cumulative"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Last 30 days (based on approvalDate → moveInDate → createdAt)
+          </p>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={registrationsLast30Days}
+                margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+              >
+                <defs>
+                  <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="label"
+                  stroke="#94a3b8"
+                  fontSize={11}
+                  interval={3}
+                />
+                <YAxis stroke="#94a3b8" allowDecimals={false} />
+                <Tooltip
+                  formatter={(value: any) => [
+                    value,
+                    registrationMode === "daily"
+                      ? "Registrations"
+                      : "Cumulative",
+                  ]}
+                  labelFormatter={(lbl) => `Date: ${lbl}`}
+                  contentStyle={{
+                    backgroundColor: "rgba(255,255,255,0.95)",
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={36} />
+                <Area
+                  type="monotone"
+                  dataKey={
+                    registrationMode === "daily" ? "daily" : "cumulative"
+                  }
+                  name={
+                    registrationMode === "daily"
+                      ? "Daily Registrations"
+                      : "Cumulative Registrations"
+                  }
+                  stroke="#8b5cf6"
+                  fill="url(#colorReg)"
+                  strokeWidth={3}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5, stroke: "#8b5cf6", strokeWidth: 2 }}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
