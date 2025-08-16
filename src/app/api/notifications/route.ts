@@ -29,10 +29,44 @@ export async function GET(request: NextRequest) {
 
     // Build query - use the exact user ID value from the session
     // This handles both ObjectId and string IDs
-    const query: Record<string, any> = {
-      userId: user._id,
+    // Build flexible userId criteria to handle ObjectId vs string storage
+    let userIdCriteria: any = user._id; // default (string from JWT or hardcoded admin id)
+    let possibleObjectId: any = null;
+    if (typeof user._id === "string" && /^[a-fA-F0-9]{24}$/.test(user._id)) {
+      try {
+        const { Types } = await import("mongoose");
+        possibleObjectId = new Types.ObjectId(user._id);
+        userIdCriteria = { $in: [user._id, possibleObjectId] };
+      } catch (convErr) {
+        console.warn(
+          "[Notifications] Failed to build ObjectId variant for user._id",
+          convErr
+        );
+      }
+    }
+
+    // Base query
+    let query: Record<string, any> = {
+      userId: userIdCriteria,
       isActive: true,
     };
+
+    // If this is an admin, also include notifications created using the legacy hardcoded admin ID
+    if (user.role === "admin") {
+      const hardcodedAdminId = "admin_id_123456789";
+      // Expand userId criteria
+      if (
+        query.userId &&
+        typeof query.userId === "object" &&
+        "$in" in query.userId
+      ) {
+        query.userId = { $in: [...query.userId.$in, hardcodedAdminId] };
+      } else if (query.userId) {
+        query.userId = { $in: [query.userId, hardcodedAdminId] };
+      } else {
+        query.userId = hardcodedAdminId;
+      }
+    }
 
     // Add filters if specified
     if (unreadOnly) {
@@ -47,18 +81,52 @@ export async function GET(request: NextRequest) {
       // Get total count
       const total = await Notification.countDocuments(query);
 
-      // Get notifications
-      const notifications = await Notification.find(query)
+      // Get notifications (primary attempt)
+      let notifications = await Notification.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
 
+      // Fallback: if none found and we had an ObjectId candidate but maybe stored only as ObjectId (rare case where JWT had string but not stored as string)
+      if (notifications.length === 0 && possibleObjectId) {
+        const fallbackQuery = {
+          isActive: true,
+          userId: possibleObjectId,
+        } as any;
+        notifications = await Notification.find(fallbackQuery)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit);
+        if (notifications.length > 0) {
+          console.log(
+            "[Notifications] Fallback query (pure ObjectId) returned results"
+          );
+        }
+      }
+
       // Get unread count
-      const unreadCount = await Notification.countDocuments({
-        userId: user._id,
-        isActive: true,
-        isRead: false,
-      });
+      let unreadFilter: any = { isActive: true, isRead: false };
+      if (possibleObjectId) {
+        unreadFilter.userId = { $in: [user._id, possibleObjectId] };
+      } else {
+        unreadFilter.userId = user._id;
+      }
+      if (user.role === "admin") {
+        const hardcodedAdminId = "admin_id_123456789";
+        if (
+          typeof unreadFilter.userId === "object" &&
+          "$in" in unreadFilter.userId
+        ) {
+          unreadFilter.userId = {
+            $in: [...unreadFilter.userId.$in, hardcodedAdminId],
+          };
+        } else {
+          unreadFilter.userId = {
+            $in: [unreadFilter.userId, hardcodedAdminId],
+          };
+        }
+      }
+      const unreadCount = await Notification.countDocuments(unreadFilter);
 
       return NextResponse.json({
         success: true,

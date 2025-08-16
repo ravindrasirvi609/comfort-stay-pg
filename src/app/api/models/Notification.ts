@@ -33,6 +33,8 @@ const NotificationSchema = new Schema<INotification>(
         "Contact",
         // Added missing type used in code & interface
         "Checkout",
+  // Added to support visit request notifications
+  "Visit",
       ],
       default: "System",
     },
