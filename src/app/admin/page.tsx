@@ -517,22 +517,26 @@ export default function AdminDashboard() {
     }
   };
 
-  // Calculate room type distribution for donut chart
-  const roomTypeDistribution = useMemo(() => {
+  // Calculate room capacity distribution for donut chart (by number of occupants per room)
+  const roomCapacityDistribution = useMemo(() => {
     if (!roomData.length) return [];
-
-    const typeCounts: Record<string, number> = {};
+    const capacityCounts: Record<number, number> = {};
     roomData.forEach((room) => {
-      if (!typeCounts[room.type]) {
-        typeCounts[room.type] = 0;
-      }
-      typeCounts[room.type]++;
+      const cap = room.capacity || 0;
+      capacityCounts[cap] = (capacityCounts[cap] || 0) + 1;
     });
 
-    return Object.keys(typeCounts).map((type) => ({
-      name: type,
-      value: typeCounts[type],
-    }));
+    const labelFor = (cap: number) => {
+      if (cap === 1) return "Single";
+      if (cap === 2) return "Double";
+      if (cap === 3) return "Triple";
+      return `${cap}-Sharing`;
+    };
+
+    return Object.keys(capacityCounts)
+      .map((k) => Number(k))
+      .sort((a, b) => a - b)
+      .map((cap) => ({ name: labelFor(cap), value: capacityCounts[cap] }));
   }, [roomData]);
 
   // Calculate rent growth rate
@@ -1104,7 +1108,7 @@ export default function AdminDashboard() {
 
       {/* Second row: Room distribution and tables */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Room Type Distribution Chart */}
+        {/* Room Capacity Distribution Chart */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
@@ -1116,7 +1120,7 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={roomTypeDistribution}
+                  data={roomCapacityDistribution}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -1127,7 +1131,7 @@ export default function AdminDashboard() {
                     `${name}: ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {roomTypeDistribution.map((_, index) => (
+                  {roomCapacityDistribution.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
