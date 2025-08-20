@@ -21,6 +21,16 @@ interface User {
     | null;
 }
 
+// Payment interface (subset) to compute current month paid & dues
+interface PaymentData {
+  _id: string;
+  userId: { id: string; _id?: string } | null;
+  amount: number;
+  months: string[];
+  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  isDepositPayment?: boolean;
+}
+
 export default function CreatePaymentPage() {
   const router = useRouter();
 
@@ -53,6 +63,24 @@ export default function CreatePaymentPage() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [existingPayments, setExistingPayments] = useState<string[]>([]);
   const [checkingPayments, setCheckingPayments] = useState(false);
+  // Map userId -> payment info for current month
+  const [userPaymentInfo, setUserPaymentInfo] = useState<
+    Record<
+      string,
+      {
+        paidAmount: number;
+        dueAmount: number;
+        status: "Paid" | "Unpaid" | "N/A";
+        roomPrice: number;
+      }
+    >
+  >({});
+
+  // Current month (e.g., "August 2025")
+  const currentMonthYear = new Date().toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  });
 
   // Generate months array for month selection (last 3 months, current month, next 3 months)
   const availableMonths = [];
@@ -75,37 +103,89 @@ export default function CreatePaymentPage() {
     setMonths([currentMonth]);
   }, []);
 
-  // Fetch all users
+  // Fetch all users and current month payments to compute dues
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchUsersAndPayments = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("/api/users");
+        const [usersRes, paymentsRes] = await Promise.all([
+          axios.get("/api/users"),
+          axios.get("/api/payments"), // we'll filter client-side
+        ]);
 
-        if (response.data.success) {
-          // Only include active users with assigned rooms
-          const activeUsers = response.data.users.filter(
-            (user: User) =>
-              user.roomId &&
-              typeof user.roomId === "object" &&
-              user.roomId.roomNumber
-          );
-          setUsers(activeUsers);
-          setFilteredUsers(activeUsers);
-        } else {
+        if (!usersRes.data.success) {
           setError("Failed to load users");
+          setLoading(false);
+          return;
         }
 
+        const rawUsers: User[] = usersRes.data.users || [];
+        // Only include active users with assigned rooms
+        const activeUsers = rawUsers.filter(
+          (user: User) =>
+            user.roomId &&
+            typeof user.roomId === "object" &&
+            user.roomId.roomNumber
+        );
+
+        // Process payments for current month
+        const payments: PaymentData[] = paymentsRes.data.payments || [];
+        const info: Record<
+          string,
+          {
+            paidAmount: number;
+            dueAmount: number;
+            status: "Paid" | "Unpaid" | "N/A";
+            roomPrice: number;
+          }
+        > = {};
+        activeUsers.forEach((u) => {
+          const roomPrice =
+            u.roomId && typeof u.roomId === "object" && u.roomId.price
+              ? u.roomId.price
+              : 0;
+          if (roomPrice > 0) {
+            const userPaymentsForCurrentMonth = payments.filter(
+              (p) =>
+                p.userId &&
+                p.userId.id === u._id &&
+                !p.isDepositPayment &&
+                p.months.includes(currentMonthYear)
+            );
+            let paidAmount = 0;
+            userPaymentsForCurrentMonth.forEach((p) => {
+              if (p.paymentStatus === "Paid") paidAmount += p.amount;
+            });
+            const dueAmount = Math.max(roomPrice - paidAmount, 0);
+            info[u._id] = {
+              paidAmount,
+              dueAmount,
+              status: paidAmount >= roomPrice ? "Paid" : "Unpaid",
+              roomPrice,
+            };
+          } else {
+            info[u._id] = {
+              paidAmount: 0,
+              dueAmount: 0,
+              status: "N/A",
+              roomPrice: 0,
+            };
+          }
+        });
+
+        setUsers(activeUsers);
+        setFilteredUsers(activeUsers);
+        setUserPaymentInfo(info);
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching users:", err);
-        setError("Failed to load users");
+        console.error("Error fetching users/payments:", err);
+        setError("Failed to load users or payments");
         setLoading(false);
       }
     };
 
-    fetchUsers();
-  }, []);
+    fetchUsersAndPayments();
+  }, [currentMonthYear]);
 
   // Filter users based on search term
   useEffect(() => {
@@ -332,33 +412,72 @@ export default function CreatePaymentPage() {
                       <p className="text-sm mt-1">Try adjusting your search</p>
                     </div>
                   ) : (
-                    filteredUsers.map((user) => (
-                      <div
-                        key={user._id}
-                        className="p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 border-transparent"
-                        onClick={() => handleUserSelection(user._id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
-                              {user.name}
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-1 text-sm">
-                              <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                                ID: {user.pgId}
-                              </span>
-                              <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                                Room:{" "}
-                                {typeof user.roomId === "object" &&
-                                user.roomId?.roomNumber
-                                  ? user.roomId.roomNumber
-                                  : "Not Assigned"}
-                              </span>
+                    filteredUsers.map((user) => {
+                      const paymentMeta = userPaymentInfo[user._id];
+                      const roomPrice =
+                        paymentMeta?.roomPrice ||
+                        (typeof user.roomId === "object" &&
+                          user.roomId?.price) ||
+                        0;
+                      const paid = paymentMeta?.paidAmount || 0;
+                      const due = paymentMeta?.dueAmount || 0;
+                      const status = paymentMeta?.status || "N/A";
+                      return (
+                        <div
+                          key={user._id}
+                          className="p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 border-transparent"
+                          onClick={() => handleUserSelection(user._id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                {user.name}
+                              </div>
+                              <div className="flex flex-wrap gap-2 mt-1 text-sm">
+                                <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                  ID: {user.pgId}
+                                </span>
+                                <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                  Room:{" "}
+                                  {typeof user.roomId === "object" &&
+                                  user.roomId?.roomNumber
+                                    ? user.roomId.roomNumber
+                                    : "Not Assigned"}
+                                </span>
+                                {roomPrice > 0 && (
+                                  <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                    Rent: ₹{roomPrice}
+                                  </span>
+                                )}
+                              </div>
+                              {roomPrice > 0 && (
+                                <div className="mt-2 text-xs flex flex-wrap gap-2">
+                                  <span
+                                    className={`px-2 py-0.5 rounded font-medium ${status === "Paid" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : status === "Unpaid" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
+                                  >
+                                    {status === "Paid" ? "Paid" : "Due"}
+                                  </span>
+                                  {status !== "N/A" && (
+                                    <span className="text-gray-600 dark:text-gray-300">
+                                      Paid: ₹{paid.toLocaleString()} / Due:{" "}
+                                      {due > 0 ? (
+                                        <span className="text-red-600 dark:text-red-400">
+                                          ₹{due.toLocaleString()}
+                                        </span>
+                                      ) : (
+                                        <span className="text-green-600 dark:text-green-400">
+                                          ₹0
+                                        </span>
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </>
