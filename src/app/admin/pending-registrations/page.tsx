@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FaSpinner } from "react-icons/fa";
 
 interface PendingRegistration {
@@ -18,17 +18,25 @@ interface PendingRegistration {
 
 export default function PendingRegistrationsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const initialSearch = searchParams.get("search") || "";
+  const initialPageParam = parseInt(searchParams.get("page") || "1", 10);
+  const initialPage =
+    !isNaN(initialPageParam) && initialPageParam > 0 ? initialPageParam : 1;
   const [pendingRegistrations, setPendingRegistrations] = useState<
     PendingRegistration[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [filteredRegistrations, setFilteredRegistrations] = useState<
     PendingRegistration[]
   >([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(initialPage);
   const [itemsPerPage] = useState(10);
+  // Skip first run of URL sync effect
+  const didInitRef = useRef(false);
 
   // Fetch pending registrations data
   useEffect(() => {
@@ -38,8 +46,13 @@ export default function PendingRegistrationsPage() {
         const response = await axios.get("/api/pending-registrations");
         console.log(response.data.data);
         if (response.data.success) {
-          setPendingRegistrations(response.data.data || []);
-          setFilteredRegistrations(response.data.data || []);
+          // Sort newest first by createdAt
+          const sorted = [...(response.data.data || [])].sort(
+            (a: PendingRegistration, b: PendingRegistration) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setPendingRegistrations(sorted);
+          setFilteredRegistrations(sorted);
         } else {
           setError(
             response.data.message || "Failed to load pending registrations"
@@ -60,18 +73,35 @@ export default function PendingRegistrationsPage() {
   // Filter registrations based on search term
   useEffect(() => {
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       const filtered = pendingRegistrations.filter(
         (registration) =>
-          registration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          registration.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          registration.name.toLowerCase().includes(term) ||
+          registration.email.toLowerCase().includes(term) ||
           registration.phone.includes(searchTerm)
       );
       setFilteredRegistrations(filtered);
     } else {
       setFilteredRegistrations(pendingRegistrations);
     }
-    setCurrentPage(1); // Reset to first page on filter change
+    // Reset to page 1 when search changes (user intent)
+    setCurrentPage(1);
   }, [searchTerm, pendingRegistrations]);
+
+  // Sync search & pagination state to URL for persistence
+  useEffect(() => {
+    if (!didInitRef.current) {
+      didInitRef.current = true;
+      return; // Skip initial sync (already reflected in initial state)
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (searchTerm) params.set("search", searchTerm);
+    else params.delete("search");
+    if (currentPage > 1) params.set("page", String(currentPage));
+    else params.delete("page");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  }, [searchTerm, currentPage, router, pathname]);
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
