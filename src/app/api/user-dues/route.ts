@@ -6,10 +6,11 @@ import User from "@/app/api/models/User";
 import Payment from "@/app/api/models/Payment";
 import {
   calculateProratedRent,
-  calculateTotalDue,
+  calculateTotalDueWithCredit,
   getMonthDetails,
   generateDueDate,
   getMonthsBetweenDates,
+  getUserAvailableCredit,
 } from "@/app/utils/proratedRentCalculation";
 
 // GET /api/user-dues - Get all user dues with filtering
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
       year
     );
 
-    // Get previous month's unpaid dues
+    // Get previous month's unpaid dues and available credit
     let previousUnpaidDue = 0;
     const previousMonthDues = await UserDue.find({
       userId,
@@ -165,6 +166,9 @@ export async function POST(request: NextRequest) {
       0
     );
 
+    // Get available credit for this user
+    const availableCredit = await getUserAvailableCredit(userId, year, monthNumber, UserDue);
+
     // Get payments for this month
     const monthYear = `${month} ${year}`;
     const payments = await Payment.find({
@@ -180,11 +184,12 @@ export async function POST(request: NextRequest) {
       0
     );
 
-    // Calculate total due
-    const dueCalc = calculateTotalDue(
+    // Calculate total due with credit system
+    const dueCalc = calculateTotalDueWithCredit(
       proratedCalc.proratedRent,
       previousUnpaidDue,
-      totalPaid
+      totalPaid,
+      availableCredit
     );
 
     const dueDate = generateDueDate(monthNumber, year);
@@ -205,6 +210,9 @@ export async function POST(request: NextRequest) {
       totalPaid: dueCalc.totalPaid,
       remainingDue: dueCalc.remainingDue,
       dueStatus: dueCalc.dueStatus,
+      creditBalance: dueCalc.newCreditBalance,
+      creditUsed: dueCalc.creditUsed,
+      netDue: dueCalc.netDue,
       dueDate,
       checkInDate: proratedCalc.isProrated ? checkInDate : undefined,
       isProrated: proratedCalc.isProrated,
@@ -314,7 +322,7 @@ export async function PUT(request: NextRequest) {
           targetYear
         );
 
-        // Get previous unpaid dues
+        // Get previous unpaid dues and available credit
         let previousUnpaidDue = 0;
         const previousMonthDues = await UserDue.find({
           userId,
@@ -330,6 +338,9 @@ export async function PUT(request: NextRequest) {
           (sum, due) => sum + due.remainingDue,
           0
         );
+
+        // Get available credit for this user
+        const availableCredit = await getUserAvailableCredit(userId, targetYear, targetMonth, UserDue);
 
         // Get payments for this month
         const monthName = new Date(targetYear, targetMonth - 1).toLocaleString(
@@ -351,11 +362,12 @@ export async function PUT(request: NextRequest) {
           0
         );
 
-        // Calculate total due
-        const dueCalc = calculateTotalDue(
+        // Calculate total due with credit system
+        const dueCalc = calculateTotalDueWithCredit(
           proratedCalc.proratedRent,
           previousUnpaidDue,
-          totalPaid
+          totalPaid,
+          availableCredit
         );
 
         const dueDate = generateDueDate(targetMonth, targetYear);
@@ -376,6 +388,9 @@ export async function PUT(request: NextRequest) {
           totalPaid: dueCalc.totalPaid,
           remainingDue: dueCalc.remainingDue,
           dueStatus: dueCalc.dueStatus,
+          creditBalance: dueCalc.newCreditBalance,
+          creditUsed: dueCalc.creditUsed,
+          netDue: dueCalc.netDue,
           dueDate,
           checkInDate: proratedCalc.isProrated ? checkInDate : undefined,
           isProrated: proratedCalc.isProrated,

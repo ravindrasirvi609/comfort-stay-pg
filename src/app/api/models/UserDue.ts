@@ -23,6 +23,11 @@ export interface IUserDue {
   totalPaid: number;
   remainingDue: number;
 
+  // Credit balance system (Phase 1)
+  creditBalance: number; // Available credit from overpayments
+  creditUsed: number; // Credit used for this month
+  netDue: number; // Due amount after applying credit balance
+
   // Status and dates
   dueStatus: "Paid" | "Partial" | "Unpaid" | "Overdue";
   dueDate: Date;
@@ -102,6 +107,23 @@ const UserDueSchema = new Schema<IUserDue>(
     remainingDue: {
       type: Number,
       default: 0,
+    },
+
+    // Credit balance system (Phase 1)
+    creditBalance: {
+      type: Number,
+      default: 0,
+      min: 0, // Credit balance cannot be negative
+    },
+    creditUsed: {
+      type: Number,
+      default: 0,
+      min: 0, // Credit used cannot be negative
+    },
+    netDue: {
+      type: Number,
+      default: 0,
+      min: 0, // Net due cannot be negative
     },
 
     // Status and dates

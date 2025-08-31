@@ -25,6 +25,13 @@ export interface DueCalculation {
   dueStatus: "Paid" | "Partial" | "Unpaid" | "Overdue";
 }
 
+export interface DueCalculationWithCredit extends DueCalculation {
+  availableCredit: number;
+  creditUsed: number;
+  newCreditBalance: number;
+  netDue: number;
+}
+
 /**
  * Calculate prorated rent based on check-in date
  */
@@ -100,6 +107,63 @@ export function calculateTotalDue(
     totalDue,
     totalPaid,
     remainingDue,
+    dueStatus,
+  };
+}
+
+/**
+ * Enhanced due calculation with credit balance support (Phase 1)
+ */
+export function calculateTotalDueWithCredit(
+  currentMonthDue: number,
+  previousUnpaidDue: number,
+  totalPaid: number,
+  availableCredit: number = 0
+): DueCalculationWithCredit {
+  // Validate inputs - prevent negative credit (should not happen in normal flow)
+  const safeAvailableCredit = Math.max(0, availableCredit);
+  
+  const totalDue = currentMonthDue + previousUnpaidDue;
+  let creditUsed = 0;
+  let newCreditBalance = safeAvailableCredit;
+  let netDue = 0;
+
+  // First, apply direct payments
+  const afterPayments = Math.max(0, totalDue - totalPaid);
+
+  if (afterPayments > 0 && safeAvailableCredit > 0) {
+    // Use credit to cover remaining due
+    creditUsed = Math.min(afterPayments, safeAvailableCredit);
+    netDue = afterPayments - creditUsed;
+    newCreditBalance = safeAvailableCredit - creditUsed;
+  } else if (afterPayments === 0 && totalPaid > totalDue) {
+    // Overpayment - add to credit balance
+    const overpayment = totalPaid - totalDue;
+    newCreditBalance = safeAvailableCredit + overpayment;
+  } else {
+    netDue = afterPayments;
+  }
+
+  // Determine status based on net due
+  let dueStatus: "Paid" | "Partial" | "Unpaid" | "Overdue";
+  if (netDue === 0) {
+    dueStatus = "Paid";
+  } else if (totalPaid > 0 || creditUsed > 0) {
+    dueStatus = "Partial";
+  } else {
+    dueStatus = "Unpaid";
+  }
+
+  return {
+    currentMonthDue,
+    previousUnpaidDue,
+    totalDue,
+    totalPaid,
+    remainingDue: Math.max(0, totalDue - totalPaid), // Original remaining due before credit
+    availableCredit: safeAvailableCredit,
+    creditUsed,
+    newCreditBalance: Number(newCreditBalance.toFixed(2)), // Keep 2 decimal places
+    netDue: Number(netDue.toFixed(2)), // Keep 2 decimal places
     dueStatus,
   };
 }
@@ -184,6 +248,75 @@ export function getMonthsBetweenDates(
   }
 
   return months;
+}
+
+/**
+ * Credit Management Utilities (Phase 1)
+ */
+
+/**
+ * Get user's total available credit from previous overpayments
+ */
+export async function getUserAvailableCredit(
+  userId: string,
+  currentYear: number,
+  currentMonth: number,
+  UserDue: any
+): Promise<number> {
+  try {
+    // Find the most recent due record to get current credit balance
+    const latestDue = await UserDue.findOne({
+      userId,
+      $or: [
+        { year: { $lt: currentYear } },
+        { year: currentYear, monthNumber: { $lt: currentMonth } },
+      ],
+      isActive: true,
+    })
+      .sort({ year: -1, monthNumber: -1 })
+      .limit(1);
+
+    return latestDue?.creditBalance || 0;
+  } catch (error) {
+    console.error("Error getting user available credit:", error);
+    return 0;
+  }
+}
+
+/**
+ * Format credit amount for display
+ */
+export function formatCreditDisplay(creditAmount: number): string {
+  if (creditAmount === 0) return "No Credit";
+  return `₹${creditAmount.toFixed(2)} Credit Available`;
+}
+
+/**
+ * Calculate credit summary for multiple users
+ */
+export function calculateCreditSummary(users: any[]): {
+  totalUsers: number;
+  usersWithCredit: number;
+  totalCreditAmount: number;
+  averageCreditPerUser: number;
+} {
+  const usersWithCredit = users.filter((user) => 
+    (user.creditBalance || 0) > 0
+  );
+  
+  const totalCreditAmount = users.reduce(
+    (sum, user) => sum + (user.creditBalance || 0),
+    0
+  );
+
+  return {
+    totalUsers: users.length,
+    usersWithCredit: usersWithCredit.length,
+    totalCreditAmount: Number(totalCreditAmount.toFixed(2)),
+    averageCreditPerUser: users.length > 0 
+      ? Number((totalCreditAmount / users.length).toFixed(2))
+      : 0,
+  };
 }
 
 /**
