@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
 import { FiUsers, FiBell, FiX } from "react-icons/fi";
@@ -58,6 +58,16 @@ interface User {
 // (Sorting config removed)
 
 export default function UsersPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  // Initialize current page from URL params, default to 1
+  const getInitialPage = () => {
+    const pageParam = searchParams.get("page");
+    return pageParam ? parseInt(pageParam, 10) : 1;
+  };
+
   // Validate image src to avoid Next/Image defaultLoader "Invalid URL" errors
   const isValidImageSrc = (src?: string): boolean => {
     try {
@@ -79,16 +89,62 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
   const [filterPayment, setFilterPayment] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(getInitialPage());
   const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+
+  // Debug current page changes
+  useEffect(() => {
+    console.log("Current page changed to:", currentPage);
+  }, [currentPage]);
   // Removed unused sort config state
-  const { toast } = useToast();
-  const router = useRouter();
   const [showUnpaidDuesOnly] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
+  const prevFiltersRef = useRef({
+    searchTerm: "",
+    filterStatus: "active",
+    filterPayment: "all",
+    showUnpaidDuesOnly: false,
+  });
+
+  // Function to update URL with current page
+  const updateURLWithPage = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams(window.location.search);
+      if (page === 1) {
+        params.delete("page");
+      } else {
+        params.set("page", page.toString());
+      }
+
+      const newURL = params.toString()
+        ? `?${params.toString()}`
+        : window.location.pathname;
+      router.replace(newURL, { scroll: false });
+    },
+    [router]
+  );
+
+  // Function to handle page changes
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      console.log("handlePageChange called with:", newPage);
+      setCurrentPage(newPage);
+      updateURLWithPage(newPage);
+    },
+    [updateURLWithPage]
+  );
+
+  // Handle URL parameter changes (browser back/forward)
+  useEffect(() => {
+    const pageParam = searchParams.get("page");
+    const pageFromURL = pageParam ? parseInt(pageParam, 10) : 1;
+    if (pageFromURL !== currentPage && pageFromURL >= 1) {
+      setCurrentPage(pageFromURL);
+    }
+  }, [searchParams, currentPage]);
 
   // Fetch users and payments data
   useEffect(() => {
@@ -171,14 +227,90 @@ export default function UsersPage() {
     }
 
     setFilteredUsers(result);
-    setCurrentPage(1); // Reset to first page on filter or sort change
-  }, [users, searchTerm, filterStatus, showUnpaidDuesOnly, filterPayment]);
+
+    // Check if any filters have changed to reset page to 1
+    const currentFilters = {
+      searchTerm,
+      filterStatus,
+      filterPayment,
+      showUnpaidDuesOnly,
+    };
+    const prevFilters = prevFiltersRef.current;
+
+    if (JSON.stringify(currentFilters) !== JSON.stringify(prevFilters)) {
+      prevFiltersRef.current = currentFilters;
+      if (currentPage !== 1) {
+        handlePageChange(1);
+      }
+    }
+  }, [
+    users,
+    searchTerm,
+    filterStatus,
+    showUnpaidDuesOnly,
+    filterPayment,
+    handlePageChange,
+    currentPage,
+  ]);
+
+  // Function to get pagination range for better visibility with many pages
+  const getPaginationRange = (
+    currentPage: number,
+    totalPages: number,
+    maxVisible: number = 5
+  ) => {
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const half = Math.floor(maxVisible / 2);
+    let start = Math.max(1, currentPage - half);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    const pages = [];
+
+    // Add first page if not in range
+    if (start > 1) {
+      pages.push(1);
+      if (start > 2) {
+        pages.push("...");
+      }
+    }
+
+    // Add visible page range
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    // Add last page if not in range
+    if (end < totalPages) {
+      if (end < totalPages - 1) {
+        pages.push("...");
+      }
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  // Debug pagination info
+  useEffect(() => {
+    console.log("Pagination info:", {
+      currentPage,
+      totalPages,
+      filteredUsersLength: filteredUsers.length,
+    });
+  }, [currentPage, totalPages, filteredUsers.length]);
 
   // Function to handle row click
   const handleRowClick = (userId: string) => {
@@ -609,7 +741,7 @@ export default function UsersPage() {
             <div className="bg-white/50 dark:bg-gray-900/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 dark:border-gray-700/50 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white/70 dark:bg-gray-800/70 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -617,7 +749,7 @@ export default function UsersPage() {
                 </button>
                 <button
                   onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    handlePageChange(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
                   className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white/70 dark:bg-gray-800/70 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -639,6 +771,11 @@ export default function UsersPage() {
                     of{" "}
                     <span className="font-medium">{filteredUsers.length}</span>{" "}
                     results
+                    {totalPages > 1 && (
+                      <span className="ml-2 text-gray-500 dark:text-gray-400">
+                        (Page {currentPage} of {totalPages})
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div>
@@ -648,7 +785,7 @@ export default function UsersPage() {
                   >
                     <button
                       onClick={() =>
-                        setCurrentPage(Math.max(1, currentPage - 1))
+                        handlePageChange(Math.max(1, currentPage - 1))
                       }
                       disabled={currentPage === 1}
                       className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -667,22 +804,31 @@ export default function UsersPage() {
                         />
                       </svg>
                     </button>
-                    {Array.from({ length: totalPages }).map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentPage(index + 1)}
-                        className={`relative inline-flex items-center px-4 py-2 border ${
-                          currentPage === index + 1
-                            ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-500 dark:border-purple-600"
-                            : "bg-white/70 dark:bg-gray-800/70 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        } text-sm font-medium`}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
+                    {getPaginationRange(currentPage, totalPages).map(
+                      (page, index) => (
+                        <React.Fragment key={index}>
+                          {page === "..." ? (
+                            <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 text-sm font-medium text-gray-500 dark:text-gray-400">
+                              ...
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handlePageChange(page as number)}
+                              className={`relative inline-flex items-center px-4 py-2 border ${
+                                currentPage === page
+                                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-500 dark:border-purple-600"
+                                  : "bg-white/70 dark:bg-gray-800/70 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              } text-sm font-medium`}
+                            >
+                              {page}
+                            </button>
+                          )}
+                        </React.Fragment>
+                      )
+                    )}
                     <button
                       onClick={() =>
-                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                        handlePageChange(Math.min(totalPages, currentPage + 1))
                       }
                       disabled={currentPage === totalPages}
                       className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
