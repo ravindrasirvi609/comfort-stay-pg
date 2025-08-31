@@ -193,6 +193,8 @@ export default function UsersPage() {
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.phone &&
+            user.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (user.pgId &&
             user.pgId.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (user.companyName &&
@@ -370,8 +372,8 @@ export default function UsersPage() {
     // Create CSV header with all relevant columns
     const headers = [
       "Name",
-      "Email",
       "Phone",
+      "Email",
       "PG ID",
       "Room Number",
       "Room Type",
@@ -399,8 +401,8 @@ export default function UsersPage() {
     // Create CSV rows with all relevant data
     const csvRows = users.map((user) => [
       user.name || "",
-      user.email || "",
       user.phone || "",
+      user.email || "",
       user.pgId || "",
       typeof user.roomId === "object" ? user.roomId?.roomNumber || "" : "",
       typeof user.roomId === "object" ? user.roomId?.type || "" : "",
@@ -601,7 +603,7 @@ export default function UsersPage() {
                 <input
                   type="text"
                   className="block w-full pl-10 pr-3 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
-                  placeholder="Search by name, email, PG ID, or company"
+                  placeholder="Search by name, email, phone, PG ID, or company"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -737,7 +739,19 @@ export default function UsersPage() {
                             {user.name}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {user.email}
+                            {user.phone ? (
+                              <a
+                                href={`https://wa.me/${user.phone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {user.phone}
+                              </a>
+                            ) : (
+                              "No phone"
+                            )}
                           </div>
                         </div>
                       </div>
