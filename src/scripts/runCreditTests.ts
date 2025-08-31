@@ -28,7 +28,9 @@ const testSuites: TestSuite[] = [
   },
 ];
 
-function runTestSuite(testSuite: TestSuite): Promise<{ passed: boolean; output: string }> {
+function runTestSuite(
+  testSuite: TestSuite
+): Promise<{ passed: boolean; output: string }> {
   return new Promise((resolve) => {
     console.log(`\n🧪 Starting ${testSuite.name}...`);
     console.log(`   ${testSuite.description}`);
@@ -65,33 +67,36 @@ function runTestSuite(testSuite: TestSuite): Promise<{ passed: boolean; output: 
     child.on("close", (code) => {
       clearTimeout(timeout);
       const passed = code === 0;
-      
+
       if (passed) {
         console.log(`\n✅ ${testSuite.name} completed successfully`);
       } else {
         console.log(`\n❌ ${testSuite.name} failed with exit code ${code}`);
       }
-      
+
       resolve({ passed, output: output + error });
     });
 
     child.on("error", (err) => {
       clearTimeout(timeout);
       console.error(`\n💥 Error running ${testSuite.name}:`, err);
-      resolve({ passed: false, output: output + error + `\n[ERROR: ${err.message}]` });
+      resolve({
+        passed: false,
+        output: output + error + `\n[ERROR: ${err.message}]`,
+      });
     });
   });
 }
 
 async function main() {
   console.log("🚀 Credit Balance System - Complete Test Suite\n");
-  console.log("=" .repeat(70));
+  console.log("=".repeat(70));
   console.log("This will run all tests for the credit balance system:");
   console.log("• Unit tests for calculation functions");
   console.log("• Integration tests with database operations");
   console.log("• Edge case validation");
   console.log("• Real-world scenario testing");
-  console.log("=" .repeat(70));
+  console.log("=".repeat(70));
 
   const results: { suite: TestSuite; passed: boolean; output: string }[] = [];
   let totalPassed = 0;
@@ -106,7 +111,7 @@ async function main() {
         passed: result.passed,
         output: result.output,
       });
-      
+
       if (result.passed) {
         totalPassed++;
       }
@@ -118,22 +123,24 @@ async function main() {
         output: `Fatal error: ${error}`,
       });
     }
-    
-    console.log("=" .repeat(70));
+
+    console.log("=".repeat(70));
   }
 
   // Generate summary report
   console.log("\n📊 FINAL TEST REPORT");
-  console.log("=" .repeat(70));
-  
+  console.log("=".repeat(70));
+
   results.forEach((result, index) => {
     const status = result.passed ? "✅ PASSED" : "❌ FAILED";
     console.log(`${index + 1}. ${result.suite.name}: ${status}`);
     console.log(`   ${result.suite.description}`);
   });
 
-  console.log("=" .repeat(70));
-  console.log(`\n🎯 Overall Results: ${totalPassed}/${totalSuites} test suites passed`);
+  console.log("=".repeat(70));
+  console.log(
+    `\n🎯 Overall Results: ${totalPassed}/${totalSuites} test suites passed`
+  );
 
   if (totalPassed === totalSuites) {
     console.log("\n🎉 ALL TESTS PASSED!");
@@ -142,18 +149,17 @@ async function main() {
     console.log("   🚀 Database operations are functioning properly");
     console.log("   🛡️  Edge cases are handled gracefully");
     console.log("   📈 System is ready for production deployment");
-    
+
     console.log("\n📋 Next Steps:");
     console.log("   1. Update UI components to display credit information");
     console.log("   2. Create admin dashboard for credit management");
     console.log("   3. Add monitoring and alerting for credit operations");
     console.log("   4. Update user documentation");
-    
   } else {
     console.log("\n⚠️  SOME TESTS FAILED");
     console.log("   Please review the failed test output above");
     console.log("   Fix any issues before deploying to production");
-    
+
     console.log("\n📋 Failed Test Suites:");
     results.forEach((result) => {
       if (!result.passed) {
@@ -162,9 +168,9 @@ async function main() {
     });
   }
 
-  console.log("\n" + "=" .repeat(70));
+  console.log("\n" + "=".repeat(70));
   console.log("Test execution completed");
-  
+
   // Exit with appropriate code
   process.exit(totalPassed === totalSuites ? 0 : 1);
 }

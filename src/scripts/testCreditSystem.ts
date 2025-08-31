@@ -236,7 +236,7 @@ async function runCreditCalculationTests() {
       } else {
         console.log("   ❌ FAILED");
         errors.forEach((error) => console.log(error));
-        
+
         // Show detailed breakdown
         console.log("   📊 Actual result:");
         console.log(`      Net Due: ₹${result.netDue}`);
@@ -251,7 +251,9 @@ async function runCreditCalculationTests() {
     console.log("");
   }
 
-  console.log(`\n📊 Calculation Tests Summary: ${passedTests}/${totalTests} passed`);
+  console.log(
+    `\n📊 Calculation Tests Summary: ${passedTests}/${totalTests} passed`
+  );
   return passedTests === totalTests;
 }
 
@@ -273,7 +275,9 @@ async function runUtilityTests() {
         console.log(`   ✅ formatCreditDisplay(${test.input}) = "${result}"`);
         passedTests++;
       } else {
-        console.log(`   ❌ formatCreditDisplay(${test.input}): Expected "${test.expected}", got "${result}"`);
+        console.log(
+          `   ❌ formatCreditDisplay(${test.input}): Expected "${test.expected}", got "${result}"`
+        );
       }
     }
   }
@@ -285,23 +289,43 @@ async function runUtilityTests() {
     const summaryTest = utilityTests[1];
     if (summaryTest?.input && summaryTest?.expected) {
       const result = calculateCreditSummary(summaryTest.input);
-      
-      const totalUsersMatch = result.totalUsers === summaryTest.expected.totalUsers;
-      const usersWithCreditMatch = result.usersWithCredit === summaryTest.expected.usersWithCredit;
-      const totalCreditAmountMatch = Math.abs(result.totalCreditAmount - summaryTest.expected.totalCreditAmount) < 0.01;
-      const averageCreditMatch = Math.abs(result.averageCreditPerUser - summaryTest.expected.averageCreditPerUser) < 0.01;
 
-      if (totalUsersMatch && usersWithCreditMatch && totalCreditAmountMatch && averageCreditMatch) {
+      const totalUsersMatch =
+        result.totalUsers === summaryTest.expected.totalUsers;
+      const usersWithCreditMatch =
+        result.usersWithCredit === summaryTest.expected.usersWithCredit;
+      const totalCreditAmountMatch =
+        Math.abs(
+          result.totalCreditAmount - summaryTest.expected.totalCreditAmount
+        ) < 0.01;
+      const averageCreditMatch =
+        Math.abs(
+          result.averageCreditPerUser -
+            summaryTest.expected.averageCreditPerUser
+        ) < 0.01;
+
+      if (
+        totalUsersMatch &&
+        usersWithCreditMatch &&
+        totalCreditAmountMatch &&
+        averageCreditMatch
+      ) {
         console.log("   ✅ calculateCreditSummary passed");
         console.log(`      Total Users: ${result.totalUsers}`);
         console.log(`      Users with Credit: ${result.usersWithCredit}`);
         console.log(`      Total Credit Amount: ₹${result.totalCreditAmount}`);
-        console.log(`      Average Credit per User: ₹${result.averageCreditPerUser}`);
+        console.log(
+          `      Average Credit per User: ₹${result.averageCreditPerUser}`
+        );
         passedTests++;
       } else {
         console.log("   ❌ calculateCreditSummary failed");
-        console.log(`      Expected: Users=${summaryTest.expected.totalUsers}, WithCredit=${summaryTest.expected.usersWithCredit}, TotalAmount=₹${summaryTest.expected.totalCreditAmount}, AvgPerUser=₹${summaryTest.expected.averageCreditPerUser}`);
-        console.log(`      Got: Users=${result.totalUsers}, WithCredit=${result.usersWithCredit}, TotalAmount=₹${result.totalCreditAmount}, AvgPerUser=₹${result.averageCreditPerUser}`);
+        console.log(
+          `      Expected: Users=${summaryTest.expected.totalUsers}, WithCredit=${summaryTest.expected.usersWithCredit}, TotalAmount=₹${summaryTest.expected.totalCreditAmount}, AvgPerUser=₹${summaryTest.expected.averageCreditPerUser}`
+        );
+        console.log(
+          `      Got: Users=${result.totalUsers}, WithCredit=${result.usersWithCredit}, TotalAmount=₹${result.totalCreditAmount}, AvgPerUser=₹${result.averageCreditPerUser}`
+        );
       }
     } else {
       console.log("   ❌ Test configuration error");
@@ -310,7 +334,9 @@ async function runUtilityTests() {
     console.log("   ❌ ERROR:", error);
   }
 
-  console.log(`\n📊 Utility Tests Summary: ${passedTests}/${totalTests} passed`);
+  console.log(
+    `\n📊 Utility Tests Summary: ${passedTests}/${totalTests} passed`
+  );
   return passedTests === totalTests;
 }
 
@@ -320,22 +346,42 @@ async function runEdgeCaseTests() {
   const edgeCases = [
     {
       name: "Negative Credit (Should be handled gracefully)",
-      input: { currentMonthRent: 5000, previousUnpaidDue: 0, totalPaid: 5000, availableCredit: -100 },
+      input: {
+        currentMonthRent: 5000,
+        previousUnpaidDue: 0,
+        totalPaid: 5000,
+        availableCredit: -100,
+      },
       expectError: false, // System should handle gracefully by treating as 0 credit
     },
     {
       name: "Zero Rent",
-      input: { currentMonthRent: 0, previousUnpaidDue: 0, totalPaid: 1000, availableCredit: 0 },
+      input: {
+        currentMonthRent: 0,
+        previousUnpaidDue: 0,
+        totalPaid: 1000,
+        availableCredit: 0,
+      },
       expectError: false,
     },
     {
       name: "Very Large Numbers",
-      input: { currentMonthRent: 999999.99, previousUnpaidDue: 500000, totalPaid: 2000000, availableCredit: 100000 },
+      input: {
+        currentMonthRent: 999999.99,
+        previousUnpaidDue: 500000,
+        totalPaid: 2000000,
+        availableCredit: 100000,
+      },
       expectError: false,
     },
     {
       name: "Decimal Precision",
-      input: { currentMonthRent: 4999.99, previousUnpaidDue: 1000.01, totalPaid: 6000.50, availableCredit: 0.50 },
+      input: {
+        currentMonthRent: 4999.99,
+        previousUnpaidDue: 1000.01,
+        totalPaid: 6000.5,
+        availableCredit: 0.5,
+      },
       expectError: false,
     },
   ];
@@ -345,7 +391,7 @@ async function runEdgeCaseTests() {
 
   for (const edgeCase of edgeCases) {
     console.log(`📋 Testing: ${edgeCase.name}`);
-    
+
     try {
       const result = calculateTotalDueWithCredit(
         edgeCase.input.currentMonthRent,
@@ -355,7 +401,7 @@ async function runEdgeCaseTests() {
       );
 
       // Basic validation - no NaN, no negative credit balance
-      const isValid = 
+      const isValid =
         !isNaN(result.netDue) &&
         !isNaN(result.newCreditBalance) &&
         !isNaN(result.creditUsed) &&
@@ -385,31 +431,42 @@ async function runEdgeCaseTests() {
     console.log("");
   }
 
-  console.log(`📊 Edge Case Tests Summary: ${passedTests}/${totalTests} passed`);
+  console.log(
+    `📊 Edge Case Tests Summary: ${passedTests}/${totalTests} passed`
+  );
   return passedTests === totalTests;
 }
 
 async function main() {
   console.log("🚀 Credit Balance System Test Suite\n");
-  console.log("=" .repeat(50));
+  console.log("=".repeat(50));
 
   const calculationTestsPass = await runCreditCalculationTests();
-  console.log("=" .repeat(50));
-  
+  console.log("=".repeat(50));
+
   const utilityTestsPass = await runUtilityTests();
-  console.log("=" .repeat(50));
-  
+  console.log("=".repeat(50));
+
   const edgeCaseTestsPass = await runEdgeCaseTests();
-  console.log("=" .repeat(50));
+  console.log("=".repeat(50));
 
   // Overall summary
   console.log("\n🎯 Overall Test Results:");
-  console.log(`   Calculation Tests: ${calculationTestsPass ? "✅ PASSED" : "❌ FAILED"}`);
-  console.log(`   Utility Tests: ${utilityTestsPass ? "✅ PASSED" : "❌ FAILED"}`);
-  console.log(`   Edge Case Tests: ${edgeCaseTestsPass ? "✅ PASSED" : "❌ FAILED"}`);
+  console.log(
+    `   Calculation Tests: ${calculationTestsPass ? "✅ PASSED" : "❌ FAILED"}`
+  );
+  console.log(
+    `   Utility Tests: ${utilityTestsPass ? "✅ PASSED" : "❌ FAILED"}`
+  );
+  console.log(
+    `   Edge Case Tests: ${edgeCaseTestsPass ? "✅ PASSED" : "❌ FAILED"}`
+  );
 
-  const allTestsPass = calculationTestsPass && utilityTestsPass && edgeCaseTestsPass;
-  console.log(`\n🏆 Final Result: ${allTestsPass ? "✅ ALL TESTS PASSED" : "❌ SOME TESTS FAILED"}`);
+  const allTestsPass =
+    calculationTestsPass && utilityTestsPass && edgeCaseTestsPass;
+  console.log(
+    `\n🏆 Final Result: ${allTestsPass ? "✅ ALL TESTS PASSED" : "❌ SOME TESTS FAILED"}`
+  );
 
   if (allTestsPass) {
     console.log("\n🎉 The Credit Balance System is working correctly!");

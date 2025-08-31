@@ -41,7 +41,8 @@ async function makeApiCall(
     return { status: response.status, data };
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return { status: 500, data: { error: errorMessage } };
   }
 }
@@ -57,10 +58,11 @@ const apiTests: ApiTestScenario[] = [
       return (
         response.success &&
         Array.isArray(response.dues) &&
-        response.dues.every((due: any) =>
-          typeof due.creditBalance === "number" &&
-          typeof due.creditUsed === "number" &&
-          typeof due.netDue === "number"
+        response.dues.every(
+          (due: any) =>
+            typeof due.creditBalance === "number" &&
+            typeof due.creditUsed === "number" &&
+            typeof due.netDue === "number"
         )
       );
     },
@@ -102,7 +104,9 @@ async function runApiTests(): Promise<boolean> {
     const healthCheck = await makeApiCall("/api/health");
     if (healthCheck.status !== 200) {
       console.log("⚠️  API health check failed. Skipping API tests.");
-      console.log("   Make sure your Next.js server is running on the correct port");
+      console.log(
+        "   Make sure your Next.js server is running on the correct port"
+      );
       return false;
     }
     console.log("✅ API is reachable\n");
@@ -127,7 +131,9 @@ async function runApiTests(): Promise<boolean> {
       // Check status code
       if (result.status !== test.expectedStatus) {
         console.log(`   ❌ FAILED - Status Code`);
-        console.log(`      Expected: ${test.expectedStatus}, Got: ${result.status}`);
+        console.log(
+          `      Expected: ${test.expectedStatus}, Got: ${result.status}`
+        );
         console.log(`      Response: ${JSON.stringify(result.data, null, 2)}`);
         continue;
       }
@@ -141,7 +147,6 @@ async function runApiTests(): Promise<boolean> {
 
       console.log("   ✅ PASSED");
       passedTests++;
-
     } catch (error) {
       console.log("   ❌ ERROR:", error);
     }
@@ -198,10 +203,10 @@ async function testCreditCalculationEndpoint() {
 
 async function main() {
   console.log("🚀 Credit Balance System API Tests\n");
-  console.log("=" .repeat(50));
+  console.log("=".repeat(50));
   console.log("Testing API endpoints with credit balance functionality");
   console.log("Make sure your Next.js development server is running");
-  console.log("=" .repeat(50));
+  console.log("=".repeat(50));
 
   // Run basic API tests
   const basicTestsPass = await runApiTests();
@@ -209,10 +214,14 @@ async function main() {
   // Run credit calculation specific test
   const calculationTestPass = await testCreditCalculationEndpoint();
 
-  console.log("\n" + "=" .repeat(50));
+  console.log("\n" + "=".repeat(50));
   console.log("🎯 API Test Results:");
-  console.log(`   Basic API Tests: ${basicTestsPass ? "✅ PASSED" : "❌ FAILED"}`);
-  console.log(`   Credit Calculation: ${calculationTestPass ? "✅ PASSED" : "❌ FAILED"}`);
+  console.log(
+    `   Basic API Tests: ${basicTestsPass ? "✅ PASSED" : "❌ FAILED"}`
+  );
+  console.log(
+    `   Credit Calculation: ${calculationTestPass ? "✅ PASSED" : "❌ FAILED"}`
+  );
 
   const allTestsPass = basicTestsPass && calculationTestPass;
 
@@ -229,7 +238,7 @@ async function main() {
     console.log("   - Credit system is properly integrated");
   }
 
-  console.log("\n" + "=" .repeat(50));
+  console.log("\n" + "=".repeat(50));
   process.exit(allTestsPass ? 0 : 1);
 }
 

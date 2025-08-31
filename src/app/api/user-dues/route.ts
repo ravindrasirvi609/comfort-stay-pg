@@ -167,7 +167,12 @@ export async function POST(request: NextRequest) {
     );
 
     // Get available credit for this user
-    const availableCredit = await getUserAvailableCredit(userId, year, monthNumber, UserDue);
+    const availableCredit = await getUserAvailableCredit(
+      userId,
+      year,
+      monthNumber,
+      UserDue
+    );
 
     // Get payments for this month
     const monthYear = `${month} ${year}`;
@@ -340,7 +345,12 @@ export async function PUT(request: NextRequest) {
         );
 
         // Get available credit for this user
-        const availableCredit = await getUserAvailableCredit(userId, targetYear, targetMonth, UserDue);
+        const availableCredit = await getUserAvailableCredit(
+          userId,
+          targetYear,
+          targetMonth,
+          UserDue
+        );
 
         // Get payments for this month
         const monthName = new Date(targetYear, targetMonth - 1).toLocaleString(

@@ -70,7 +70,7 @@ async function setupTestData() {
       isActive: true,
     },
     {
-      name: "Test User Credit 2", 
+      name: "Test User Credit 2",
       email: "testcredit2@example.com",
       phoneNumber: "1234567891",
       roomId: testRoom._id,
@@ -114,7 +114,12 @@ async function testCreditAccumulation(userId: Types.ObjectId) {
     });
 
     // Test getUserAvailableCredit function
-    const availableCredit = await getUserAvailableCredit(userId.toString(), 2025, 1, UserDue);
+    const availableCredit = await getUserAvailableCredit(
+      userId.toString(),
+      2025,
+      1,
+      UserDue
+    );
 
     if (Math.abs(availableCredit - 2000) < 0.01) {
       console.log("   ✅ Credit accumulation test passed");
@@ -177,7 +182,9 @@ async function testCreditApplication(userId: Types.ObjectId) {
       return true;
     } else {
       console.log("   ❌ Credit application test failed");
-      console.log(`      Expected Net Due: ₹${calculatedNetDue}, Got: ₹${netDue}`);
+      console.log(
+        `      Expected Net Due: ₹${calculatedNetDue}, Got: ₹${netDue}`
+      );
       return false;
     }
   } catch (error) {
@@ -215,9 +222,13 @@ async function testMultiMonthCreditFlow(userId: Types.ObjectId) {
     });
 
     // Verify multi-month credit flow
-    const expectedNetDue = februaryDue.totalDue - februaryDue.totalPaid - februaryDue.creditUsed;
+    const expectedNetDue =
+      februaryDue.totalDue - februaryDue.totalPaid - februaryDue.creditUsed;
 
-    if (Math.abs(februaryDue.netDue - expectedNetDue) < 0.01 && februaryDue.creditBalance === 0) {
+    if (
+      Math.abs(februaryDue.netDue - expectedNetDue) < 0.01 &&
+      februaryDue.creditBalance === 0
+    ) {
       console.log("   ✅ Multi-month credit flow test passed");
       console.log(`      Credit fully utilized across months`);
       console.log(`      Final Net Due: ₹${februaryDue.netDue}`);
@@ -225,7 +236,9 @@ async function testMultiMonthCreditFlow(userId: Types.ObjectId) {
       return true;
     } else {
       console.log("   ❌ Multi-month credit flow test failed");
-      console.log(`      Expected Net Due: ₹${expectedNetDue}, Got: ₹${februaryDue.netDue}`);
+      console.log(
+        `      Expected Net Due: ₹${expectedNetDue}, Got: ₹${februaryDue.netDue}`
+      );
       return false;
     }
   } catch (error) {
@@ -265,16 +278,23 @@ async function testComplexCreditScenario(userId: Types.ObjectId) {
     // Verify complex scenario calculations
     const expectedCredit = marchDue.totalPaid - marchDue.totalDue; // ₹12,000 - ₹9,000 = ₹3,000
 
-    if (Math.abs(marchDue.creditBalance - expectedCredit) < 0.01 && marchDue.netDue === 0) {
+    if (
+      Math.abs(marchDue.creditBalance - expectedCredit) < 0.01 &&
+      marchDue.netDue === 0
+    ) {
       console.log("   ✅ Complex credit scenario test passed");
-      console.log(`      Total Due: ₹${marchDue.totalDue} (₹${marchDue.currentMonthDue} + ₹${marchDue.previousUnpaidDue})`);
+      console.log(
+        `      Total Due: ₹${marchDue.totalDue} (₹${marchDue.currentMonthDue} + ₹${marchDue.previousUnpaidDue})`
+      );
       console.log(`      Total Paid: ₹${marchDue.totalPaid}`);
       console.log(`      New Credit: ₹${marchDue.creditBalance}`);
       console.log(`      Net Due: ₹${marchDue.netDue}`);
       return true;
     } else {
       console.log("   ❌ Complex credit scenario test failed");
-      console.log(`      Expected Credit: ₹${expectedCredit}, Got: ₹${marchDue.creditBalance}`);
+      console.log(
+        `      Expected Credit: ₹${expectedCredit}, Got: ₹${marchDue.creditBalance}`
+      );
       return false;
     }
   } catch (error) {
@@ -297,7 +317,9 @@ async function cleanupTestData() {
     console.log(`   ✅ Cleaned up ${cleanupResults[0].deletedCount} users`);
     console.log(`   ✅ Cleaned up ${cleanupResults[1].deletedCount} rooms`);
     console.log(`   ✅ Cleaned up ${cleanupResults[2].deletedCount} payments`);
-    console.log(`   ✅ Cleaned up ${cleanupResults[3].deletedCount} due records`);
+    console.log(
+      `   ✅ Cleaned up ${cleanupResults[3].deletedCount} due records`
+    );
   } catch (error) {
     console.log("   ⚠️ Error during cleanup:", error);
   }
@@ -305,7 +327,7 @@ async function cleanupTestData() {
 
 async function main() {
   console.log("🚀 Credit Balance System Integration Tests\n");
-  console.log("=" .repeat(60));
+  console.log("=".repeat(60));
 
   try {
     // Connect to database
@@ -316,7 +338,7 @@ async function main() {
     const { testRoom, testUsers } = await setupTestData();
     const testUserId = testUsers[0]._id;
 
-    console.log("=" .repeat(60));
+    console.log("=".repeat(60));
 
     // Run integration tests
     const tests = [
@@ -334,8 +356,10 @@ async function main() {
       if (result) passedTests++;
     }
 
-    console.log("=" .repeat(60));
-    console.log(`\n📊 Integration Test Summary: ${passedTests}/${totalTests} passed`);
+    console.log("=".repeat(60));
+    console.log(
+      `\n📊 Integration Test Summary: ${passedTests}/${totalTests} passed`
+    );
 
     if (passedTests === totalTests) {
       console.log("🎉 All integration tests passed!");
@@ -354,17 +378,16 @@ async function main() {
 
     console.log("\n✨ Integration tests completed");
     process.exit(passedTests === totalTests ? 0 : 1);
-
   } catch (error) {
     console.error("💥 Fatal error in integration tests:", error);
-    
+
     // Attempt cleanup even on error
     try {
       await cleanupTestData();
     } catch (cleanupError) {
       console.error("💥 Error during cleanup:", cleanupError);
     }
-    
+
     process.exit(1);
   }
 }

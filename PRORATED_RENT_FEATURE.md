@@ -105,12 +105,12 @@ The system includes several utility functions for credit management:
 const credit = await getUserAvailableCredit(userId, year, month, UserDue);
 
 // Format credit for display
-const displayText = formatCreditDisplay(1500.50); // "₹1,500.50 credit"
+const displayText = formatCreditDisplay(1500.5); // "₹1,500.50 credit"
 
 // Calculate credit summary for multiple users
 const summary = calculateCreditSummary([
   { creditBalance: 1000, netDue: -500 },
-  { creditBalance: 0, netDue: 2000 }
+  { creditBalance: 0, netDue: 2000 },
 ]);
 // Returns: { totalCredit: 1500, usersWithCredit: 2, averageCredit: 750 }
 ```
@@ -196,7 +196,12 @@ console.log(dueCalc);
 
 ```typescript
 // Scenario A: Credit partially covers dues
-const partialCreditScenario = calculateTotalDueWithCredit(5000, 2000, 3000, 1000);
+const partialCreditScenario = calculateTotalDueWithCredit(
+  5000,
+  2000,
+  3000,
+  1000
+);
 // Result: ₹1,000 credit reduces ₹7,000 total due to ₹6,000, user paid ₹3,000, owes ₹3,000
 
 // Scenario B: Credit fully covers dues
@@ -340,11 +345,13 @@ import { DueDisplay, DuesSummary } from '@/components/DueDisplay';
    - Ensure month/year parameters are correct
 
 3. **Payment Not Reflecting in Dues**
+
    - Check if payment month matches due month
    - Verify payment status is "Paid"
    - Run recalculation for the user
 
 4. **Credit Balance Issues (NEW)**
+
    - Verify previous months' due records exist
    - Check if overpayments were properly recorded
    - Ensure credit calculations include all payment history
@@ -374,12 +381,14 @@ curl /api/user-dues/recalculate
 ## Future Enhancements
 
 ### Phase 2 Enhancements (Next)
+
 1. **Credit Expiration**: Optional credit expiration dates for policy compliance
 2. **Credit Transfer**: Allow credit transfer between users (family members)
 3. **Credit Limits**: Maximum credit balance limits per user
 4. **Credit Reports**: Detailed credit usage and balance reports
 
 ### Advanced Features
+
 1. **Advanced Proration Rules**: Different rules for different room types
 2. **Seasonal Pricing**: Support for seasonal rent variations with credit compatibility
 3. **Grace Periods**: Configurable grace periods for late payments
@@ -388,6 +397,7 @@ curl /api/user-dues/recalculate
 6. **Mobile Notifications**: Push notifications for due amounts and credit updates
 
 ### Business Intelligence
+
 1. **Credit Analytics**: Advanced analytics on credit patterns and usage
 2. **Predictive Modeling**: Predict payment patterns based on credit history
 3. **Integration**: Connect with external payment gateways supporting credit
@@ -396,6 +406,7 @@ curl /api/user-dues/recalculate
 ## Implementation Status
 
 ### ✅ Completed (Phase 1)
+
 - [x] Credit Balance System
 - [x] Automatic Credit Application
 - [x] Cross-Month Credit Tracking
@@ -405,11 +416,13 @@ curl /api/user-dues/recalculate
 - [x] Utility Functions for Credit Management
 
 ### 🚧 In Progress
+
 - [ ] UI Components for Credit Display
 - [ ] Credit Summary Dashboard
 - [ ] Admin Credit Management Tools
 
 ### 📋 Planned
+
 - [ ] Credit Expiration System (Phase 2)
 - [ ] Advanced Credit Reports
 - [ ] Credit Transfer Features
@@ -419,6 +432,7 @@ curl /api/user-dues/recalculate
 The Credit Balance System includes a comprehensive test suite to ensure reliability and accuracy.
 
 ### Quick Test Command
+
 ```bash
 # Interactive test runner (recommended)
 ./scripts/test-credit-system.sh
@@ -430,8 +444,9 @@ npx tsx src/scripts/runCreditTests.ts          # Complete suite
 ```
 
 ### Test Coverage
+
 - ✅ **Unit Tests**: All calculation functions and edge cases
-- ✅ **Integration Tests**: Database operations and real scenarios  
+- ✅ **Integration Tests**: Database operations and real scenarios
 - ✅ **API Tests**: Endpoint functionality and responses
 - ✅ **Edge Cases**: Invalid inputs and boundary conditions
 

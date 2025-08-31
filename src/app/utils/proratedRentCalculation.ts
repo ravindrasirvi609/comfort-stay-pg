@@ -122,7 +122,7 @@ export function calculateTotalDueWithCredit(
 ): DueCalculationWithCredit {
   // Validate inputs - prevent negative credit (should not happen in normal flow)
   const safeAvailableCredit = Math.max(0, availableCredit);
-  
+
   const totalDue = currentMonthDue + previousUnpaidDue;
   let creditUsed = 0;
   let newCreditBalance = safeAvailableCredit;
@@ -300,10 +300,8 @@ export function calculateCreditSummary(users: any[]): {
   totalCreditAmount: number;
   averageCreditPerUser: number;
 } {
-  const usersWithCredit = users.filter((user) => 
-    (user.creditBalance || 0) > 0
-  );
-  
+  const usersWithCredit = users.filter((user) => (user.creditBalance || 0) > 0);
+
   const totalCreditAmount = users.reduce(
     (sum, user) => sum + (user.creditBalance || 0),
     0
@@ -313,9 +311,10 @@ export function calculateCreditSummary(users: any[]): {
     totalUsers: users.length,
     usersWithCredit: usersWithCredit.length,
     totalCreditAmount: Number(totalCreditAmount.toFixed(2)),
-    averageCreditPerUser: users.length > 0 
-      ? Number((totalCreditAmount / users.length).toFixed(2))
-      : 0,
+    averageCreditPerUser:
+      users.length > 0
+        ? Number((totalCreditAmount / users.length).toFixed(2))
+        : 0,
   };
 }
 
