@@ -99,11 +99,12 @@ export default function UsersPage() {
         const usersResponse = await axios.get("/api/users/with-dues");
         const usersData = usersResponse.data.users || [];
 
-        // Map the response to include due amount from UserDue model  
+        // Map the response to include due amount from UserDue model
         const processedUsers = usersData.map((user: any) => {
           return {
             ...user,
-            currentMonthRentStatus: user.currentMonthRentStatus || user.dueStatus || "N/A",
+            currentMonthRentStatus:
+              user.currentMonthRentStatus || user.dueStatus || "N/A",
             dueAmount: user.dueAmount || user.remainingDue || 0, // Use the due amount directly from API
           };
         });

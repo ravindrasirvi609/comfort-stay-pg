@@ -282,14 +282,14 @@ export async function PUT(request: NextRequest) {
       try {
         const userId = userDoc._id.toString();
         const room = userDoc.roomId as any;
-        
+
         // Skip if room or room price is null/undefined
         if (!room || !room.price) {
           results.errors.push(`User ${userId}: No room price available`);
           results.failed++;
           continue;
         }
-        
+
         const fullMonthRent = room.price;
         const checkInDate = userDoc.moveInDate || userDoc.createdAt;
 
