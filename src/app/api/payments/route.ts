@@ -1,9 +1,146 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
-import Payment from "@/app/api/models/Payment";
-import User from "@/app/api/models/User";
+import Payment from "../models/Payment";
+import User from "../models/User";
+import UserDue from "../models/UserDue";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
+import { calculateTotalDue } from "@/app/utils/proratedRentCalculation";
+
+// Helper function to recalculate user dues after payment
+async function recalculateUserDuesAfterPayment(
+  userId: string,
+  monthsArray: string[]
+) {
+  for (const monthYear of monthsArray) {
+    // Parse month and year from "January 2025" format
+    const [monthName, yearStr] = monthYear.split(" ");
+    const year = parseInt(yearStr);
+    const monthNumber = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
+
+    // Find the due record for this month
+    const due = await UserDue.findOne({
+      userId,
+      year,
+      monthNumber,
+      isActive: true,
+    });
+
+    if (!due) {
+      // If no due record exists, skip this month
+      console.log(`No due record found for user ${userId}, month ${monthYear}`);
+      continue;
+    }
+
+    // Get all payments for this month
+    const payments = await Payment.find({
+      userId,
+      months: monthYear,
+      paymentStatus: "Paid",
+      isDepositPayment: false,
+      isActive: true,
+    });
+
+    const totalPaid = payments.reduce(
+      (sum: number, payment: any) => sum + payment.amount,
+      0
+    );
+
+    // Get previous unpaid dues
+    let previousUnpaidDue = 0;
+    const previousMonthDues = await UserDue.find({
+      userId,
+      $or: [
+        { year: { $lt: year } },
+        { year: year, monthNumber: { $lt: monthNumber } },
+      ],
+      remainingDue: { $gt: 0 },
+      isActive: true,
+    });
+
+    previousUnpaidDue = previousMonthDues.reduce(
+      (sum: number, prevDue: any) => sum + prevDue.remainingDue,
+      0
+    );
+
+    // Calculate updated due amounts
+    const dueCalc = calculateTotalDue(
+      due.proratedRent,
+      previousUnpaidDue,
+      totalPaid
+    );
+
+    // Update the due record
+    due.totalDue = dueCalc.totalDue;
+    due.currentMonthDue = dueCalc.currentMonthDue;
+    due.previousUnpaidDue = dueCalc.previousUnpaidDue;
+    due.totalPaid = dueCalc.totalPaid;
+    due.remainingDue = dueCalc.remainingDue;
+    due.dueStatus = dueCalc.dueStatus;
+    due.updatedAt = new Date();
+
+    await due.save();
+
+    // Also update future months that might be affected
+    const futureMonthDues = await UserDue.find({
+      userId,
+      $or: [
+        { year: { $gt: year } },
+        { year: year, monthNumber: { $gt: monthNumber } },
+      ],
+      isActive: true,
+    }).sort({ year: 1, monthNumber: 1 });
+
+    // Recalculate future months
+    for (const futureDue of futureMonthDues) {
+      const futureMonthYear = `${futureDue.month} ${futureDue.year}`;
+      const futurePayments = await Payment.find({
+        userId,
+        months: futureMonthYear,
+        paymentStatus: "Paid",
+        isDepositPayment: false,
+        isActive: true,
+      });
+
+      const futureTotalPaid = futurePayments.reduce(
+        (sum: number, payment: any) => sum + payment.amount,
+        0
+      );
+
+      // Get previous unpaid for this future month
+      let futurePreviousUnpaid = 0;
+      const futurePreviousDues = await UserDue.find({
+        userId,
+        $or: [
+          { year: { $lt: futureDue.year } },
+          { year: futureDue.year, monthNumber: { $lt: futureDue.monthNumber } },
+        ],
+        remainingDue: { $gt: 0 },
+        isActive: true,
+      });
+
+      futurePreviousUnpaid = futurePreviousDues.reduce(
+        (sum: number, prevDue: any) => sum + prevDue.remainingDue,
+        0
+      );
+
+      const futureDueCalc = calculateTotalDue(
+        futureDue.proratedRent,
+        futurePreviousUnpaid,
+        futureTotalPaid
+      );
+
+      futureDue.totalDue = futureDueCalc.totalDue;
+      futureDue.previousUnpaidDue = futureDueCalc.previousUnpaidDue;
+      futureDue.totalPaid = futureDueCalc.totalPaid;
+      futureDue.remainingDue = futureDueCalc.remainingDue;
+      futureDue.dueStatus = futureDueCalc.dueStatus;
+      futureDue.updatedAt = new Date();
+
+      await futureDue.save();
+    }
+  }
+}
 
 // Get all payments
 export async function GET(request: NextRequest) {
@@ -208,6 +345,14 @@ export async function POST(request: NextRequest) {
         depositFees: amount,
         $set: { registrationStatus: "Approved" }, // Auto-approve registration when deposit is paid
       });
+    } else {
+      // For regular payments, update user dues
+      try {
+        await recalculateUserDuesAfterPayment(userId, selectedMonths);
+      } catch (dueError) {
+        console.error("Error updating dues after payment:", dueError);
+        // Don't fail the payment creation, but log the error
+      }
     }
 
     return NextResponse.json({
