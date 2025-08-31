@@ -446,14 +446,14 @@ export default function CreatePaymentPage() {
                                   </span>
                                   {status !== "N/A" && (
                                     <span className="text-gray-600 dark:text-gray-300">
-                                      Paid: ₹{paid.toLocaleString()} / Due:{" "}
+                                      Paid: ₹{paid.toFixed(2)} / Due:{" "}
                                       {due > 0 ? (
                                         <span className="text-red-600 dark:text-red-400">
-                                          ₹{due.toLocaleString()}
+                                          ₹{due.toFixed(2)}
                                         </span>
                                       ) : (
                                         <span className="text-green-600 dark:text-green-400">
-                                          ₹0
+                                          ₹0.00
                                         </span>
                                       )}
                                     </span>

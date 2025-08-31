@@ -99,20 +99,12 @@ export default function UsersPage() {
         const usersResponse = await axios.get("/api/users/with-dues");
         const usersData = usersResponse.data.users || [];
 
-        // Map the response to include due amount from UserDue model
+        // Map the response to include due amount from UserDue model  
         const processedUsers = usersData.map((user: any) => {
-          const dueInfo = user.currentDue || {};
           return {
             ...user,
-            currentMonthRentStatus:
-              dueInfo.dueStatus === "Paid"
-                ? "Paid"
-                : dueInfo.dueStatus === "Unpaid" ||
-                    dueInfo.dueStatus === "Partial" ||
-                    dueInfo.dueStatus === "Overdue"
-                  ? "Unpaid"
-                  : "N/A",
-            dueAmount: dueInfo.remainingDue || 0, // Use remainingDue from UserDue model
+            currentMonthRentStatus: user.currentMonthRentStatus || user.dueStatus || "N/A",
+            dueAmount: user.dueAmount || user.remainingDue || 0, // Use the due amount directly from API
           };
         });
 
@@ -275,7 +267,7 @@ export default function UsersPage() {
       typeof user.roomId === "object" ? `₹${user.roomId?.price || 0}` : "₹0",
       user.isActive ? "Active" : "Inactive",
       user.currentMonthRentStatus || "N/A",
-      user.dueAmount ? `₹${user.dueAmount}` : "₹0",
+      user.dueAmount ? `₹${user.dueAmount.toFixed(2)}` : "₹0.00",
       user.moveInDate ? new Date(user.moveInDate).toLocaleDateString() : "",
       user.approvalDate ? new Date(user.approvalDate).toLocaleDateString() : "",
       user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "",
@@ -453,7 +445,7 @@ export default function UsersPage() {
                   Total Unpaid Dues
                 </p>
                 <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  ₹{totalUnpaidDues.toLocaleString()}
+                  ₹{totalUnpaidDues.toFixed(2)}
                 </p>
               </div>
               <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
@@ -566,7 +558,7 @@ export default function UsersPage() {
                       <div className="text-sm text-gray-900 dark:text-white">
                         {user.dueAmount > 0 ? (
                           <span className="text-red-600 dark:text-red-400 font-medium">
-                            ₹{user.dueAmount.toLocaleString()}
+                            ₹{user.dueAmount.toFixed(2)}
                           </span>
                         ) : (
                           <span className="text-green-600 dark:text-green-400">

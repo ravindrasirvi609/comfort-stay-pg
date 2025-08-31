@@ -7,7 +7,7 @@ import {
   testProratedCalculation,
   calculateProratedRent,
   formatCurrency,
-} from "../app/utils/proratedRentCalculation";
+} from "../app/utils/proratedRentCalculation.js";
 
 console.log("=== Prorated Rent Calculation Tests ===\n");
 

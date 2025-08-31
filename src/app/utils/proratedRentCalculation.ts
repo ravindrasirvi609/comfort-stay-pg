@@ -58,7 +58,7 @@ export function calculateProratedRent(
 
   // Calculate prorated amount for partial month
   const daysCovered = totalDaysInMonth - checkInDay + 1; // +1 to include check-in day
-  const proratedRent = Math.ceil(dailyRate * daysCovered); // Round up to nearest rupee
+  const proratedRent = Number((dailyRate * daysCovered).toFixed(2)); // Keep 2 decimal places, no rounding up
 
   return {
     fullMonthRent,
@@ -143,8 +143,8 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

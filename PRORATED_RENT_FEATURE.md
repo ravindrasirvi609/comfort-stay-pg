@@ -11,7 +11,7 @@ The Prorated Rent Calculation feature automatically calculates rent based on the
 - **Automatic Calculation**: When a user checks in mid-month, rent is calculated proportionally
 - **Daily Rate Formula**: `Daily Rate = Monthly Rent ÷ Days in Month`
 - **Prorated Amount**: `Daily Rate × Days Remaining in Month` (including check-in day)
-- **Rounding**: Always rounds up to the nearest rupee for user-friendly amounts
+- **Rounding**: Keeps actual amount with 2 decimal places for precise calculations
 
 ### 2. Cumulative Due Tracking
 
