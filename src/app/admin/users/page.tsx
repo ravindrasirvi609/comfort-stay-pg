@@ -95,59 +95,24 @@ export default function UsersPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch users
-        const usersResponse = await axios.get("/api/users");
+        // Fetch users with their due information
+        const usersResponse = await axios.get("/api/users/with-dues");
         const usersData = usersResponse.data.users || [];
 
-        // Fetch all non-deposit payments
-        const paymentsResponse = await axios.get("/api/payments");
-        const allFetchedPayments: PaymentData[] =
-          paymentsResponse.data.payments || [];
-
-        // Get current month and year in "Month YYYY" format (e.g., "July 2024")
-        const currentDate = new Date();
-        const currentMonthYear = `${currentDate.toLocaleString("default", { month: "long" })} ${currentDate.getFullYear()}`;
-        console.log("currentMonthYear", currentMonthYear);
-
-        const processedUsers = usersData.map((user: User) => {
-          let rentStatus: User["currentMonthRentStatus"] = "N/A";
-          let dueAmount = 0; // Initialize due amount
-          const roomPrice =
-            typeof user.roomId === "object" && user.roomId?.price
-              ? user.roomId.price
-              : 0;
-          console.log("roomPrice", roomPrice);
-
-          if (roomPrice > 0) {
-            const userPaymentsForCurrentMonth = allFetchedPayments.filter(
-              (p) =>
-                p.userId && // Important: Check if userId is not null
-                p.userId.id === user._id && // Using .id as per your last change, ensure this is correct from API population
-                !p.isDepositPayment &&
-                p.months.includes(currentMonthYear) // Corrected to use p.months
-            );
-
-            // Refined logic: Sum all 'Paid' payments for the current month
-            let totalAmountPaidForCurrentMonth = 0;
-            for (const payment of userPaymentsForCurrentMonth) {
-              if (payment.paymentStatus === "Paid") {
-                totalAmountPaidForCurrentMonth += payment.amount;
-              }
-            }
-
-            if (totalAmountPaidForCurrentMonth >= roomPrice) {
-              rentStatus = "Paid";
-            } else {
-              rentStatus = "Unpaid";
-              // Calculate due amount as difference between room price and amount paid
-              dueAmount = roomPrice - totalAmountPaidForCurrentMonth;
-            }
-          }
-
+        // Map the response to include due amount from UserDue model
+        const processedUsers = usersData.map((user: any) => {
+          const dueInfo = user.currentDue || {};
           return {
             ...user,
-            currentMonthRentStatus: rentStatus,
-            dueAmount: dueAmount,
+            currentMonthRentStatus:
+              dueInfo.dueStatus === "Paid"
+                ? "Paid"
+                : dueInfo.dueStatus === "Unpaid" ||
+                    dueInfo.dueStatus === "Partial" ||
+                    dueInfo.dueStatus === "Overdue"
+                  ? "Unpaid"
+                  : "N/A",
+            dueAmount: dueInfo.remainingDue || 0, // Use remainingDue from UserDue model
           };
         });
 

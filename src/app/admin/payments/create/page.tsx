@@ -103,15 +103,14 @@ export default function CreatePaymentPage() {
     setMonths([currentMonth]);
   }, []);
 
-  // Fetch all users and current month payments to compute dues
+  // Fetch all users and their due information from UserDue model
   useEffect(() => {
     const fetchUsersAndPayments = async () => {
       try {
         setLoading(true);
-        const [usersRes, paymentsRes] = await Promise.all([
-          axios.get("/api/users"),
-          axios.get("/api/payments"), // we'll filter client-side
-        ]);
+
+        // Fetch users with their due information from the new API
+        const usersRes = await axios.get("/api/users/with-dues");
 
         if (!usersRes.data.success) {
           setError("Failed to load users");
@@ -119,17 +118,16 @@ export default function CreatePaymentPage() {
           return;
         }
 
-        const rawUsers: User[] = usersRes.data.users || [];
+        const rawUsers: any[] = usersRes.data.users || [];
         // Only include active users with assigned rooms
         const activeUsers = rawUsers.filter(
-          (user: User) =>
+          (user: any) =>
             user.roomId &&
             typeof user.roomId === "object" &&
             user.roomId.roomNumber
         );
 
-        // Process payments for current month
-        const payments: PaymentData[] = paymentsRes.data.payments || [];
+        // Process users to extract due information from UserDue model
         const info: Record<
           string,
           {
@@ -139,38 +137,27 @@ export default function CreatePaymentPage() {
             roomPrice: number;
           }
         > = {};
+
         activeUsers.forEach((u) => {
+          const dueInfo = u.currentDue || {};
           const roomPrice =
             u.roomId && typeof u.roomId === "object" && u.roomId.price
               ? u.roomId.price
               : 0;
-          if (roomPrice > 0) {
-            const userPaymentsForCurrentMonth = payments.filter(
-              (p) =>
-                p.userId &&
-                p.userId.id === u._id &&
-                !p.isDepositPayment &&
-                p.months.includes(currentMonthYear)
-            );
-            let paidAmount = 0;
-            userPaymentsForCurrentMonth.forEach((p) => {
-              if (p.paymentStatus === "Paid") paidAmount += p.amount;
-            });
-            const dueAmount = Math.max(roomPrice - paidAmount, 0);
-            info[u._id] = {
-              paidAmount,
-              dueAmount,
-              status: paidAmount >= roomPrice ? "Paid" : "Unpaid",
-              roomPrice,
-            };
-          } else {
-            info[u._id] = {
-              paidAmount: 0,
-              dueAmount: 0,
-              status: "N/A",
-              roomPrice: 0,
-            };
-          }
+
+          info[u._id] = {
+            paidAmount: dueInfo.totalPaid || 0,
+            dueAmount: dueInfo.remainingDue || 0,
+            status:
+              dueInfo.dueStatus === "Paid"
+                ? "Paid"
+                : dueInfo.dueStatus === "Unpaid" ||
+                    dueInfo.dueStatus === "Partial" ||
+                    dueInfo.dueStatus === "Overdue"
+                  ? "Unpaid"
+                  : "N/A",
+            roomPrice: roomPrice,
+          };
         });
 
         setUsers(activeUsers);
@@ -185,7 +172,7 @@ export default function CreatePaymentPage() {
     };
 
     fetchUsersAndPayments();
-  }, [currentMonthYear]);
+  }, []);
 
   // Filter users based on search term
   useEffect(() => {
