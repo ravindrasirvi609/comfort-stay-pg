@@ -192,10 +192,10 @@ export default function ProratedRentPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            💰 Rent Management
+            � Rent Collection Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Simple and easy management of prorated rent and dues
+            Track and collect pending rent payments from users
           </p>
         </div>
 
@@ -227,40 +227,40 @@ export default function ProratedRentPage() {
           <div className="space-y-6">
             {/* Quick Stats */}
             {summary && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="text-3xl font-bold text-green-700 dark:text-green-400 mb-2">
                     {summary.paidCount}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    ✅ Rent Paid This Month
+                  <div className="text-sm text-green-700 dark:text-green-400 font-medium">
+                    ✅ Users Paid This Month
+                  </div>
+                  <div className="text-xs text-green-600 dark:text-green-500 mt-1">
+                    No action needed
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
+                <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="text-3xl font-bold text-red-700 dark:text-red-400 mb-2">
                     {summary.unpaidCount}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    ❌ Rent Pending
+                  <div className="text-sm text-red-700 dark:text-red-400 font-medium">
+                    ⚠️ Users Need to Pay
+                  </div>
+                  <div className="text-xs text-red-600 dark:text-red-500 mt-1">
+                    Send payment reminders
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-400 mb-2">
                     {formatCurrency(summary.totalUnpaidAmount)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    💸 Total Amount Due
+                  <div className="text-sm text-purple-700 dark:text-purple-400 font-medium">
+                    💸 Total to Collect
                   </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                    {users.filter((u) => u.isProrated).length}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    📅 Prorated Users
+                  <div className="text-xs text-purple-600 dark:text-purple-500 mt-1">
+                    This is your focus
                   </div>
                 </div>
               </div>
@@ -270,38 +270,74 @@ export default function ProratedRentPage() {
             {summary && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  📈 This Month's Summary
+                  � Money to Collect This Month
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Current Month Rent Due
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="text-sm text-red-700 dark:text-red-400 mb-2 font-medium">
+                      💸 Total Amount Pending
                     </div>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {formatCurrency(summary.currentMonthDue)}
+                    <div className="text-3xl font-bold text-red-700 dark:text-red-400">
+                      {formatCurrency(summary.totalUnpaidAmount)}
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Previous Unpaid Amount
-                    </div>
-                    <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                      {formatCurrency(summary.previousUnpaidDue)}
+                    <div className="text-xs text-red-600 dark:text-red-500 mt-2">
+                      This is what users actually owe
                     </div>
                   </div>
-                  {summary.totalCreditAmount && (
-                    <div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Credit Balance
+
+                  {summary.previousUnpaidDue > 0 && (
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <div className="text-sm text-orange-700 dark:text-orange-400 mb-2 font-medium">
+                        ⏳ Old Pending Amount
                       </div>
-                      <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(summary.totalCreditAmount)}
+                      <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
+                        {formatCurrency(summary.previousUnpaidDue)}
+                      </div>
+                      <div className="text-xs text-orange-600 dark:text-orange-500 mt-2">
+                        From previous months
                       </div>
                     </div>
                   )}
+
+                  {summary.totalCreditAmount &&
+                    summary.totalCreditAmount > 0 && (
+                      <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="text-sm text-green-700 dark:text-green-400 mb-2 font-medium">
+                          � Credit Available
+                        </div>
+                        <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                          {formatCurrency(summary.totalCreditAmount)}
+                        </div>
+                        <div className="text-xs text-green-600 dark:text-green-500 mt-2">
+                          Users have overpaid
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             )}
+
+            {/* Simple Explanation */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center">
+                💡 What You Need to Know
+              </h3>
+              <div className="text-blue-800 dark:text-blue-300 space-y-2 text-sm">
+                <p className="text-lg font-semibold">
+                  📋 Total to collect:{" "}
+                  <span className="text-red-700 dark:text-red-400">
+                    {formatCurrency(summary?.totalUnpaidAmount || 0)}
+                  </span>
+                </p>
+                <p>• This is the exact amount users need to pay</p>
+                <p>• Already includes previous unpaid amounts</p>
+                <p>• Already deducted any credit balances</p>
+                <p className="text-blue-700 dark:text-blue-400 font-medium">
+                  🎯 Focus on collecting this amount from users marked as
+                  "Unpaid"
+                </p>
+              </div>
+            </div>
 
             {/* What is Prorated Rent? */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">

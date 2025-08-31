@@ -119,6 +119,7 @@ export default function CreatePaymentPage() {
         }
 
         const rawUsers: any[] = usersRes.data.users || [];
+
         // Only include active users with assigned rooms
         const activeUsers = rawUsers.filter(
           (user: any) =>
@@ -139,23 +140,25 @@ export default function CreatePaymentPage() {
         > = {};
 
         activeUsers.forEach((u) => {
-          const dueInfo = u.currentDue || {};
+          // Use the correct fields from /api/users/with-dues response
           const roomPrice =
             u.roomId && typeof u.roomId === "object" && u.roomId.price
               ? u.roomId.price
               : 0;
 
+          const dueAmount = u.dueAmount || u.remainingDue || 0;
+          const paidAmount = u.totalPaid || 0;
+          const status =
+            u.currentMonthRentStatus === "Paid"
+              ? "Paid"
+              : u.currentMonthRentStatus === "Unpaid"
+                ? "Unpaid"
+                : "N/A";
+
           info[u._id] = {
-            paidAmount: dueInfo.totalPaid || 0,
-            dueAmount: dueInfo.remainingDue || 0,
-            status:
-              dueInfo.dueStatus === "Paid"
-                ? "Paid"
-                : dueInfo.dueStatus === "Unpaid" ||
-                    dueInfo.dueStatus === "Partial" ||
-                    dueInfo.dueStatus === "Overdue"
-                  ? "Unpaid"
-                  : "N/A",
+            paidAmount: paidAmount,
+            dueAmount: dueAmount,
+            status: status,
             roomPrice: roomPrice,
           };
         });
@@ -187,11 +190,31 @@ export default function CreatePaymentPage() {
               .toLowerCase()
               .includes(searchTerm.toLowerCase()))
       );
-      setFilteredUsers(filtered);
+
+      // Sort by due amount - users with dues first
+      const sortedFiltered = filtered.sort((a, b) => {
+        const aDue = userPaymentInfo[a._id]?.dueAmount || 0;
+        const bDue = userPaymentInfo[b._id]?.dueAmount || 0;
+        if (aDue > 0 && bDue === 0) return -1; // a has due, b doesn't - a comes first
+        if (aDue === 0 && bDue > 0) return 1; // b has due, a doesn't - b comes first
+        if (aDue > 0 && bDue > 0) return bDue - aDue; // both have dues, higher due first
+        return a.name.localeCompare(b.name); // both paid, sort by name
+      });
+
+      setFilteredUsers(sortedFiltered);
     } else {
-      setFilteredUsers(users);
+      // Sort all users by due amount when no search term
+      const sortedUsers = [...users].sort((a, b) => {
+        const aDue = userPaymentInfo[a._id]?.dueAmount || 0;
+        const bDue = userPaymentInfo[b._id]?.dueAmount || 0;
+        if (aDue > 0 && bDue === 0) return -1;
+        if (aDue === 0 && bDue > 0) return 1;
+        if (aDue > 0 && bDue > 0) return bDue - aDue;
+        return a.name.localeCompare(b.name);
+      });
+      setFilteredUsers(sortedUsers);
     }
-  }, [searchTerm, users]);
+  }, [searchTerm, users, userPaymentInfo]);
 
   // Set default amount when user is selected
   useEffect(() => {
@@ -409,16 +432,28 @@ export default function CreatePaymentPage() {
                       const paid = paymentMeta?.paidAmount || 0;
                       const due = paymentMeta?.dueAmount || 0;
                       const status = paymentMeta?.status || "N/A";
+
                       return (
                         <div
                           key={user._id}
-                          className="p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 border-transparent"
+                          className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 ${
+                            due > 0
+                              ? "border-red-400 bg-red-50/30 dark:bg-red-900/10"
+                              : status === "Paid"
+                                ? "border-green-400 bg-green-50/30 dark:bg-green-900/10"
+                                : "border-transparent"
+                          }`}
                           onClick={() => handleUserSelection(user._id)}
                         >
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="font-medium text-gray-900 dark:text-white">
                                 {user.name}
+                                {due > 0 && (
+                                  <span className="ml-2 text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded">
+                                    Has Due
+                                  </span>
+                                )}
                               </div>
                               <div className="flex flex-wrap gap-2 mt-1 text-sm">
                                 <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
@@ -433,30 +468,58 @@ export default function CreatePaymentPage() {
                                 </span>
                                 {roomPrice > 0 && (
                                   <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                                    Rent: ₹{roomPrice}
+                                    Monthly Rent: ₹
+                                    {roomPrice.toLocaleString("en-IN")}
                                   </span>
                                 )}
                               </div>
                               {roomPrice > 0 && (
-                                <div className="mt-2 text-xs flex flex-wrap gap-2">
-                                  <span
-                                    className={`px-2 py-0.5 rounded font-medium ${status === "Paid" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : status === "Unpaid" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
-                                  >
-                                    {status === "Paid" ? "Paid" : "Due"}
-                                  </span>
-                                  {status !== "N/A" && (
-                                    <span className="text-gray-600 dark:text-gray-300">
-                                      Paid: ₹{paid.toFixed(2)} / Due:{" "}
-                                      {due > 0 ? (
-                                        <span className="text-red-600 dark:text-red-400">
-                                          ₹{due.toFixed(2)}
-                                        </span>
-                                      ) : (
-                                        <span className="text-green-600 dark:text-green-400">
-                                          ₹0.00
-                                        </span>
-                                      )}
+                                <div className="mt-2 text-xs">
+                                  <div className="flex flex-wrap gap-3">
+                                    <span
+                                      className={`px-2 py-0.5 rounded font-medium ${
+                                        status === "Paid"
+                                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                          : status === "Unpaid"
+                                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                      }`}
+                                    >
+                                      {status === "Paid"
+                                        ? "✅ Fully Paid"
+                                        : status === "Unpaid"
+                                          ? "⚠️ Has Due"
+                                          : "❓ Status Unknown"}
                                     </span>
+                                  </div>
+                                  {status !== "N/A" && (
+                                    <div className="mt-1 text-gray-600 dark:text-gray-300 space-y-1">
+                                      <div>
+                                        💸 <strong>Amount Due:</strong>{" "}
+                                        {due > 0 ? (
+                                          <span className="text-red-600 dark:text-red-400 font-bold">
+                                            ₹
+                                            {due.toLocaleString("en-IN", {
+                                              minimumFractionDigits: 2,
+                                              maximumFractionDigits: 2,
+                                            })}
+                                          </span>
+                                        ) : (
+                                          <span className="text-green-600 dark:text-green-400 font-bold">
+                                            ₹0.00
+                                          </span>
+                                        )}
+                                      </div>
+                                      {paid > 0 && (
+                                        <div>
+                                          ✅ <strong>Already Paid:</strong> ₹
+                                          {paid.toLocaleString("en-IN", {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
