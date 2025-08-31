@@ -42,6 +42,9 @@ interface User {
   moveInDate: string;
   currentMonthRentStatus?: "Paid" | "Unpaid" | "N/A"; // New field
   dueAmount: number; // Amount due from the user
+  totalPaidForMonth?: number; // Paid for current month
+  totalPaidAllTime?: number; // Total paid across all months
+  rentTillNow?: number; // Cumulative rent from check-in to current month
   approvalDate?: string;
   permanentAddress?: string;
   city?: string;
@@ -102,6 +105,8 @@ export default function UsersPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [showRecalculateDialog, setShowRecalculateDialog] = useState(false);
   const prevFiltersRef = useRef({
     searchTerm: "",
     filterStatus: "active",
@@ -374,6 +379,8 @@ export default function UsersPage() {
       "Status",
       "Current Rent Status",
       "Due Amount",
+      "Rent Till Now",
+      "Total Paid",
       "Move In Date",
       "Approval Date",
       "Created At",
@@ -401,6 +408,8 @@ export default function UsersPage() {
       user.isActive ? "Active" : "Inactive",
       user.currentMonthRentStatus || "N/A",
       user.dueAmount ? `₹${user.dueAmount.toFixed(2)}` : "₹0.00",
+      user.rentTillNow ? `₹${user.rentTillNow.toFixed(2)}` : "₹0.00",
+      user.totalPaidAllTime ? `₹${user.totalPaidAllTime.toFixed(2)}` : "₹0.00",
       user.moveInDate ? new Date(user.moveInDate).toLocaleDateString() : "",
       user.approvalDate ? new Date(user.approvalDate).toLocaleDateString() : "",
       user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "",
@@ -434,6 +443,40 @@ export default function UsersPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Function to handle bulk recalculation
+  const handleBulkRecalculate = async () => {
+    setIsRecalculating(true);
+    try {
+      const response = await axios.post("/api/admin/recalculate-all-dues");
+
+      if (response.data.success) {
+        toast.success(
+          `Recalculation completed. Updated ${response.data.stats.updated} of ${response.data.stats.totalProcessed} due records.`
+        );
+
+        // Refresh the data
+        const usersResponse = await axios.get("/api/users/with-dues");
+        if (usersResponse.data.success) {
+          const processedUsers = usersResponse.data.users.map((user: any) => ({
+            ...user,
+            currentMonthRentStatus:
+              user.currentMonthRentStatus || user.dueStatus || "N/A",
+            dueAmount: user.dueAmount || user.remainingDue || 0,
+          }));
+          setUsers(processedUsers);
+        }
+      } else {
+        toast.error(response.data.message || "Failed to recalculate dues");
+      }
+    } catch (error) {
+      console.error("Error recalculating dues:", error);
+      toast.error("Failed to recalculate dues. Please try again.");
+    } finally {
+      setIsRecalculating(false);
+      setShowRecalculateDialog(false);
+    }
   };
 
   // Add this before the return statement
@@ -470,13 +513,44 @@ export default function UsersPage() {
                 View and manage all registered users of Comfort Stay PG
               </p>
             </div>
-            <button
-              onClick={exportUsersToCSV}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
-            >
-              <FaFileExport className="mr-2" />
-              Export Users
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowRecalculateDialog(true)}
+                disabled={isRecalculating}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRecalculating ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Recalculating...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    Fix Dues
+                  </>
+                )}
+              </button>
+              <button
+                onClick={exportUsersToCSV}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
+              >
+                <FaFileExport className="mr-2" />
+                Export Users
+              </button>
+            </div>
           </div>
         </div>
 
@@ -620,6 +694,12 @@ export default function UsersPage() {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Rent Till Now
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Total Paid
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Due Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -689,6 +769,40 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
+                        {user.rentTillNow ? (
+                          <span className="font-medium text-blue-600 dark:text-blue-400">
+                            ₹{user.rentTillNow.toLocaleString("en-IN")}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 dark:text-gray-400">
+                            ₹0
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {user.moveInDate
+                          ? `Since ${new Date(user.moveInDate).toLocaleDateString("en-IN")}`
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {user.totalPaidAllTime ? (
+                          <span className="font-medium text-green-600 dark:text-green-400">
+                            ₹{user.totalPaidAllTime.toLocaleString("en-IN")}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 dark:text-gray-400">
+                            ₹0
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Total payments
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
                         {user.dueAmount > 0 ? (
                           <span className="text-red-600 dark:text-red-400 font-medium">
                             ₹{user.dueAmount.toFixed(2)}
@@ -725,7 +839,7 @@ export default function UsersPage() {
                 {currentUsers.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7} // Adjusted colSpan from 6 to 7 (User, PGID, Room, Status, Current Rent, Due Amount, Date Joined)
+                      colSpan={7} // Updated colSpan for: User, Room, Status, Rent Till Now, Total Paid, Due Amount, Actions
                       className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
                       No users found matching the criteria
@@ -903,6 +1017,61 @@ export default function UsersPage() {
                   </div>
                 ) : (
                   "Send Reminder"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recalculate Confirmation Dialog */}
+      {showRecalculateDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                Recalculate All Dues
+              </h3>
+              <button
+                onClick={() => setShowRecalculateDialog(false)}
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              >
+                <FiX className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                This will recalculate all user due amounts based on their
+                payments. This process may take a few moments and will fix any
+                discrepancies in the due calculations.
+              </p>
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Note:</strong> This will update all UserDue records
+                  and may affect the payment status displayed to users.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowRecalculateDialog(false)}
+                disabled={isRecalculating}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors duration-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkRecalculate}
+                disabled={isRecalculating}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRecalculating ? (
+                  <div className="flex items-center">
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  "Recalculate"
                 )}
               </button>
             </div>

@@ -96,45 +96,116 @@ export async function GET(request: NextRequest) {
       paymentsMap.set(userId, existing + payment.amount);
     });
 
+    // Calculate comprehensive payment data for each user
+    const allUserPayments = await Payment.find({
+      userId: { $in: userIds },
+      paymentStatus: "Paid",
+      isDepositPayment: false,
+      isActive: true,
+    }).lean();
+
+    // Create payment map for all users
+    const allPaymentsMap = new Map();
+    allUserPayments.forEach((payment: any) => {
+      const userId = payment.userId.toString();
+      const existing = allPaymentsMap.get(userId) || 0;
+      allPaymentsMap.set(userId, existing + payment.amount);
+    });
+
     // Enhanced user data
     const enhancedUsers = users.map((user: any) => {
       const due = duesMap.get(user._id.toString());
       const roomPrice = user.roomId?.price || 0;
+      const moveInDate = user.moveInDate ? new Date(user.moveInDate) : null;
+      const currentDate = new Date(targetYear, targetMonth - 1);
+
+      // Calculate total paid across all months
+      const totalPaidAllTime = allPaymentsMap.get(user._id.toString()) || 0;
+
+      // Calculate "Rent Till Now" - cumulative rent from check-in to current month
+      let rentTillNow = 0;
+      if (moveInDate && roomPrice > 0) {
+        const moveInYear = moveInDate.getFullYear();
+        const moveInMonth = moveInDate.getMonth() + 1;
+
+        // Calculate rent for each month from check-in to current month
+        for (let year = moveInYear; year <= targetYear; year++) {
+          const startMonth = year === moveInYear ? moveInMonth : 1;
+          const endMonth = year === targetYear ? targetMonth : 12;
+
+          for (let month = startMonth; month <= endMonth; month++) {
+            if (year === moveInYear && month === moveInMonth) {
+              // First month - calculate prorated rent
+              const daysInMonth = new Date(year, month, 0).getDate();
+              const checkInDay = moveInDate.getDate();
+              const daysCovered = daysInMonth - checkInDay + 1;
+              const dailyRate = roomPrice / daysInMonth;
+              rentTillNow += Math.ceil(dailyRate * daysCovered);
+            } else {
+              // Full month rent
+              rentTillNow += roomPrice;
+            }
+          }
+        }
+      }
 
       if (due) {
         // User has due record - use enhanced data
+        // Calculate the ACTUAL due amount: Rent Till Now - Total Paid All Time
+        const actualDueAmount = Math.max(0, rentTillNow - totalPaidAllTime);
+
+        // Determine current month status based on actual calculation
+        const actualStatus =
+          actualDueAmount === 0
+            ? "Paid"
+            : totalPaidAllTime > 0
+              ? "Partial"
+              : "Unpaid";
+
         return {
           ...user,
-          currentMonthRentStatus: due.dueStatus === "Paid" ? "Paid" : "Unpaid",
-          dueAmount: due.remainingDue || 0,
-          totalDue: due.totalDue || 0,
+          currentMonthRentStatus: actualStatus,
+          dueAmount: actualDueAmount, // This is the correct due amount
+          totalDue: rentTillNow, // Total rent obligation till now
           currentMonthDue: due.currentMonthDue || 0,
           previousUnpaidDue: due.previousUnpaidDue || 0,
+          totalPaidForMonth: due.totalPaid || 0, // Paid for current month
+          totalPaidAllTime, // Total paid across all months
+          rentTillNow, // Cumulative rent from check-in to current month
           isProrated: due.isProrated || false,
           daysCovered: due.daysCovered,
           totalDaysInMonth: due.totalDaysInMonth,
           checkInDate: due.checkInDate,
           proratedRent: due.proratedRent,
           fullMonthRent: due.fullMonthRent,
-          dueStatus: due.dueStatus,
+          dueStatus: actualStatus,
           dueDate: due.dueDate,
         };
       } else if (roomPrice > 0) {
         // Legacy calculation for users without due records
-        const totalPaid = paymentsMap.get(user._id.toString()) || 0;
-        const remainingDue = Math.max(0, roomPrice - totalPaid);
+        // Use the correct calculation: Rent Till Now - Total Paid All Time
+        const actualDueAmount = Math.max(0, rentTillNow - totalPaidAllTime);
+        const actualStatus =
+          actualDueAmount === 0
+            ? "Paid"
+            : totalPaidAllTime > 0
+              ? "Partial"
+              : "Unpaid";
 
         return {
           ...user,
-          currentMonthRentStatus: remainingDue === 0 ? "Paid" : "Unpaid",
-          dueAmount: remainingDue,
-          totalDue: remainingDue,
-          currentMonthDue: remainingDue,
-          previousUnpaidDue: 0,
+          currentMonthRentStatus: actualStatus,
+          dueAmount: actualDueAmount, // Correct due amount
+          totalDue: rentTillNow, // Total rent obligation
+          currentMonthDue: roomPrice, // Current month rent
+          previousUnpaidDue: Math.max(0, rentTillNow - roomPrice), // Previous months
+          totalPaidForMonth: paymentsMap.get(user._id.toString()) || 0,
+          totalPaidAllTime,
+          rentTillNow,
           isProrated: false,
           proratedRent: roomPrice,
           fullMonthRent: roomPrice,
-          dueStatus: remainingDue === 0 ? "Paid" : "Unpaid",
+          dueStatus: actualStatus,
         };
       } else {
         // No room assigned
@@ -145,6 +216,9 @@ export async function GET(request: NextRequest) {
           totalDue: 0,
           currentMonthDue: 0,
           previousUnpaidDue: 0,
+          totalPaidForMonth: 0,
+          totalPaidAllTime: totalPaidAllTime,
+          rentTillNow: 0,
           isProrated: false,
           dueStatus: "N/A",
         };
