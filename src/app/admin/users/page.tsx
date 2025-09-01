@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
 import { FiUsers, FiBell, FiX } from "react-icons/fi";
 import { FaFileExport, FaFileInvoiceDollar } from "react-icons/fa";
+import SettlementModal from "@/components/SettlementModal";
 
 // Define PaymentData interface based on Payment model
 interface PaymentData {
@@ -107,6 +108,14 @@ export default function UsersPage() {
   const [selectedUserName, setSelectedUserName] = useState<string>("");
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showRecalculateDialog, setShowRecalculateDialog] = useState(false);
+  // Settlement modal state
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [selectedUserForSettlement, setSelectedUserForSettlement] = useState<{
+    _id: string;
+    name: string;
+    pgId: string;
+    dueAmount: number;
+  } | null>(null);
   const prevFiltersRef = useRef({
     searchTerm: "",
     filterStatus: "active",
@@ -364,6 +373,49 @@ export default function UsersPage() {
       setShowConfirmDialog(false);
       setSelectedUserId(null);
       setSelectedUserName("");
+    }
+  };
+
+  // Function to handle settle due button click
+  const handleSettleDueClick = (
+    e: React.MouseEvent,
+    userId: string,
+    userName: string,
+    dueAmount: number
+  ) => {
+    e.stopPropagation();
+    const user = users.find((u) => u._id === userId);
+    if (user) {
+      setSelectedUserForSettlement({
+        _id: userId,
+        name: userName,
+        pgId: user.pgId,
+        dueAmount: dueAmount,
+      });
+      setShowSettlementModal(true);
+    }
+  };
+
+  // Function to handle successful settlement
+  const handleSettlementSuccess = async () => {
+    // Refresh users data to reflect the settlement
+    try {
+      const usersResponse = await axios.get("/api/users/with-dues");
+      const usersData = usersResponse.data.users || [];
+
+      const processedUsers = usersData.map((user: any) => {
+        return {
+          ...user,
+          currentMonthRentStatus:
+            user.currentMonthRentStatus || user.dueStatus || "N/A",
+          dueAmount: user.dueAmount || user.remainingDue || 0,
+        };
+      });
+
+      setUsers(processedUsers);
+    } catch (err) {
+      console.error("Error refreshing user data after settlement:", err);
+      toast.error("Settlement successful but failed to refresh data");
     }
   };
 
@@ -831,20 +883,36 @@ export default function UsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-3">
                         {user.dueAmount > 0 && (
-                          <button
-                            onClick={(e) =>
-                              handleReminderClick(e, user._id, user.name)
-                            }
-                            disabled={sendingReminder === user._id}
-                            className="p-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors duration-200"
-                            title="Send Reminder"
-                          >
-                            {sendingReminder === user._id ? (
-                              <div className="h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <FiBell className="h-5 w-5" />
-                            )}
-                          </button>
+                          <>
+                            <button
+                              onClick={(e) =>
+                                handleReminderClick(e, user._id, user.name)
+                              }
+                              disabled={sendingReminder === user._id}
+                              className="p-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors duration-200"
+                              title="Send Reminder"
+                            >
+                              {sendingReminder === user._id ? (
+                                <div className="h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <FiBell className="h-5 w-5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) =>
+                                handleSettleDueClick(
+                                  e,
+                                  user._id,
+                                  user.name,
+                                  user.dueAmount
+                                )
+                              }
+                              className="px-3 py-1 text-xs bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-md transition-colors duration-200"
+                              title="Settle Due Amount"
+                            >
+                              Settle Due
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -1091,6 +1159,23 @@ export default function UsersPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Settlement Modal */}
+      {showSettlementModal && selectedUserForSettlement && (
+        <SettlementModal
+          isOpen={showSettlementModal}
+          onClose={() => {
+            setShowSettlementModal(false);
+            setSelectedUserForSettlement(null);
+          }}
+          onSettlementSuccess={handleSettlementSuccess}
+          user={selectedUserForSettlement}
+          currentMonth={new Date().toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          })}
+        />
       )}
     </div>
   );

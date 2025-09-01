@@ -285,3 +285,25 @@ export interface IExpense {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+/**
+ * Due Settlement interface - Tracks settlements (waivers/forgiveness) of due amounts
+ */
+export interface IDueSettlement {
+  _id?: string;
+  userId: Schema.Types.ObjectId | IUser;
+  month: string; // "Month Year" format (e.g., "September 2025")
+  amount: number; // Settlement amount
+  reason:
+    | "Mid-month entry"
+    | "Special discount"
+    | "Compensation"
+    | "Admin discretion"
+    | "Other";
+  remarks?: string; // Optional additional details
+  settledBy: Schema.Types.ObjectId | IUser; // Admin who settled
+  settledAt: Date; // Settlement timestamp
+  isActive: boolean; // Soft delete support
+  createdAt?: Date;
+  updatedAt?: Date;
+}

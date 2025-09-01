@@ -7,6 +7,7 @@ import Notification from "./Notification";
 import ContactInquiry from "./ContactInquiry";
 import VisitRequest from "./VisitRequest";
 import Subscriber from "./Subscriber";
+import DueSettlement from "./DueSettlement";
 
 export {
   User,
@@ -18,6 +19,7 @@ export {
   ContactInquiry,
   VisitRequest,
   Subscriber,
+  DueSettlement,
 };
 
 // Export a function to ensure all models are registered
@@ -32,5 +34,6 @@ export function ensureAllModels() {
     ContactInquiry,
     VisitRequest,
     Subscriber,
+    DueSettlement,
   };
 }
