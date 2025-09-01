@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     // OPTIMIZED: Pre-fetch all settlements and current month payments in batch
     const currentMonthYear = `${new Date(targetYear, targetMonth - 1).toLocaleString("default", { month: "long" })} ${targetYear}`;
-    
+
     // Batch fetch all settlements for current month
     const allSettlements = await DueSettlement.find({
       userId: { $in: userIds },
@@ -130,7 +130,8 @@ export async function GET(request: NextRequest) {
       // Calculate total paid across all months
       const totalPaidAllTime = allPaymentsMap.get(user._id.toString()) || 0;
       const totalSettled = settlementsMap.get(user._id.toString()) || 0;
-      const totalPaidForMonth = currentMonthPaymentsMap.get(user._id.toString()) || 0;
+      const totalPaidForMonth =
+        currentMonthPaymentsMap.get(user._id.toString()) || 0;
 
       // Calculate "Rent Till Now" - cumulative rent from check-in to current month
       let rentTillNow = 0;
@@ -161,9 +162,13 @@ export async function GET(request: NextRequest) {
 
       if (due) {
         // User has due record - use enhanced data with settlements
-        const totalDue = (due.currentMonthDue || 0) + (due.previousUnpaidDue || 0);
-        const effectiveDue = Math.max(0, totalDue - totalPaidForMonth - totalSettled);
-        
+        const totalDue =
+          (due.currentMonthDue || 0) + (due.previousUnpaidDue || 0);
+        const effectiveDue = Math.max(
+          0,
+          totalDue - totalPaidForMonth - totalSettled
+        );
+
         let dueStatus: "Paid" | "Partial" | "Unpaid";
         if (effectiveDue === 0) {
           dueStatus = "Paid";
@@ -196,7 +201,10 @@ export async function GET(request: NextRequest) {
         };
       } else if (roomPrice > 0) {
         // Legacy calculation for users without due records
-        const actualDueAmount = Math.max(0, rentTillNow - totalPaidAllTime - totalSettled);
+        const actualDueAmount = Math.max(
+          0,
+          rentTillNow - totalPaidAllTime - totalSettled
+        );
         const actualStatus =
           actualDueAmount === 0
             ? "Paid"
