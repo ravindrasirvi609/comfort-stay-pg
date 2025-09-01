@@ -231,18 +231,24 @@ export async function GET(request: NextRequest) {
           // Legacy calculation for users without due records
           // Need to calculate settlements for this user
           const currentMonthYear = `${new Date(targetYear, targetMonth - 1).toLocaleString("default", { month: "long" })} ${targetYear}`;
-          
+
           // Get existing settlements for this user for the current month
           const userSettlements = await DueSettlement.find({
             userId: user._id.toString(),
             month: currentMonthYear,
             isActive: true,
           });
-          
-          const totalSettled = userSettlements.reduce((sum, settlement) => sum + settlement.amount, 0);
-          
+
+          const totalSettled = userSettlements.reduce(
+            (sum, settlement) => sum + settlement.amount,
+            0
+          );
+
           // Use the correct calculation: Rent Till Now - Total Paid All Time - Total Settled
-          const actualDueAmount = Math.max(0, rentTillNow - totalPaidAllTime - totalSettled);
+          const actualDueAmount = Math.max(
+            0,
+            rentTillNow - totalPaidAllTime - totalSettled
+          );
           const actualStatus =
             actualDueAmount === 0
               ? "Paid"
