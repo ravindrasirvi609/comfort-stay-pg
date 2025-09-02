@@ -51,21 +51,23 @@ export async function POST(
       );
     }
 
-    const { month, amount, reason, remarks } = body;
+    const { month, amount, reason, remarks, isOverall, validateOnly } = body;
 
-    // Validate required fields
-    if (!month || !amount || !reason) {
+    // Validate required fields (when validateOnly, reason isn't required)
+    if ((!isOverall && !month) || !amount || (!validateOnly && !reason)) {
       return NextResponse.json(
         {
           success: false,
-          message: "Month, amount, and reason are required",
+          message: isOverall
+            ? "Amount and reason are required for overall settlement"
+            : "Month, amount, and reason are required",
         },
         { status: 400 }
       );
     }
 
     // Validate month format
-    if (!/^[A-Za-z]+ \d{4}$/.test(month)) {
+    if (!isOverall && month && !/^[A-Za-z]+ \d{4}$/.test(month)) {
       return NextResponse.json(
         {
           success: false,
@@ -91,8 +93,9 @@ export async function POST(
     // Validate settlement against current dues
     const validation = await validateSettlement(
       userId,
-      month,
-      settlementAmount
+      month ?? null,
+      settlementAmount,
+      Boolean(isOverall)
     );
     if (!validation.isValid) {
       return NextResponse.json(
@@ -106,16 +109,28 @@ export async function POST(
       );
     }
 
+    // If only validating, return limits without creating a record
+    if (validateOnly) {
+      return NextResponse.json({
+        success: true,
+        message: "Validation successful",
+        maxSettlableAmount: validation.maxSettlableAmount,
+        currentDue: validation.currentDue,
+        isOverall: Boolean(isOverall),
+      });
+    }
+
     // Create settlement record
     const settlement = new DueSettlement({
       userId,
-      month,
+      month: isOverall ? undefined : month,
       amount: settlementAmount,
       reason,
       remarks: remarks || undefined,
       settledBy: user._id,
       settledAt: new Date(),
       isActive: true,
+      isOverall: Boolean(isOverall),
     });
 
     await settlement.save();
@@ -124,7 +139,11 @@ export async function POST(
     CacheInvalidator.invalidateAllUserRelatedCache(userId);
 
     // Get updated due amount
-    const remainingDue = await getUserCurrentDue(userId, month);
+    const remainingDue = isOverall
+      ? validation.currentDue! - settlementAmount >= 0
+        ? validation.currentDue! - settlementAmount
+        : 0
+      : await getUserCurrentDue(userId, month!);
 
     // Populate settlement for response
     await settlement.populate([
@@ -144,6 +163,7 @@ export async function POST(
         remarks: settlement.remarks,
         settledBy: settlement.settledBy,
         settledAt: settlement.settledAt,
+        isOverall: settlement.isOverall,
       },
       remainingDue,
     });
@@ -193,7 +213,7 @@ export async function GET(
     }
 
     if (month) {
-      // Get settlement summary for specific month
+      // Get settlement summary for specific month (including overall entries)
       const summary = await getSettlementSummary(userId, month);
 
       return NextResponse.json({

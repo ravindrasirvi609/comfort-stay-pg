@@ -60,11 +60,11 @@ export async function calculateDueWithSettlements(
       0
     );
 
-    // Get total settlements for this month
+    // Get total settlements affecting this month: month-specific or overall
     const settlements = await DueSettlement.find({
       userId,
-      month,
       isActive: true,
+      $or: [{ month }, { isOverall: true }],
     });
 
     const totalSettled = settlements.reduce(
@@ -115,8 +115,8 @@ export async function getSettlementSummary(
   try {
     const settlements = await DueSettlement.find({
       userId,
-      month,
       isActive: true,
+      $or: [{ month }, { isOverall: true }],
     })
       .populate("settledBy", "name email")
       .sort({ settledAt: -1 });
@@ -152,8 +152,9 @@ export async function getSettlementSummary(
  */
 export async function validateSettlement(
   userId: string,
-  month: string,
-  settlementAmount: number
+  month: string | null,
+  settlementAmount: number,
+  isOverall: boolean = false
 ): Promise<{
   isValid: boolean;
   error?: string;
@@ -169,10 +170,21 @@ export async function validateSettlement(
       };
     }
 
-    // Parse month and year
-    const [monthName, yearStr] = month.split(" ");
-    const year = parseInt(yearStr);
-    const monthNumber = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
+    // When overall settlement, we don't require month
+    let year = 0;
+    let monthNumber = 0;
+    if (isOverall) {
+      const now = new Date();
+      year = now.getFullYear();
+      monthNumber = now.getMonth() + 1; // 1-based
+    } else {
+      if (!month) {
+        return { isValid: false, error: "Month is required" };
+      }
+      const [monthName, yearStr] = month.split(" ");
+      year = parseInt(yearStr);
+      monthNumber = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
+    }
 
     // First, try to get user's due record for this month
     const due = await UserDue.findOne({
@@ -184,17 +196,17 @@ export async function validateSettlement(
 
     let maxSettlableAmount = 0;
 
-    if (due) {
+    if (due && !isOverall) {
       // User has due record - use settlement-aware calculation
       const dueCalc = await calculateDueWithSettlements(
         userId,
-        month,
+        month!,
         due.currentMonthDue,
         due.previousUnpaidDue
       );
       maxSettlableAmount = dueCalc.effectiveDue;
     } else {
-      // No UserDue record - calculate legacy due amount using the same logic as with-dues endpoint
+      // Calculate overall or legacy due amount using the same logic as with-dues endpoint
       const User = (await import("@/app/api/models/User")).default;
       const Payment = (await import("@/app/api/models/Payment")).default;
 
@@ -259,12 +271,12 @@ export async function validateSettlement(
         0
       );
 
-      // Get existing settlements for this month
-      const existingSettlements = await DueSettlement.find({
-        userId,
-        month,
-        isActive: true,
-      });
+      // Get existing settlements
+      const existingSettlements = await DueSettlement.find(
+        isOverall
+          ? { userId, isActive: true }
+          : { userId, isActive: true, $or: [{ month }, { isOverall: true }] }
+      );
 
       const totalSettled = existingSettlements.reduce(
         (sum, settlement) => sum + settlement.amount,

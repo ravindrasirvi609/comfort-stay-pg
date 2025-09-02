@@ -32,6 +32,9 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
+  const [overall, setOverall] = useState(false);
+  const [maxSettlable, setMaxSettlable] = useState<number | null>(null);
+  const [validating, setValidating] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -45,6 +48,61 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
+
+    // Auto-validate when amount changes (debounced via simple timeout)
+    if (name === "amount") {
+      const amountNum = parseFloat(value);
+      if (!isNaN(amountNum) && amountNum > 0) {
+        void validateMax(amountNum);
+      } else {
+        setMaxSettlable(null);
+      }
+    }
+  };
+
+  const validateMax = async (amountToTry?: number) => {
+    try {
+      setValidating(true);
+      const res = await fetch(`/api/users/${user._id}/settle-due`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          month: overall ? undefined : currentMonth,
+          amount: amountToTry ?? parseFloat(formData.amount || "0"),
+          isOverall: overall,
+          validateOnly: true,
+          // reason omitted on validate
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMaxSettlable(data.maxSettlableAmount ?? null);
+        // If current amount exceeds max, show an inline error
+        const current = parseFloat(formData.amount || "0");
+        if (
+          current &&
+          data.maxSettlableAmount !== undefined &&
+          current > data.maxSettlableAmount
+        ) {
+          setErrors((prev) => ({
+            ...prev,
+            amount: `Maximum settleable amount: ₹${data.maxSettlableAmount}`,
+          }));
+        }
+      } else if (data?.maxSettlableAmount !== undefined) {
+        setMaxSettlable(data.maxSettlableAmount);
+        setErrors((prev) => ({
+          ...prev,
+          amount: `Maximum settleable amount: ₹${data.maxSettlableAmount}`,
+        }));
+      } else {
+        setMaxSettlable(null);
+      }
+    } catch (e) {
+      setMaxSettlable(null);
+    } finally {
+      setValidating(false);
+    }
   };
 
   const validateForm = () => {
@@ -56,8 +114,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       newErrors.amount = "Settlement amount is required";
     } else if (isNaN(amount) || amount <= 0) {
       newErrors.amount = "Amount must be a positive number";
-    } else if (amount > user.dueAmount) {
-      newErrors.amount = `Amount cannot exceed due amount (₹${user.dueAmount})`;
+    } else if (maxSettlable !== null && amount > maxSettlable) {
+      newErrors.amount = `Maximum settleable amount: ₹${maxSettlable}`;
     }
 
     // Validate reason
@@ -90,10 +148,11 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          month: currentMonth,
+          month: overall ? undefined : currentMonth,
           amount: parseFloat(formData.amount),
           reason: formData.reason,
           remarks: formData.remarks.trim() || undefined,
+          isOverall: overall,
         }),
       });
 
@@ -134,11 +193,13 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   };
 
   const handleAmountSelect = (percentage: number) => {
-    const amount = Math.round((user.dueAmount * percentage) / 100);
+    const base = maxSettlable ?? user.dueAmount;
+    const amount = Math.round((base * percentage) / 100);
     setFormData((prev) => ({ ...prev, amount: amount.toString() }));
     if (errors.amount) {
       setErrors((prev) => ({ ...prev, amount: "" }));
     }
+    void validateMax(amount);
   };
 
   if (!isOpen) return null;
@@ -184,11 +245,27 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-300">
-              Due for {currentMonth}:
+              {overall ? "Overall Due:" : `Due for ${currentMonth}:`}
             </span>
             <span className="font-semibold text-red-600 dark:text-red-400">
               ₹{user.dueAmount.toLocaleString()}
             </span>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              id="overall"
+              type="checkbox"
+              className="h-4 w-4 text-green-600 border-gray-300 rounded"
+              checked={overall}
+              onChange={(e) => setOverall(e.target.checked)}
+              disabled={isSubmitting}
+            />
+            <label
+              htmlFor="overall"
+              className="text-sm text-gray-700 dark:text-gray-200"
+            >
+              Settle overall outstanding (not a specific month)
+            </label>
           </div>
         </div>
 
@@ -210,7 +287,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                 onChange={handleInputChange}
                 placeholder="0"
                 min="0.01"
-                max={user.dueAmount}
+                max={maxSettlable ?? user.dueAmount}
                 step="0.01"
                 disabled={isSubmitting}
                 className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
@@ -220,6 +297,15 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             </div>
             {errors.amount && (
               <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+            )}
+            {maxSettlable !== null && !errors.amount && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                You can settle up to ₹{maxSettlable.toLocaleString()}{" "}
+                {overall ? "(overall)" : `for ${currentMonth}`}.
+              </p>
+            )}
+            {validating && (
+              <p className="text-xs text-gray-400 mt-1">Validating…</p>
             )}
 
             {/* Quick Amount Selection */}

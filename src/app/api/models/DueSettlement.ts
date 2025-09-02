@@ -7,7 +7,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IDueSettlement extends Document {
   _id: any; // Making this required to satisfy Document interface
   userId: Schema.Types.ObjectId;
-  month: string; // "Month Year" format (e.g., "September 2025")
+  month?: string; // "Month Year" format (e.g., "September 2025") when not overall
   amount: number; // Settlement amount
   reason:
     | "Mid-month entry"
@@ -19,6 +19,7 @@ export interface IDueSettlement extends Document {
   settledBy: Schema.Types.ObjectId; // Admin who settled
   settledAt: Date; // Settlement timestamp
   isActive: boolean; // Soft delete support
+  isOverall?: boolean; // When true, settlement applies to overall outstanding
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -36,11 +37,13 @@ const DueSettlementSchema: Schema<IDueSettlement> = new Schema(
     },
     month: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
-      // Validate format "Month Year"
+      // Validate format "Month Year" when not overall
       validate: {
-        validator: function (value: string) {
+        validator: function (this: any, value: string | undefined) {
+          if (this.isOverall) return true; // skip month validation for overall
+          if (typeof value === "undefined" || value === null) return false;
           return /^[A-Za-z]+ \d{4}$/.test(value);
         },
         message:
@@ -85,6 +88,11 @@ const DueSettlementSchema: Schema<IDueSettlement> = new Schema(
       default: true,
       index: true,
     },
+    isOverall: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -99,6 +107,7 @@ const DueSettlementSchema: Schema<IDueSettlement> = new Schema(
 
 // Add compound index for unique constraint (one settlement per user per month)
 DueSettlementSchema.index({ userId: 1, month: 1 }, { unique: false }); // Allow multiple settlements per month
+DueSettlementSchema.index({ userId: 1, isOverall: 1, settledAt: -1 });
 
 // Instance methods
 DueSettlementSchema.methods.toJSON = function () {
