@@ -125,6 +125,26 @@ export default function AdminLayout({
       ),
     },
     {
+      name: "Settled Amounts",
+      href: "/admin/settlements",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0-6a1 1 0 011 1v1.07A7.002 7.002 0 0119.93 11H21a1 1 0 110 2h-1.07A7.002 7.002 0 0113 19.93V21a1 1 0 11-2 0v-1.07A7.002 7.002 0 014.07 13H3a1 1 0 110-2h1.07A7.002 7.002 0 0111 4.07V3a1 1 0 011-1z"
+          />
+        </svg>
+      ),
+    },
+    {
       name: "Due Calculation",
       href: "/admin/prorated-rent",
       icon: (
