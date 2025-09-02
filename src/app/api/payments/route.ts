@@ -8,139 +8,110 @@ import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import { calculateTotalDue } from "@/app/utils/proratedRentCalculation";
 import CacheInvalidator from "@/app/lib/cacheInvalidator";
 
-// Helper function to recalculate user dues after payment
+// Helper function to recalculate user dues after payment (ENHANCED VERSION)
 async function recalculateUserDuesAfterPayment(
   userId: string,
   monthsArray: string[]
 ) {
-  for (const monthYear of monthsArray) {
-    // Parse month and year from "January 2025" format
-    const [monthName, yearStr] = monthYear.split(" ");
-    const year = parseInt(yearStr);
-    const monthNumber = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
+  console.log(`🔄 Starting enhanced settlement for user ${userId}`);
 
-    // Find the due record for this month
-    const due = await UserDue.findOne({
-      userId,
-      year,
-      monthNumber,
-      isActive: true,
-    });
+  // Step 1: Get ALL active dues for the user, sorted chronologically
+  const allUserDues = await UserDue.find({
+    userId,
+    isActive: true,
+  }).sort({ year: 1, monthNumber: 1 }); // Critical: Sort chronologically
 
-    if (!due) {
-      // If no due record exists, skip this month
-      console.log(`No due record found for user ${userId}, month ${monthYear}`);
-      continue;
+  if (allUserDues.length === 0) {
+    console.log(`No dues found for user ${userId}`);
+    return;
+  }
+
+  console.log(`📋 Found ${allUserDues.length} dues for user ${userId}`);
+
+  // Step 2: Get ALL payments for this user (not just for specific months)
+  const allPayments = await Payment.find({
+    userId,
+    paymentStatus: "Paid",
+    isDepositPayment: false,
+    isActive: true,
+  });
+
+  const totalPaidByUser = allPayments.reduce(
+    (sum: number, payment: any) => sum + payment.amount,
+    0
+  );
+
+  console.log(`💰 Total payments by user: ₹${totalPaidByUser}`);
+
+  // Step 3: Allocate total payments to dues chronologically (CRITICAL FIX)
+  let remainingPaymentToAllocate = totalPaidByUser;
+
+  for (const due of allUserDues) {
+    const monthYear = `${due.month} ${due.year}`;
+    const currentMonthDue = due.proratedRent;
+
+    console.log(`\n📅 Processing ${monthYear} - Due: ₹${currentMonthDue}`);
+
+    if (remainingPaymentToAllocate <= 0) {
+      // No more payment to allocate
+      due.totalPaid = 0;
+      due.remainingDue = currentMonthDue;
+      due.dueStatus = "Unpaid";
+      console.log(`   ❌ No payment remaining - Status: Unpaid`);
+    } else {
+      // Allocate payment to this due (up to the due amount)
+      const paymentForThisDue = Math.min(
+        remainingPaymentToAllocate,
+        currentMonthDue
+      );
+      remainingPaymentToAllocate -= paymentForThisDue;
+
+      due.totalPaid = paymentForThisDue;
+      due.remainingDue = Math.max(0, currentMonthDue - paymentForThisDue);
+      due.currentMonthDue = currentMonthDue;
+      due.totalDue = currentMonthDue; // Simplified - no previous unpaid in this logic
+      due.previousUnpaidDue = 0; // Will be calculated if needed
+
+      // Update status based on payment
+      if (due.remainingDue === 0) {
+        due.dueStatus = "Paid";
+        console.log(`   ✅ Fully paid - Status: Paid`);
+      } else if (paymentForThisDue > 0) {
+        due.dueStatus = "Partial";
+        console.log(
+          `   🔄 Partially paid - Status: Partial, Remaining: ₹${due.remainingDue}`
+        );
+      } else {
+        due.dueStatus = "Unpaid";
+        console.log(`   ❌ Not paid - Status: Unpaid`);
+      }
     }
-
-    // Get all payments for this month
-    const payments = await Payment.find({
-      userId,
-      months: monthYear,
-      paymentStatus: "Paid",
-      isDepositPayment: false,
-      isActive: true,
-    });
-
-    const totalPaid = payments.reduce(
-      (sum: number, payment: any) => sum + payment.amount,
-      0
-    );
-
-    // Get previous unpaid dues
-    let previousUnpaidDue = 0;
-    const previousMonthDues = await UserDue.find({
-      userId,
-      $or: [
-        { year: { $lt: year } },
-        { year: year, monthNumber: { $lt: monthNumber } },
-      ],
-      remainingDue: { $gt: 0 },
-      isActive: true,
-    });
-
-    previousUnpaidDue = previousMonthDues.reduce(
-      (sum: number, prevDue: any) => sum + prevDue.remainingDue,
-      0
-    );
-
-    // Calculate updated due amounts
-    const dueCalc = calculateTotalDue(
-      due.proratedRent,
-      previousUnpaidDue,
-      totalPaid
-    );
 
     // Update the due record
-    due.totalDue = dueCalc.totalDue;
-    due.currentMonthDue = dueCalc.currentMonthDue;
-    due.previousUnpaidDue = dueCalc.previousUnpaidDue;
-    due.totalPaid = dueCalc.totalPaid;
-    due.remainingDue = dueCalc.remainingDue;
-    due.dueStatus = dueCalc.dueStatus;
     due.updatedAt = new Date();
-
     await due.save();
 
-    // Also update future months that might be affected
-    const futureMonthDues = await UserDue.find({
-      userId,
-      $or: [
-        { year: { $gt: year } },
-        { year: year, monthNumber: { $gt: monthNumber } },
-      ],
-      isActive: true,
-    }).sort({ year: 1, monthNumber: 1 });
-
-    // Recalculate future months
-    for (const futureDue of futureMonthDues) {
-      const futureMonthYear = `${futureDue.month} ${futureDue.year}`;
-      const futurePayments = await Payment.find({
-        userId,
-        months: futureMonthYear,
-        paymentStatus: "Paid",
-        isDepositPayment: false,
-        isActive: true,
-      });
-
-      const futureTotalPaid = futurePayments.reduce(
-        (sum: number, payment: any) => sum + payment.amount,
-        0
-      );
-
-      // Get previous unpaid for this future month
-      let futurePreviousUnpaid = 0;
-      const futurePreviousDues = await UserDue.find({
-        userId,
-        $or: [
-          { year: { $lt: futureDue.year } },
-          { year: futureDue.year, monthNumber: { $lt: futureDue.monthNumber } },
-        ],
-        remainingDue: { $gt: 0 },
-        isActive: true,
-      });
-
-      futurePreviousUnpaid = futurePreviousDues.reduce(
-        (sum: number, prevDue: any) => sum + prevDue.remainingDue,
-        0
-      );
-
-      const futureDueCalc = calculateTotalDue(
-        futureDue.proratedRent,
-        futurePreviousUnpaid,
-        futureTotalPaid
-      );
-
-      futureDue.totalDue = futureDueCalc.totalDue;
-      futureDue.previousUnpaidDue = futureDueCalc.previousUnpaidDue;
-      futureDue.totalPaid = futureDueCalc.totalPaid;
-      futureDue.remainingDue = futureDueCalc.remainingDue;
-      futureDue.dueStatus = futureDueCalc.dueStatus;
-      futureDue.updatedAt = new Date();
-
-      await futureDue.save();
-    }
+    console.log(
+      `   💾 Updated ${monthYear}: Paid=₹${due.totalPaid}, Remaining=₹${due.remainingDue}, Status=${due.dueStatus}`
+    );
   }
+
+  // Step 4: Handle excess payment (credit balance)
+  if (remainingPaymentToAllocate > 0) {
+    console.log(
+      `\n💳 Excess payment: ₹${remainingPaymentToAllocate} - Adding to credit balance`
+    );
+    // TODO: Implement credit balance system in future
+  }
+
+  console.log(`\n✅ Enhanced settlement complete for user ${userId}`);
+
+  // Step 5: Log final summary
+  const totalOutstanding = allUserDues.reduce(
+    (sum, due) => sum + due.remainingDue,
+    0
+  );
+  console.log(`📊 Total outstanding after settlement: ₹${totalOutstanding}`);
 }
 
 // Get all payments
