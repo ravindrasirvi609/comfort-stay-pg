@@ -142,7 +142,7 @@ export async function PUT(
     // Update fields if provided
     if (amount !== undefined) paymentToUpdate.amount = amount;
     if (months !== undefined) paymentToUpdate.months = months;
-    if (paymentDate !== undefined) paymentToUpdate.paymentDate = paymentDate;
+    if (paymentDate !== undefined) paymentToUpdate.paymentDate = paymentDate; // Allow manual correction of payment date in edit mode
     if (dueDate !== undefined) paymentToUpdate.dueDate = dueDate;
     if (paymentStatus !== undefined)
       paymentToUpdate.paymentStatus = paymentStatus;

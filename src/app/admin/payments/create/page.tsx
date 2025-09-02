@@ -39,9 +39,7 @@ export default function CreatePaymentPage() {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [amount, setAmount] = useState<number | "">("");
   const [months, setMonths] = useState<string[]>([]);
-  const [paymentDate, setPaymentDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  // paymentDate is now auto-set by the API to current timestamp
   const [dueDate, setDueDate] = useState<string>(
     new Date(new Date().setDate(new Date().getDate() + 30))
       .toISOString()
@@ -308,7 +306,7 @@ export default function CreatePaymentPage() {
         userId: selectedUser,
         amount: Number(amount),
         months: months,
-        paymentDate,
+        // paymentDate is now automatically set to current timestamp by the API
         dueDate,
         paymentStatus: status,
         paymentMethod,
@@ -705,22 +703,25 @@ export default function CreatePaymentPage() {
             )}
           </div>
 
-          {/* Payment Date */}
+          {/* Payment Date - Note: This will be automatically set to current timestamp */}
           <div>
             <label
               htmlFor="paymentDate"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Payment Date
+              Payment Date (Auto-set to current time)
             </label>
             <input
               type="date"
               id="paymentDate"
-              value={paymentDate}
-              onChange={(e) => setPaymentDate(e.target.value)}
-              max={new Date().toISOString().split("T")[0]}
-              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+              value={new Date().toISOString().split("T")[0]}
+              disabled
+              className="bg-gray-100 dark:bg-gray-800 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md cursor-not-allowed"
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Payment date will be automatically set to the current timestamp
+              when created
+            </p>
           </div>
 
           {/* Due Date */}

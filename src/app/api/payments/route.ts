@@ -469,11 +469,13 @@ export async function POST(request: NextRequest) {
     const receiptNumber = await generateReceiptNumber();
 
     // Create new payment record
+    // Note: paymentDate is always set to current timestamp when payment is created via admin
+    // This ensures the payment date reflects when the record was created, not a selected date
     const newPayment = new Payment({
       userId,
       amount,
       months: Array.isArray(months) ? months : [months], // Ensure months is an array
-      paymentDate: paymentDate || new Date(),
+      paymentDate: new Date(), // Always use current timestamp when payment is created
       dueDate,
       paymentStatus: paymentStatus || status || "Paid", // Use paymentStatus field if provided, otherwise use status
       receiptNumber,
