@@ -275,15 +275,6 @@ export async function validateSettlement(
       maxSettlableAmount = Math.max(0, rentTillNow - totalPaid - totalSettled);
     }
 
-    if (settlementAmount > maxSettlableAmount) {
-      return {
-        isValid: false,
-        error: `Settlement amount (₹${settlementAmount}) exceeds remaining due (₹${maxSettlableAmount})`,
-        maxSettlableAmount,
-        currentDue: maxSettlableAmount,
-      };
-    }
-
     if (maxSettlableAmount <= 0) {
       return {
         isValid: false,
