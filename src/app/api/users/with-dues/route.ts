@@ -204,7 +204,10 @@ export async function GET(request: NextRequest) {
 
       // Step 4: Calculate Final Actual Due
       // Final Actual Due = RentTillNow - (TotalPaid + Settlement)
-      const actualDueAmount = Math.max(0, rentTillNow - (totalPaidAllTime + totalSettlementAmount));
+      const actualDueAmount = Math.max(
+        0,
+        rentTillNow - (totalPaidAllTime + totalSettlementAmount)
+      );
 
       // Determine overall due status based on actual calculations
       let overallDueStatus: "Paid" | "Partial" | "Unpaid" | "N/A" = "N/A";
@@ -344,13 +347,13 @@ export async function GET(request: NextRequest) {
           acc.currentMonthDue += user.currentMonthDue;
           acc.previousUnpaidDue += user.previousUnpaidDue;
         }
-        
+
         // Add settlement summary
         if (user.hasSettlementsApplied) {
           acc.usersWithSettlements++;
           acc.totalSettlementAmount += user.totalSettlementAmount;
         }
-        
+
         return acc;
       },
       {
