@@ -22,7 +22,13 @@ interface SettlementItem {
   reason: string;
   remarks?: string;
   settledAt: string;
-  user: { _id: string; name: string; email: string; pgId: string };
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    pgId?: string;
+    roomNumber?: string;
+  };
   settledBy: { _id: string; name: string; email: string };
 }
 
@@ -175,7 +181,7 @@ export default function SettlementsPage() {
                 <input
                   type="text"
                   className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100"
-                  placeholder="Search by resident name or ID"
+                  placeholder="Search by resident name or room number"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -290,7 +296,9 @@ export default function SettlementsPage() {
                           {s.user.name}
                         </Link>
                       </div>
-                      <div className="text-xs text-gray-500">{s.user.pgId}</div>
+                      <div className="text-xs text-gray-500">
+                        Room {s.user.roomNumber || "-"}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                       {s.month}

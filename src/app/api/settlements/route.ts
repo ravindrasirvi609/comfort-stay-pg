@@ -52,6 +52,16 @@ export async function GET(request: NextRequest) {
         },
       },
       { $unwind: "$userInfo" },
+      // Join room to get roomNumber
+      {
+        $lookup: {
+          from: "rooms",
+          localField: "userInfo.roomId",
+          foreignField: "_id",
+          as: "roomInfo",
+        },
+      },
+      { $unwind: { path: "$roomInfo", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "users",
@@ -70,6 +80,7 @@ export async function GET(request: NextRequest) {
               $or: [
                 { "userInfo.name": { $regex: search, $options: "i" } },
                 { "userInfo.pgId": { $regex: search, $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
               ],
             },
           },
@@ -105,6 +116,7 @@ export async function GET(request: NextRequest) {
             name: "$userInfo.name",
             email: "$userInfo.email",
             pgId: "$userInfo.pgId",
+            roomNumber: "$roomInfo.roomNumber",
           },
           settledBy: {
             _id: "$adminInfo._id",
