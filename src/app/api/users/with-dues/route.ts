@@ -5,6 +5,7 @@ import User from "@/app/api/models/User";
 import UserDue from "@/app/api/models/UserDue";
 import Payment from "@/app/api/models/Payment";
 import DueSettlement from "@/app/api/models/DueSettlement";
+import duesToCache from "@/app/lib/cache";
 
 // GET /api/users/with-dues - Get users with enhanced due information
 export async function GET(request: NextRequest) {
@@ -25,12 +26,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await connectToDatabase();
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "active";
     const month = searchParams.get("month");
     const year = searchParams.get("year");
+
+    // Generate cache key based on query parameters
+    const cacheKey = duesToCache.generateKey("users-with-dues", {
+      status,
+      month: month || "current",
+      year: year || "current",
+    });
+
+    // Check if data exists in cache
+    const cachedData = duesToCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`[CACHE HIT] users-with-dues: ${cacheKey}`);
+      return NextResponse.json({
+        ...cachedData,
+        cached: true,
+        cacheHit: true,
+      });
+    }
+
+    console.log(`[CACHE MISS] users-with-dues: ${cacheKey}`);
+
+    await connectToDatabase();
 
     // Build user query
     let userQuery: any = {};
@@ -292,6 +313,30 @@ export async function GET(request: NextRequest) {
         "default",
         { month: "long" }
       ),
+      cached: false,
+      cacheHit: false,
+    });
+
+    // Cache the result for future requests (5 minutes TTL)
+    const responseData = {
+      success: true,
+      users: enhancedUsers,
+      summary,
+      targetMonth,
+      targetYear,
+      targetMonthName: new Date(targetYear, targetMonth - 1).toLocaleString(
+        "default",
+        { month: "long" }
+      ),
+    };
+
+    duesToCache.set(cacheKey, responseData, 5 * 60 * 1000); // 5 minutes cache
+    console.log(`[CACHE SET] users-with-dues: ${cacheKey}`);
+
+    return NextResponse.json({
+      ...responseData,
+      cached: false,
+      cacheHit: false,
     });
   } catch (error) {
     console.error("Error fetching users with dues:", error);

@@ -9,6 +9,7 @@ import {
   getSettlementSummary,
   getUserCurrentDue,
 } from "@/app/lib/dueCalculator";
+import CacheInvalidator from "@/app/lib/cacheInvalidator";
 
 // POST /api/users/[id]/settle-due - Settle a user's due amount
 export async function POST(
@@ -118,6 +119,9 @@ export async function POST(
     });
 
     await settlement.save();
+
+    // Invalidate cache after settlement
+    CacheInvalidator.invalidateAllUserRelatedCache(userId);
 
     // Get updated due amount
     const remainingDue = await getUserCurrentDue(userId, month);

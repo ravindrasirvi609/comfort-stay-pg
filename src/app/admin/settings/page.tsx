@@ -9,8 +9,10 @@ import {
   RiBuilding4Line,
   RiMailSettingsLine,
   RiNotification4Line,
+  RiDatabase2Line,
 } from "react-icons/ri";
 import { FaSpinner } from "react-icons/fa";
+import CacheManager from "@/components/CacheManager";
 
 interface PGDetails {
   name: string;
@@ -323,6 +325,19 @@ export default function SettingsPage() {
                 >
                   <RiNotification4Line className="mr-2 h-5 w-5" />
                   Notifications
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setActiveTab("cache")}
+                  className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${
+                    activeTab === "cache"
+                      ? "text-pink-600 border-pink-600 dark:text-pink-500 dark:border-pink-500"
+                      : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <RiDatabase2Line className="mr-2 h-5 w-5" />
+                  Cache Management
                 </button>
               </li>
             </ul>
@@ -666,6 +681,16 @@ export default function SettingsPage() {
                     )
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Cache Management Section */}
+            {activeTab === "cache" && (
+              <div className="p-6">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  Performance & Cache Management
+                </h2>
+                <CacheManager />
               </div>
             )}
           </div>

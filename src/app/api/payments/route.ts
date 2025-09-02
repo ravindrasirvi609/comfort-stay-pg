@@ -6,6 +6,7 @@ import User from "../models/User";
 import UserDue from "../models/UserDue";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import { calculateTotalDue } from "@/app/utils/proratedRentCalculation";
+import CacheInvalidator from "@/app/lib/cacheInvalidator";
 
 // Helper function to recalculate user dues after payment
 async function recalculateUserDuesAfterPayment(
@@ -490,6 +491,9 @@ export async function POST(request: NextRequest) {
     });
 
     await newPayment.save();
+
+    // Invalidate cache after payment creation
+    CacheInvalidator.invalidateAllUserRelatedCache(userId);
 
     // If this is a deposit payment, update the user's depositFees field
     if (isDepositPayment) {
