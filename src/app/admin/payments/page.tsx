@@ -42,17 +42,34 @@ interface Payment {
   isDepositPayment?: boolean;
 }
 
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  limit: number;
+}
+
 export default function PaymentsPage() {
   // States
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const [showRentInfo, setShowRentInfo] = useState(false);
+  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 10,
+  });
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -61,7 +78,7 @@ export default function PaymentsPage() {
     new Date().getFullYear().toString()
   );
 
-  // Sum of payments for current filter
+  // Sum of payments for current filter (now calculated server-side)
   const [totalAmount, setTotalAmount] = useState(0);
 
   // Generate months array for filter dropdown
@@ -88,101 +105,51 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [currentPage, statusFilter, monthFilter, yearFilter, debouncedSearchTerm]);
 
+  // Reset to page 1 when filters change
   useEffect(() => {
-    // Apply filters and search
-    let result = [...payments];
+    setCurrentPage(1);
+  }, [statusFilter, monthFilter, yearFilter]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
 
-    // Apply status filter
-    if (statusFilter) {
-      result = result.filter(
-        (payment) =>
-          payment.paymentStatus === statusFilter ||
-          payment.status === statusFilter
-      );
-    }
-
-    // Apply month filter
-    if (monthFilter) {
-      result = result.filter((payment) => {
-        if (!payment.months || payment.months.length === 0) return false;
-
-        // Check if any month in the array contains the filter month
-        return payment.months.some((monthStr) => {
-          const [paymentMonth] = monthStr.split(" ");
-          return paymentMonth === monthFilter;
-        });
-      });
-    }
-
-    // Apply year filter
-    if (yearFilter) {
-      result = result.filter((payment) => {
-        if (!payment.months || payment.months.length === 0) return false;
-
-        // Check if any month in the array contains the filter year
-        return payment.months.some((monthStr) => {
-          const parts = monthStr.split(" ");
-          return parts.length > 1 && parts[1] === yearFilter;
-        });
-      });
-    }
-
-    // Apply search term
-    if (searchTerm) {
-      result = result.filter((payment) => {
-        const user = payment.userId as User;
-        return (
-          (user?.name &&
-            user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user?.pgId &&
-            user.pgId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (payment.receiptNumber &&
-            payment.receiptNumber
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()))
-        );
-      });
-    }
-
-    // Calculate total amount for current filter
-    const total = result.reduce((sum, payment) => {
-      return payment.paymentStatus === "Paid" || payment.status === "Paid"
-        ? sum + payment.amount
-        : sum;
-    }, 0);
-
-    setTotalAmount(total);
-    setFilteredPayments(result);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [payments, statusFilter, monthFilter, yearFilter, searchTerm]);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
 
-      const response = await axios.get("/api/payments");
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+      });
+
+      if (statusFilter) params.append("status", statusFilter);
+      if (monthFilter) params.append("month", monthFilter);
+      if (yearFilter) params.append("year", yearFilter);
+      if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
+
+      const response = await axios.get(`/api/payments?${params.toString()}`);
 
       if (response.data.success) {
-        // Sort payments by createdAt in descending order (newest first)
-        const sortedPayments = response.data.payments.sort(
-          (a: Payment, b: Payment) => {
-            return (
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-          }
+        setPayments(response.data.payments);
+        setPaginationInfo(response.data.pagination);
+
+        // Calculate total amount from current page payments
+        const total = response.data.payments.reduce(
+          (sum: number, payment: Payment) => {
+            return payment.paymentStatus === "Paid" || payment.status === "Paid"
+              ? sum + payment.amount
+              : sum;
+          },
+          0
         );
-
-        setPayments(sortedPayments);
-        setFilteredPayments(sortedPayments);
-
-        // Calculate initial total amount
-        const total = sortedPayments.reduce((sum: number, payment: Payment) => {
-          return payment.paymentStatus === "Paid" || payment.status === "Paid"
-            ? sum + payment.amount
-            : sum;
-        }, 0);
 
         setTotalAmount(total);
       } else {
@@ -197,17 +164,9 @@ export default function PaymentsPage() {
     }
   };
 
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredPayments.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
-
+  // Pagination logic - now using server-side pagination
   const paginate = (pageNumber: number) => {
-    if (pageNumber > 0 && pageNumber <= totalPages) {
+    if (pageNumber > 0 && pageNumber <= paginationInfo.totalPages) {
       setCurrentPage(pageNumber);
     }
   };
@@ -218,6 +177,8 @@ export default function PaymentsPage() {
     setMonthFilter("");
     setYearFilter(new Date().getFullYear().toString());
     setSearchTerm("");
+    setDebouncedSearchTerm("");
+    setCurrentPage(1); // Reset to first page when filters are cleared
   };
 
   // Get status badge style
@@ -330,7 +291,7 @@ export default function PaymentsPage() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {filteredPayments.length}
+            {paginationInfo.totalCount}
           </h3>
         </div>
 
@@ -498,7 +459,14 @@ export default function PaymentsPage() {
 
       {/* Payments Table */}
       <div className="backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg overflow-hidden">
-        {filteredPayments.length === 0 ? (
+        {loading ? (
+          <div className="p-8 text-center">
+            <FaSpinner className="animate-spin text-4xl text-pink-600 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">
+              Loading payments...
+            </p>
+          </div>
+        ) : payments.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-gray-500 dark:text-gray-400">
               No payments found
@@ -566,7 +534,7 @@ export default function PaymentsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white/20 dark:bg-gray-900/20 divide-y divide-gray-200 dark:divide-gray-700">
-                {currentItems.map((payment) => {
+                {payments.map((payment: Payment) => {
                   const user = payment.userId as User;
                   return (
                     <tr
@@ -667,23 +635,30 @@ export default function PaymentsPage() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {paginationInfo.totalPages > 1 && (
           <div className="px-6 py-3 flex justify-between items-center border-t border-gray-200 dark:border-gray-700">
             <div className="text-sm text-gray-700 dark:text-gray-400">
               Showing{" "}
-              <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
               <span className="font-medium">
-                {Math.min(indexOfLastItem, filteredPayments.length)}
+                {(paginationInfo.currentPage - 1) * paginationInfo.limit + 1}
               </span>{" "}
-              of <span className="font-medium">{filteredPayments.length}</span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  paginationInfo.currentPage * paginationInfo.limit,
+                  paginationInfo.totalCount
+                )}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium">{paginationInfo.totalCount}</span>{" "}
               results
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={!paginationInfo.hasPrevPage}
                 className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
-                  currentPage === 1
+                  !paginationInfo.hasPrevPage
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
@@ -691,46 +666,51 @@ export default function PaymentsPage() {
                 <IoChevronBackOutline className="h-4 w-4" />
               </button>
 
-              {Array.from({ length: totalPages }).map((_, index) => {
-                const pageNumber = index + 1;
-                // Show only current page, first, last, and 1 page before and after current
-                const showPage =
-                  pageNumber === 1 ||
-                  pageNumber === totalPages ||
-                  Math.abs(pageNumber - currentPage) <= 1;
+              {Array.from({ length: paginationInfo.totalPages }).map(
+                (_, index) => {
+                  const pageNumber = index + 1;
+                  // Show only current page, first, last, and 1 page before and after current
+                  const showPage =
+                    pageNumber === 1 ||
+                    pageNumber === paginationInfo.totalPages ||
+                    Math.abs(pageNumber - currentPage) <= 1;
 
-                // Show ellipsis for gaps
-                if (!showPage) {
-                  if (pageNumber === 2 || pageNumber === totalPages - 1) {
-                    return (
-                      <span key={pageNumber} className="px-3 py-2">
-                        ...
-                      </span>
-                    );
+                  // Show ellipsis for gaps
+                  if (!showPage) {
+                    if (
+                      pageNumber === 2 ||
+                      pageNumber === paginationInfo.totalPages - 1
+                    ) {
+                      return (
+                        <span key={pageNumber} className="px-3 py-2">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
                   }
-                  return null;
-                }
 
-                return (
-                  <button
-                    key={pageNumber}
-                    onClick={() => paginate(pageNumber)}
-                    className={`relative inline-flex items-center px-3 py-2 border ${
-                      currentPage === pageNumber
-                        ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 font-medium"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    } text-sm rounded-md`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => paginate(pageNumber)}
+                      className={`relative inline-flex items-center px-3 py-2 border ${
+                        currentPage === pageNumber
+                          ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 font-medium"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      } text-sm rounded-md`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                }
+              )}
 
               <button
                 onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={!paginationInfo.hasNextPage}
                 className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
-                  currentPage === totalPages
+                  !paginationInfo.hasNextPage
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}

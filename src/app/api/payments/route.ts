@@ -166,48 +166,200 @@ export async function GET(request: NextRequest) {
       const userId = url.searchParams.get("userId");
       const status = url.searchParams.get("status");
       const month = url.searchParams.get("month");
+      const year = url.searchParams.get("year");
+      const search = url.searchParams.get("search");
+      const page = parseInt(url.searchParams.get("page") || "1");
+      const limit = parseInt(url.searchParams.get("limit") || "10");
 
       // Build query based on parameters
-      const query: Record<string, string | boolean | { $in: string[] }> = {
+      const query: Record<string, any> = {
         isActive: true,
       };
       if (userId) query.userId = userId;
       if (status) query.paymentStatus = status;
 
       // Handle month filter by checking if it exists in the months array
-      if (month) {
-        query.months = { $in: [month] };
+      if (month && year) {
+        const monthYear = `${month} ${year}`;
+        query.months = { $in: [monthYear] };
+      } else if (month) {
+        // If only month is provided, search for any year with that month
+        query.months = { $regex: new RegExp(`^${month} `, "i") };
+      } else if (year) {
+        // If only year is provided, search for any month with that year
+        query.months = { $regex: new RegExp(` ${year}$`, "i") };
       }
 
-      payments = await Payment.find(query)
-        .populate("userId", "name email pgId")
-        .sort({ paymentDate: -1 });
+      // Calculate skip value for pagination
+      const skip = (page - 1) * limit;
+
+      // First, get total count for pagination metadata
+      let totalCount;
+      if (search) {
+        // If search is provided, we need to aggregate with user data
+        const searchPipeline = [
+          { $match: query },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "userInfo",
+            },
+          },
+          { $unwind: "$userInfo" },
+          {
+            $match: {
+              $or: [
+                { "userInfo.name": { $regex: search, $options: "i" } },
+                { "userInfo.pgId": { $regex: search, $options: "i" } },
+                { receiptNumber: { $regex: search, $options: "i" } },
+              ],
+            },
+          },
+          { $count: "total" },
+        ] as any[];
+
+        const countResult = await Payment.aggregate(searchPipeline);
+        totalCount = countResult.length > 0 ? countResult[0].total : 0;
+      } else {
+        totalCount = await Payment.countDocuments(query);
+      }
+
+      // Now get the actual payments with pagination
+      if (search) {
+        // Use aggregation for search functionality
+        const searchPipeline = [
+          { $match: query },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "userInfo",
+            },
+          },
+          { $unwind: "$userInfo" },
+          {
+            $match: {
+              $or: [
+                { "userInfo.name": { $regex: search, $options: "i" } },
+                { "userInfo.pgId": { $regex: search, $options: "i" } },
+                { receiptNumber: { $regex: search, $options: "i" } },
+              ],
+            },
+          },
+          { $sort: { paymentDate: -1, createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: 1,
+              userId: "$userInfo",
+              amount: 1,
+              months: 1,
+              paymentStatus: 1,
+              paymentDate: 1,
+              receiptNumber: 1,
+              paymentMethod: 1,
+              remarks: 1,
+              createdAt: 1,
+              isDepositPayment: 1,
+              isActive: 1,
+            },
+          },
+        ] as any[];
+
+        payments = await Payment.aggregate(searchPipeline);
+      } else {
+        payments = await Payment.find(query)
+          .populate("userId", "name email pgId")
+          .sort({ paymentDate: -1, createdAt: -1 })
+          .skip(skip)
+          .limit(limit);
+      }
+
+      // Add pagination metadata to response
+      const totalPages = Math.ceil(totalCount / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      // Make sure virtuals are included
+      const paymentsWithVirtuals = payments.map((payment) => {
+        const paymentObj =
+          typeof payment.toObject === "function"
+            ? payment.toObject({ virtuals: true })
+            : { ...payment }; // For aggregation results
+
+        // Ensure month is set if it doesn't exist but months does
+        if (
+          !paymentObj.month &&
+          paymentObj.months &&
+          paymentObj.months.length > 0
+        ) {
+          paymentObj.month = paymentObj.months[0];
+        }
+        return paymentObj;
+      });
+
+      return NextResponse.json({
+        success: true,
+        payments: paymentsWithVirtuals,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          hasNextPage,
+          hasPrevPage,
+          limit,
+        },
+      });
     } else {
-      // For normal users, only get their payments
-      payments = await Payment.find({
+      // For normal users, only get their payments with pagination
+      const url = new URL(request.url);
+      const page = parseInt(url.searchParams.get("page") || "1");
+      const limit = parseInt(url.searchParams.get("limit") || "10");
+      const skip = (page - 1) * limit;
+
+      const userQuery = {
         userId: user._id,
         isActive: true,
-      }).sort({ paymentDate: -1 });
+      };
+
+      const totalCount = await Payment.countDocuments(userQuery);
+      const totalPages = Math.ceil(totalCount / limit);
+
+      payments = await Payment.find(userQuery)
+        .sort({ paymentDate: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      // Make sure virtuals are included
+      const paymentsWithVirtuals = payments.map((payment) => {
+        const paymentObj = payment.toObject({ virtuals: true });
+        if (
+          !paymentObj.month &&
+          paymentObj.months &&
+          paymentObj.months.length > 0
+        ) {
+          paymentObj.month = paymentObj.months[0];
+        }
+        return paymentObj;
+      });
+
+      return NextResponse.json({
+        success: true,
+        payments: paymentsWithVirtuals,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+          limit,
+        },
+      });
     }
-
-    // Make sure virtuals are included
-    const paymentsWithVirtuals = payments.map((payment) => {
-      const paymentObj = payment.toObject({ virtuals: true });
-      // Ensure month is set if it doesn't exist but months does
-      if (
-        !paymentObj.month &&
-        paymentObj.months &&
-        paymentObj.months.length > 0
-      ) {
-        paymentObj.month = paymentObj.months[0];
-      }
-      return paymentObj;
-    });
-
-    return NextResponse.json({
-      success: true,
-      payments: paymentsWithVirtuals,
-    });
   } catch (error) {
     console.error("Get payments error:", error);
     return NextResponse.json(
