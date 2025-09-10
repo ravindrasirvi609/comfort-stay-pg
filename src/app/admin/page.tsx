@@ -321,7 +321,7 @@ export default function AdminDashboard() {
       ] = await Promise.all([
         axios.get("/api/users?onlyActiveConfirmed=true"),
         axios.get("/api/rooms"),
-        axios.get("/api/payments"),
+        axios.get("/api/payments?limit=0"),
         axios.get("/api/complaints"),
       ]);
 
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
 
       // Calculate rent collected this month
       const currentDate = new Date();
-      const currentMonth = currentDate.toLocaleString("default", {
+      const currentMonth = currentDate.toLocaleString("en-IN", {
         month: "long",
         year: "numeric",
       });
@@ -419,7 +419,7 @@ export default function AdminDashboard() {
       // Get previous month
       const prevDate = new Date(currentDate);
       prevDate.setMonth(currentDate.getMonth() - 1);
-      const previousMonth = prevDate.toLocaleString("default", {
+      const previousMonth = prevDate.toLocaleString("en-IN", {
         month: "long",
         year: "numeric",
       });
@@ -474,8 +474,8 @@ export default function AdminDashboard() {
     // Get last 6 months
     for (let i = 5; i >= 0; i--) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const monthName = date.toLocaleString("default", { month: "short" });
-      const monthYear = date.toLocaleString("default", {
+      const monthName = date.toLocaleString("en-IN", { month: "short" });
+      const monthYear = date.toLocaleString("en-IN", {
         month: "long",
         year: "numeric",
       });

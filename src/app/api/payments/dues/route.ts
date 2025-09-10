@@ -30,7 +30,7 @@ export async function GET() {
 
     // Find all unpaid payments
     const unpaidPayments = await Payment.find({
-      status: { $in: ["Due", "Overdue"] },
+      paymentStatus: { $in: ["Due", "Overdue"] },
       isActive: true,
     }).distinct("userId");
 

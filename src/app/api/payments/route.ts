@@ -141,7 +141,8 @@ export async function GET(request: NextRequest) {
       const year = url.searchParams.get("year");
       const search = url.searchParams.get("search");
       const page = parseInt(url.searchParams.get("page") || "1");
-      const limit = parseInt(url.searchParams.get("limit") || "10");
+      let limit = parseInt(url.searchParams.get("limit") || "10");
+      if (limit === 0) limit = 100000; // Return all if limit=0
 
       // Build query based on parameters
       const query: Record<string, any> = {
@@ -290,7 +291,8 @@ export async function GET(request: NextRequest) {
       // For normal users, only get their payments with pagination
       const url = new URL(request.url);
       const page = parseInt(url.searchParams.get("page") || "1");
-      const limit = parseInt(url.searchParams.get("limit") || "10");
+      let limit = parseInt(url.searchParams.get("limit") || "10");
+      if (limit === 0) limit = 100000; // Return all if limit=0
       const skip = (page - 1) * limit;
 
       const userQuery = {
