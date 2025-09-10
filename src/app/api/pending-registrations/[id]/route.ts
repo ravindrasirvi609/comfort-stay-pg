@@ -3,7 +3,10 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { User } from "@/app/api/models";
 
-export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     await connectToDatabase();
 
     // Ensure params is not a Promise before using it
-    const id = await params.id;
+    const id = typeof params.id === "string" ? params.id : await params.id;
 
     // Find the pending registration by ID
     const pendingRegistration = await User.findOne({

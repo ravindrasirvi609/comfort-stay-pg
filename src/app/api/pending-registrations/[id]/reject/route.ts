@@ -4,7 +4,10 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { sendRejectionEmail } from "@/app/lib/email";
 import { User } from "@/app/api/models";
 
-export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     // Check if user is authenticated and is an admin
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     await connectToDatabase();
 
     // Ensure params is not a Promise before using it
-    const id = await params.id;
+    const id = typeof params.id === "string" ? params.id : await params.id;
 
     // Find the pending registration
     const pendingRegistration = await User.findOne({

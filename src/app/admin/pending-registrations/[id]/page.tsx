@@ -255,7 +255,8 @@ export default function PendingRegistrationDetailsPage() {
       setError("");
 
       const response = await axios.post(
-        `/api/pending-registrations/${id}/reject`
+        `/api/pending-registrations/${id}/reject`,
+        { reason: "" } // Send empty reason for now
       );
 
       if (response.data.success) {
