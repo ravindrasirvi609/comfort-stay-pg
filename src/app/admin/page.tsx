@@ -1390,7 +1390,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Users on Notice Period Section */}
-      <div className="mt-8">
+      <div className="my-8">
         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
           Users on Notice Period
         </h2>
