@@ -49,6 +49,19 @@ interface Room {
   building?: string;
 }
 
+// Validate image src to avoid Next/Image defaultLoader "Invalid URL" errors
+const isValidImageSrc = (src?: string): boolean => {
+  try {
+    if (!src || typeof src !== "string") return false;
+    if (src.startsWith("/")) return true; // public asset
+    // Allow common safe protocols
+    const u = new URL(src);
+    return ["http:", "https:", "data:"].includes(u.protocol);
+  } catch {
+    return false;
+  }
+};
+
 export default function PendingRegistrationDetailsPage() {
   const params = useParams();
   const id = params.id as string;
@@ -588,7 +601,8 @@ export default function PendingRegistrationDetailsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {registration.validIdPhoto.endsWith(".pdf") ? (
+                      {registration.validIdPhoto &&
+                      registration.validIdPhoto.endsWith(".pdf") ? (
                         <div className="flex justify-center items-center h-full bg-gray-100 dark:bg-gray-800">
                           <div className="text-center">
                             <svg
@@ -608,13 +622,34 @@ export default function PendingRegistrationDetailsPage() {
                             <p className="mt-2">Click to view PDF</p>
                           </div>
                         </div>
-                      ) : (
+                      ) : registration.validIdPhoto &&
+                        isValidImageSrc(registration.validIdPhoto) ? (
                         <Image
                           src={registration.validIdPhoto}
                           alt="Valid ID"
                           fill
                           className="object-contain"
                         />
+                      ) : (
+                        <div className="flex justify-center items-center h-full bg-gray-100 dark:bg-gray-800">
+                          <div className="text-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-16 w-16 mx-auto text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                              />
+                            </svg>
+                            <p className="mt-2">Invalid image</p>
+                          </div>
+                        </div>
                       )}
                     </a>
                   </div>
@@ -625,18 +660,41 @@ export default function PendingRegistrationDetailsPage() {
                     Passport Photo
                   </p>
                   <div className="relative h-60 w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                    <a
-                      href={registration.profileImage}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Image
-                        src={registration.profileImage}
-                        alt="Passport Photo"
-                        fill
-                        className="object-contain"
-                      />
-                    </a>
+                    {registration.profileImage &&
+                    isValidImageSrc(registration.profileImage) ? (
+                      <a
+                        href={registration.profileImage}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Image
+                          src={registration.profileImage}
+                          alt="Passport Photo"
+                          fill
+                          className="object-contain"
+                        />
+                      </a>
+                    ) : (
+                      <div className="flex justify-center items-center h-full bg-gray-100 dark:bg-gray-800">
+                        <div className="text-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-16 w-16 mx-auto text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            />
+                          </svg>
+                          <p className="mt-2">Invalid image</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

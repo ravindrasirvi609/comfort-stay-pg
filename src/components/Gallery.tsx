@@ -11,22 +11,12 @@ const images = [
   },
   {
     src: "/gallery/3sharing.jpg",
-    alt: "Private Room",
+    alt: "Triple Sharing Room",
     category: "rooms",
-  },
-  {
-    src: "/gallery/lounge.jpg",
-    alt: "Lounge Area",
-    category: "common",
   },
   {
     src: "/gallery/dining.jpg",
     alt: "Dining Area",
-    category: "dining",
-  },
-  {
-    src: "/gallery/kitchen.jpg",
-    alt: "Kitchen",
     category: "dining",
   },
   {
@@ -40,29 +30,9 @@ const images = [
     category: "rooms",
   },
   {
-    src: "/gallery/beauty-corner.jpg",
-    alt: "Beauty Corner",
-    category: "amenities",
-  },
-  {
     src: "/gallery/building.jpg",
     alt: "Building Exterior",
     category: "exterior",
-  },
-  {
-    src: "/gallery/entrance.jpg",
-    alt: "Reception Area",
-    category: "common",
-  },
-  {
-    src: "/gallery/garden.jpg",
-    alt: "Garden Area",
-    category: "exterior",
-  },
-  {
-    src: "/gallery/security.jpg",
-    alt: "Security System",
-    category: "amenities",
   },
 ];
 

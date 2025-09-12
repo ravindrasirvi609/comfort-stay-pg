@@ -95,6 +95,19 @@ interface ErrorResponse {
   message: string;
 }
 
+// Validate image src to avoid Next/Image defaultLoader "Invalid URL" errors
+const isValidImageSrc = (src?: string): boolean => {
+  try {
+    if (!src || typeof src !== "string") return false;
+    if (src.startsWith("/")) return true; // public asset
+    // Allow common safe protocols
+    const u = new URL(src);
+    return ["http:", "https:", "data:"].includes(u.protocol);
+  } catch {
+    return false;
+  }
+};
+
 export default function UserDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -240,7 +253,7 @@ export default function UserDetailPage() {
         <div className="md:flex">
           {/* Profile Image / Initial Section */}
           <div className="md:w-1/3 p-6 flex flex-col items-center justify-center bg-gradient-to-br from-pink-50 to-blue-50 dark:from-gray-800 dark:to-purple-900/30">
-            {user.profileImage ? (
+            {user.profileImage && isValidImageSrc(user.profileImage) ? (
               <Image
                 src={user.profileImage}
                 alt={user.name}
@@ -547,7 +560,7 @@ export default function UserDetailPage() {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* ID Document */}
-            {user.validIdPhoto && (
+            {user.validIdPhoto && isValidImageSrc(user.validIdPhoto) && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -579,7 +592,7 @@ export default function UserDetailPage() {
             )}
 
             {/* Passport Photo */}
-            {user.profileImage && (
+            {user.profileImage && isValidImageSrc(user.profileImage) && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">

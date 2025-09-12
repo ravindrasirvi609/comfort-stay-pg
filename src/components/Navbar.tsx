@@ -43,6 +43,19 @@ const navLinks = [
   { href: "/contact", label: "Contact", icon: <Contact className="w-4 h-4" /> },
 ];
 
+// Validate image src to avoid Next/Image defaultLoader "Invalid URL" errors
+const isValidImageSrc = (src?: string): boolean => {
+  try {
+    if (!src || typeof src !== "string") return false;
+    if (src.startsWith("/")) return true; // public asset
+    // Allow common safe protocols
+    const u = new URL(src);
+    return ["http:", "https:", "data:"].includes(u.protocol);
+  } catch {
+    return false;
+  }
+};
+
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -126,7 +139,8 @@ export default function Navbar() {
                   >
                     <div className="relative">
                       <div className="h-8 w-8 rounded-full bg-pink-100 dark:bg-pink-800/30 flex items-center justify-center overflow-hidden border-2 border-pink-200 dark:border-pink-700">
-                        {user?.profileImage ? (
+                        {user?.profileImage &&
+                        isValidImageSrc(user.profileImage) ? (
                           <Image
                             src={user.profileImage}
                             alt={user.name}
@@ -230,7 +244,8 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <div className="h-6 w-6 rounded-full bg-pink-100 dark:bg-pink-800/30 flex items-center justify-center overflow-hidden">
-                      {user?.profileImage ? (
+                      {user?.profileImage &&
+                      isValidImageSrc(user.profileImage) ? (
                         <Image
                           src={user.profileImage}
                           alt={user.name}
