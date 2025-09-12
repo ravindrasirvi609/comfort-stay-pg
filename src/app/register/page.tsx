@@ -722,7 +722,7 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        ID Document Upload *
+                        Aadhar Card Upload *
                       </label>
                       <div className="bg-white/30 dark:bg-gray-800/30 rounded-xl p-3 sm:p-4 backdrop-blur-sm">
                         <ImageUpload
@@ -749,7 +749,7 @@ export default function RegisterPage() {
                                 d="M5 13l4 4L19 7"
                               />
                             </svg>
-                            ID document uploaded successfully
+                            Aadhar Card uploaded successfully
                           </p>
                         )}
                       </div>
