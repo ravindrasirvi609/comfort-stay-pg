@@ -4,6 +4,10 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 import Room from "@/app/api/models/Room";
 import UserArchive from "@/app/api/models/UserArchive";
+import {
+  validateSpecificBed,
+  validateAndFindAvailableBed,
+} from "@/app/lib/bedValidation";
 import { differenceInDays } from "date-fns";
 
 // Get a single user
@@ -155,8 +159,61 @@ export async function PUT(
       if (profileImage) userToUpdate.profileImage = profileImage;
       if (documents) userToUpdate.documents = documents;
       if (pgId) userToUpdate.pgId = pgId;
-      if (roomId !== undefined) userToUpdate.roomId = roomId;
-      if (bedNumber !== undefined) userToUpdate.bedNumber = bedNumber;
+      // Handle room assignment
+      if (roomId !== undefined) {
+        // If room is being changed and no bed number is specified, auto-assign one
+        if (bedNumber === undefined) {
+          const bedValidation = await validateAndFindAvailableBed(
+            roomId.toString(),
+            userToUpdate._id.toString()
+          );
+
+          if (!bedValidation.isValid) {
+            return NextResponse.json(
+              { success: false, message: bedValidation.message },
+              { status: 400 }
+            );
+          }
+
+          userToUpdate.bedNumber = bedValidation.bedNumber;
+        }
+
+        userToUpdate.roomId = roomId;
+      }
+
+      // Validate bed number assignment
+      if (bedNumber !== undefined) {
+        // Determine which room to validate against
+        const roomToValidate =
+          roomId !== undefined ? roomId : userToUpdate.roomId;
+
+        if (!roomToValidate) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Cannot assign bed number without a room assignment",
+            },
+            { status: 400 }
+          );
+        }
+
+        // Validate the specific bed number
+        const bedValidation = await validateSpecificBed(
+          roomToValidate.toString(),
+          bedNumber,
+          userToUpdate._id.toString()
+        );
+
+        if (!bedValidation.isValid) {
+          return NextResponse.json(
+            { success: false, message: bedValidation.message },
+            { status: 400 }
+          );
+        }
+
+        userToUpdate.bedNumber = bedNumber;
+      }
+
       if (moveInDate) userToUpdate.moveInDate = moveInDate;
       if (moveOutDate) userToUpdate.moveOutDate = moveOutDate;
       if (isActive !== undefined) userToUpdate.isActive = isActive;

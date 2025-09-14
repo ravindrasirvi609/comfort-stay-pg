@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { User, Payment, Room } from "@/app/api/models";
 import { sendEmail } from "@/app/lib/email";
+import { validateAndFindAvailableBed } from "@/app/lib/bedValidation";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
@@ -68,28 +69,19 @@ export async function POST(
       );
     }
 
-    // Find an available bed number
-    const usersInRoom = await User.find({
-      roomId: room._id,
-      isActive: true,
-    }).select("bedNumber");
+    // Find an available bed number using the validation utility
+    const bedValidation = await validateAndFindAvailableBed(
+      room._id.toString()
+    );
 
-    const occupiedBedNumbers = usersInRoom.map((u) => u.bedNumber);
-    let selectedBedNumber = null;
-
-    for (let i = 1; i <= room.capacity; i++) {
-      if (!occupiedBedNumbers.includes(i)) {
-        selectedBedNumber = i;
-        break;
-      }
-    }
-
-    if (selectedBedNumber === null) {
+    if (!bedValidation.isValid) {
       return NextResponse.json(
-        { success: false, message: "No available beds in this room" },
+        { success: false, message: bedValidation.message },
         { status: 400 }
       );
     }
+
+    const selectedBedNumber = bedValidation.bedNumber;
 
     // Ensure params is not a Promise before using it
     const id = typeof params.id === "string" ? params.id : await params.id;

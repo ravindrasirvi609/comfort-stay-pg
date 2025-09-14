@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import { User, Room, RoomChangeRequest, Notification } from "@/app/api/models";
+import { validateAndFindAvailableBed } from "@/app/lib/bedValidation";
 import mongoose from "mongoose";
 
 // Handle room change request (admin only)
@@ -89,29 +90,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find an available bed number in the new room
-    const usersInNewRoom = await User.find({
-      roomId: newRoom._id,
-      isActive: true,
-    }).select("bedNumber");
+    // Find an available bed number in the new room using validation utility
+    const bedValidation = await validateAndFindAvailableBed(
+      newRoom._id.toString()
+    );
 
-    const occupiedBeds = usersInNewRoom.map((u) => u.bedNumber);
-    let newBedNumber = null;
-
-    // Find the first available bed number
-    for (let i = 1; i <= newRoom.capacity; i++) {
-      if (!occupiedBeds.includes(i)) {
-        newBedNumber = i;
-        break;
-      }
-    }
-
-    if (newBedNumber === null) {
+    if (!bedValidation.isValid) {
       return NextResponse.json(
-        { success: false, message: "No available beds in the selected room" },
+        { success: false, message: bedValidation.message },
         { status: 400 }
       );
     }
+
+    const newBedNumber = bedValidation.bedNumber;
 
     // Start a transaction
     const session = await mongoose.startSession();

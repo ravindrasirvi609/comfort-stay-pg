@@ -8,6 +8,10 @@ import { NextRequest } from "next/server";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import { format } from "date-fns";
 import UserArchive from "@/app/api/models/UserArchive";
+import {
+  validateAndFindAvailableBed,
+  validateSpecificBed,
+} from "@/app/lib/bedValidation";
 
 export async function GET(request: NextRequest) {
   // Redirect to the archives API since all deactivated users are now in archives
@@ -204,8 +208,7 @@ export async function PUT(request: NextRequest) {
 
       // Now proceed with activation logic...
 
-      // Use transaction-less approach instead to avoid client session issues
-      // First, handle room assignment and validation if needed
+      // Handle room assignment and validation if needed
       if (roomId) {
         const room = await Room.findById(roomId);
 
@@ -216,17 +219,47 @@ export async function PUT(request: NextRequest) {
           );
         }
 
-        if (room.currentOccupancy >= room.capacity) {
-          return NextResponse.json(
-            { success: false, message: "Room is at full capacity" },
-            { status: 400 }
+        // Check if user has a previous bed number from archive
+        let bedNumberToAssign = userToActivate.bedNumber;
+
+        if (bedNumberToAssign) {
+          // Validate if the previous bed is still available
+          const bedValidation = await validateSpecificBed(
+            roomId,
+            bedNumberToAssign,
+            userToActivate._id
           );
+
+          if (!bedValidation.isValid) {
+            console.log(
+              `Previous bed ${bedNumberToAssign} not available: ${bedValidation.message}`
+            );
+            bedNumberToAssign = null; // Will find a new bed below
+          }
         }
 
-        // Assign the room
-        userToActivate.roomId = roomId;
+        // If no valid bed number, find an available one
+        if (!bedNumberToAssign) {
+          const availableBedValidation = await validateAndFindAvailableBed(
+            roomId,
+            userToActivate._id
+          );
 
-        // Increment room occupancy
+          if (!availableBedValidation.isValid) {
+            return NextResponse.json(
+              { success: false, message: availableBedValidation.message },
+              { status: 400 }
+            );
+          }
+
+          bedNumberToAssign = availableBedValidation.bedNumber;
+        }
+
+        // Assign the room and bed
+        userToActivate.roomId = roomId;
+        userToActivate.bedNumber = bedNumberToAssign;
+
+        // Update room occupancy
         room.currentOccupancy += 1;
         await room.save();
       }
