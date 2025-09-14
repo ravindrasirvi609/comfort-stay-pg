@@ -63,15 +63,146 @@ export async function PUT(request: NextRequest) {
     }
 
     try {
-      // Find the user first to check if exists
-      const userToActivate = await User.findById(userId);
+      // First check if user exists in UserArchive (inactive users are stored here)
+      let userToActivate = await User.findById(userId);
+      let existingUser = null; // Track if we found an existing user vs created new one
 
+      // If not found in User collection, check UserArchive
       if (!userToActivate) {
-        return NextResponse.json(
-          { success: false, message: "User not found" },
-          { status: 404 }
+        console.log(
+          "User not found in User collection, checking UserArchive for userId:",
+          userId,
+          "Type:",
+          typeof userId
         );
+
+        // Debug: Check if UserArchive collection has any records
+        const totalArchives = await UserArchive.countDocuments();
+        console.log("Total UserArchive records in database:", totalArchives);
+
+        // Debug: Get a sample of UserArchive records to see their structure
+        const sampleArchives = await UserArchive.find({})
+          .limit(3)
+          .select("name _id userId")
+          .lean();
+        console.log("Sample UserArchive records structure:");
+        sampleArchives.forEach((archive, index) => {
+          console.log(
+            `${index + 1}. Name: ${archive.name}, _id: ${archive._id}, userId: ${archive.userId}, userId type: ${typeof archive.userId}`
+          );
+        });
+
+        // Try to find by userId first
+        let archivedUser = await UserArchive.findOne({ userId: userId });
+        console.log(
+          "Search by userId result:",
+          archivedUser ? `Found: ${archivedUser.name}` : "Not found"
+        );
+
+        // If not found by userId, try by _id (in case userId wasn't set properly)
+        if (!archivedUser) {
+          archivedUser = await UserArchive.findById(userId);
+          console.log(
+            "Search by _id result:",
+            archivedUser ? `Found: ${archivedUser.name}` : "Not found"
+          );
+        }
+
+        // If still not found, try finding by _id as string (fallback)
+        if (!archivedUser) {
+          archivedUser = await UserArchive.findOne({ _id: userId });
+          console.log(
+            "Search by _id as string result:",
+            archivedUser ? `Found: ${archivedUser.name}` : "Not found"
+          );
+        }
+
+        if (!archivedUser) {
+          console.log("User not found in any UserArchive search method");
+          return NextResponse.json(
+            { success: false, message: "User not found in archives" },
+            { status: 404 }
+          );
+        }
+
+        console.log(
+          "Found archived user:",
+          archivedUser.name,
+          "with ID:",
+          archivedUser._id
+        );
+
+        // Restore user from archive to User collection
+        // Check if the original user still exists in User collection
+        const originalUserId = archivedUser.userId;
+        let existingUser = null;
+
+        if (originalUserId) {
+          existingUser = await User.findById(originalUserId);
+        }
+
+        // If not found by ID, try to find by email (user might exist but with different ID)
+        if (!existingUser && archivedUser.email) {
+          existingUser = await User.findOne({ email: archivedUser.email });
+          console.log(
+            "User not found by ID, but found by email:",
+            existingUser ? existingUser.name : "Not found"
+          );
+        }
+
+        if (existingUser) {
+          // User still exists, just update their status
+          console.log(
+            "Found existing user in User collection, updating status"
+          );
+          userToActivate = existingUser;
+        } else {
+          // User was deleted, create new user from archive data
+          console.log(
+            "User not found in User collection, creating from archive"
+          );
+          userToActivate = new User({
+            // Don't set _id, let MongoDB generate a new one
+            name: archivedUser.name,
+            email: archivedUser.email,
+            phone: archivedUser.phone,
+            role: archivedUser.role,
+            password: archivedUser.password,
+            pgId: archivedUser.pgId,
+            registrationStatus: archivedUser.registrationStatus,
+            fathersName: archivedUser.fathersName,
+            permanentAddress: archivedUser.permanentAddress,
+            city: archivedUser.city,
+            state: archivedUser.state,
+            guardianMobileNumber: archivedUser.guardianMobileNumber,
+            validIdType: archivedUser.validIdType,
+            companyName: archivedUser.companyName,
+            companyAddress: archivedUser.companyAddress,
+            validIdPhoto: archivedUser.validIdPhoto,
+            profileImage: archivedUser.profileImage,
+            documents: archivedUser.documents,
+            roomId: archivedUser.roomId,
+            bedNumber: archivedUser.bedNumber,
+            rejectionReason: archivedUser.rejectionReason,
+            moveInDate: archivedUser.moveInDate,
+            moveOutDate: archivedUser.moveOutDate,
+            approvalDate: archivedUser.approvalDate,
+            rejectionDate: archivedUser.rejectionDate,
+            isActive: false, // Will be set to true below
+            depositFees: archivedUser.depositFees,
+            isOnNoticePeriod: archivedUser.isOnNoticePeriod,
+            lastStayingDate: archivedUser.lastStayingDate,
+            isDeleted: false,
+            keyIssued: archivedUser.keyIssued,
+            depositReturn: archivedUser.depositReturn,
+          });
+        }
+
+        // Save the restored user
+        await userToActivate.save();
       }
+
+      // Now proceed with activation logic...
 
       // Use transaction-less approach instead to avoid client session issues
       // First, handle room assignment and validation if needed
@@ -117,12 +248,27 @@ export async function PUT(request: NextRequest) {
       // Save user changes
       await userToActivate.save();
 
-      // If archiveId provided, delete that archive entry (or mark if future needs)
+      // If archiveId provided, delete that archive entry
       if (archiveId) {
-        const archiveRecord = await UserArchive.findOne({
-          _id: archiveId,
-          userId: userToActivate._id,
-        });
+        const archiveRecord = await UserArchive.findById(archiveId);
+        if (archiveRecord) {
+          await archiveRecord.deleteOne();
+        }
+      } else if (!existingUser) {
+        // If no archiveId provided AND we created a new user from archive,
+        // try to find and delete by userId
+        let archiveRecord = await UserArchive.findOne({ userId: userId });
+
+        // If not found by userId, try by _id
+        if (!archiveRecord) {
+          archiveRecord = await UserArchive.findById(userId);
+        }
+
+        // If still not found, try by _id as string
+        if (!archiveRecord) {
+          archiveRecord = await UserArchive.findOne({ _id: userId });
+        }
+
         if (archiveRecord) {
           await archiveRecord.deleteOne();
         }
