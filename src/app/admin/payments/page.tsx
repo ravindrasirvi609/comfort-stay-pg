@@ -377,6 +377,11 @@ export default function PaymentsPage() {
                   placeholder="Search by name or ID"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                    }
+                  }}
                 />
               </div>
             </div>
