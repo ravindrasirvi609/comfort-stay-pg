@@ -250,11 +250,6 @@ export default function DashboardPage() {
       (lastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (daysDifference < 15) {
-      setNoticePeriodError("Notice period must be at least 15 days");
-      return;
-    }
-
     try {
       setIsSubmitting(true);
 
@@ -1117,11 +1112,7 @@ export default function DashboardPage() {
                       id="lastStayingDate"
                       value={lastStayingDate}
                       onChange={(e) => setLastStayingDate(e.target.value)}
-                      min={
-                        new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                          .toISOString()
-                          .split("T")[0]
-                      }
+                      min={new Date().toISOString().split("T")[0]}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white"
                       required
                     />

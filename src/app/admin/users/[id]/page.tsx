@@ -21,7 +21,6 @@ import {
   ArrowLeft,
   Trash2,
   Home,
-  Building,
   FileText,
   CreditCard,
   UserCheck,
@@ -29,9 +28,11 @@ import {
   Briefcase,
   CheckCircle,
   Bed,
+  BellRing,
 } from "lucide-react";
 import AdminRoomChange from "@/components/AdminRoomChange";
 import DeleteUserDialog from "@/components/DeleteUserDialog";
+import { FaExclamationCircle } from "react-icons/fa";
 
 interface UserData {
   _id: string;
@@ -67,6 +68,8 @@ interface UserData {
     amount: number;
     date?: string;
   };
+  isOnNoticePeriod?: boolean;
+  lastStayingDate?: string | null;
   roomId?:
     | {
         _id: string;
@@ -119,6 +122,15 @@ export default function UserDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isNoticeDialogOpen, setIsNoticeDialogOpen] = useState(false);
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [noticeLastDate, setNoticeLastDate] = useState("");
+  const [noticeError, setNoticeError] = useState("");
+  const [noticeSuccess, setNoticeSuccess] = useState("");
+  const [withdrawError, setWithdrawError] = useState("");
+  const [withdrawSuccess, setWithdrawSuccess] = useState("");
+  const [isNoticeSubmitting, setIsNoticeSubmitting] = useState(false);
+  const [isWithdrawProcessing, setIsWithdrawProcessing] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -194,6 +206,145 @@ export default function UserDetailPage() {
 
   const handleRoomChanged = () => {
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const openNoticeDialog = () => {
+    setNoticeError("");
+    setNoticeSuccess("");
+    const existingDate = user?.lastStayingDate
+      ? new Date(user.lastStayingDate).toISOString().split("T")[0]
+      : "";
+    setNoticeLastDate(existingDate);
+    setIsNoticeDialogOpen(true);
+  };
+
+  const openWithdrawDialog = () => {
+    setWithdrawError("");
+    setWithdrawSuccess("");
+    setIsWithdrawDialogOpen(true);
+  };
+
+  const handleAdminNoticeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setNoticeError("");
+    setNoticeSuccess("");
+
+    if (!noticeLastDate) {
+      setNoticeError("Please select the last staying date");
+      return;
+    }
+
+    const today = new Date();
+    const selected = new Date(noticeLastDate);
+    const dayDiff = Math.ceil(
+      (selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (Number.isNaN(selected.getTime())) {
+      setNoticeError("Invalid date selected");
+      return;
+    }
+
+    try {
+      setIsNoticeSubmitting(true);
+      const response = await axios.post("/api/users/notice-period", {
+        lastStayingDate: noticeLastDate,
+        userId: user._id,
+      });
+
+      if (response.data.success) {
+        const updatedInfo = response.data.user || {};
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                isOnNoticePeriod: updatedInfo.isOnNoticePeriod ?? true,
+                lastStayingDate: updatedInfo.lastStayingDate || noticeLastDate,
+              }
+            : prev
+        );
+        setNoticeSuccess(
+          response.data.message ||
+            (dayDiff > 15
+              ? "Notice period submitted. Resident eligible for ₹1500 refund."
+              : "Notice period submitted successfully.")
+        );
+        toast.success(
+          user.isOnNoticePeriod
+            ? "Notice period updated"
+            : "Notice period submitted"
+        );
+        setTimeout(() => {
+          setIsNoticeDialogOpen(false);
+          setNoticeSuccess("");
+        }, 1500);
+      } else {
+        setNoticeError(
+          response.data.message || "Failed to submit notice period"
+        );
+      }
+    } catch (error) {
+      console.error("Error submitting notice period for user:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        setNoticeError(
+          error.response.data?.message || "Failed to submit notice period"
+        );
+      } else {
+        setNoticeError("Failed to submit notice period");
+      }
+    } finally {
+      setIsNoticeSubmitting(false);
+    }
+  };
+
+  const handleAdminWithdrawNotice = async () => {
+    if (!user) return;
+    setWithdrawError("");
+    setWithdrawSuccess("");
+    try {
+      setIsWithdrawProcessing(true);
+      const response = await axios.post("/api/users/notice-period", {
+        isWithdrawal: true,
+        userId: user._id,
+      });
+
+      if (response.data.success) {
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                isOnNoticePeriod: false,
+                lastStayingDate: null,
+              }
+            : prev
+        );
+        setWithdrawSuccess(
+          response.data.message || "Notice period withdrawn successfully"
+        );
+        toast.success("Notice period withdrawn");
+        setTimeout(() => {
+          setIsWithdrawDialogOpen(false);
+          setWithdrawSuccess("");
+        }, 1500);
+      } else {
+        setWithdrawError(
+          response.data.message || "Failed to withdraw notice period"
+        );
+      }
+    } catch (error) {
+      console.error("Error withdrawing notice period for user:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        setWithdrawError(
+          error.response.data?.message || "Failed to withdraw notice period"
+        );
+      } else {
+        setWithdrawError("Failed to withdraw notice period");
+      }
+    } finally {
+      setIsWithdrawProcessing(false);
+    }
   };
 
   if (loading) {
@@ -529,6 +680,49 @@ export default function UserDetailPage() {
                 </p>
               </div>
             </div>
+
+            <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700/70 p-4 bg-gray-50 dark:bg-gray-900/30">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="flex items-start">
+                  <BellRing className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Notice Period Status
+                    </p>
+                    <p className="text-base font-medium text-gray-900 dark:text-white">
+                      {user.isOnNoticePeriod
+                        ? "Active"
+                        : "Not on notice period"}
+                    </p>
+                    {user.isOnNoticePeriod && user.lastStayingDate && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        Last staying date: {formatDate(user.lastStayingDate)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={openNoticeDialog}
+                    className="px-3 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                  >
+                    {user.isOnNoticePeriod ? "Update Notice" : "Submit Notice"}
+                  </button>
+                  {user.isOnNoticePeriod && (
+                    <button
+                      onClick={openWithdrawDialog}
+                      className="px-3 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    >
+                      Withdraw
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Minimum 15-day notice required for refund eligibility. Actions
+                submitted here are recorded on behalf of the resident.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -666,6 +860,229 @@ export default function UserDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Notice Period Dialog */}
+      {isNoticeDialogOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black opacity-50"
+              onClick={() => setIsNoticeDialogOpen(false)}
+            ></div>
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {user.isOnNoticePeriod
+                    ? "Update Notice Period"
+                    : "Submit Notice Period"}
+                </h3>
+                <button
+                  onClick={() => setIsNoticeDialogOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  This submission is performed by an admin on behalf of the
+                  resident. Ensure the resident has been informed about the
+                  move-out timeline.
+                </p>
+                <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-lg shadow-sm mb-6">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <FaExclamationCircle className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        Notice Period Policy
+                      </h3>
+                      <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>
+                            Minimum 15 days notice for refund eligibility.
+                          </li>
+                          <li>
+                            ₹1500 booking amount refund if notice is more than
+                            15 days.
+                          </li>
+                          <li>
+                            No refund when notice period is shorter than 15
+                            days.
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {noticeError && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                    {noticeError}
+                  </div>
+                )}
+                {noticeSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                    {noticeSuccess}
+                  </div>
+                )}
+                <form onSubmit={handleAdminNoticeSubmit}>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="noticeLastStayingDate"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Last Staying Date
+                    </label>
+                    <input
+                      type="date"
+                      id="noticeLastStayingDate"
+                      value={noticeLastDate}
+                      onChange={(e) => setNoticeLastDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Select the resident's confirmed move-out date (min 15 days
+                      from today).
+                    </p>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setIsNoticeDialogOpen(false)}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      disabled={isNoticeSubmitting}
+                    >
+                      {isNoticeSubmitting
+                        ? "Processing..."
+                        : user.isOnNoticePeriod
+                          ? "Update Notice"
+                          : "Submit Notice"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Withdraw Notice Period Dialog */}
+      {isWithdrawDialogOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black opacity-50"
+              onClick={() => setIsWithdrawDialogOpen(false)}
+            ></div>
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Withdraw Notice Period
+                </h3>
+                <button
+                  onClick={() => setIsWithdrawDialogOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-6">
+                {withdrawError && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                    {withdrawError}
+                  </div>
+                )}
+                {withdrawSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                    {withdrawSuccess}
+                  </div>
+                )}
+                {!withdrawSuccess && (
+                  <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/30 rounded-lg">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg
+                          className="h-5 w-5 text-yellow-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                          Confirm withdrawal
+                        </h3>
+                        <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                          Withdrawing the notice period will cancel the
+                          resident's move-out process. Please ensure the
+                          resident acknowledges this change.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsWithdrawDialogOpen(false)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAdminWithdrawNotice}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    disabled={isWithdrawProcessing}
+                  >
+                    {isWithdrawProcessing ? "Processing..." : "Confirm"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payments Section */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden mb-8">

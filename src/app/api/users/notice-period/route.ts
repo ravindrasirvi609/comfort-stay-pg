@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import { isAuthenticated } from "@/app/lib/auth";
+import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 import Notification from "@/app/api/models/Notification";
 
@@ -18,12 +18,23 @@ export async function POST(request: NextRequest) {
 
     // Parse the request body
     const body = await request.json();
-    const { lastStayingDate, isWithdrawal } = body;
+    const { lastStayingDate, isWithdrawal, userId: requestedUserId } = body;
+
+    const actingUserId = user._id.toString();
+    const targetUserId = requestedUserId || actingUserId;
+    const isManagingDifferentUser = targetUserId.toString() !== actingUserId;
+
+    if (isManagingDifferentUser && !isAdmin(user)) {
+      return NextResponse.json(
+        { success: false, message: "Access denied" },
+        { status: 403 }
+      );
+    }
 
     await connectToDatabase();
 
     // Get the latest user data to check current notice period status
-    const currentUser = await User.findById(user._id);
+    const currentUser = await User.findById(targetUserId);
 
     if (!currentUser) {
       return NextResponse.json(
@@ -31,6 +42,8 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const wasOnNoticePeriod = Boolean(currentUser.isOnNoticePeriod);
 
     // Handle notice period withdrawal
     if (isWithdrawal) {
@@ -43,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       // Update user to remove notice period
       const updatedUser = await User.findByIdAndUpdate(
-        user._id,
+        targetUserId,
         {
           isOnNoticePeriod: false,
           lastStayingDate: null,
@@ -59,11 +72,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create notification for admin when user withdraws notice period
+      // Create notification for relevant party when notice period is withdrawn
       await Notification.create({
-        userId: "admin_id_123456789", // Admin ID
-        title: "Notice Period Withdrawn",
-        message: `${currentUser.name || "A resident"} has withdrawn their notice period.`,
+        userId: isManagingDifferentUser
+          ? currentUser._id
+          : "admin_id_123456789",
+        title: isManagingDifferentUser
+          ? "Notice Period Withdrawn by Admin"
+          : "Notice Period Withdrawn",
+        message: isManagingDifferentUser
+          ? `An admin has withdrawn your notice period${currentUser.lastStayingDate ? ` that was scheduled for ${new Date(currentUser.lastStayingDate).toLocaleDateString()}` : ""}.`
+          : `${currentUser.name || "A resident"} has withdrawn their notice period.`,
         type: "NoticePeriod",
         isRead: false,
         isActive: true,
@@ -73,7 +92,9 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: "Notice period has been withdrawn successfully",
+        message: isManagingDifferentUser
+          ? "Notice period withdrawn for user"
+          : "Notice period has been withdrawn successfully",
         user: {
           isOnNoticePeriod: false,
           lastStayingDate: null,
@@ -103,6 +124,13 @@ export async function POST(request: NextRequest) {
 
     const selectedDate = new Date(lastStayingDate);
 
+    if (Number.isNaN(selectedDate.getTime())) {
+      return NextResponse.json(
+        { success: false, message: "Invalid last staying date" },
+        { status: 400 }
+      );
+    }
+
     if (selectedDate < minimumDate) {
       const daysRequired = currentUser.isOnNoticePeriod ? 10 : 1; // Changed from 30 to 1
       return NextResponse.json(
@@ -116,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     // Update the user's notice period details
     const updatedUser = await User.findByIdAndUpdate(
-      user._id,
+      targetUserId,
       {
         isOnNoticePeriod: true,
         lastStayingDate: selectedDate,
@@ -131,17 +159,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const message = currentUser.isOnNoticePeriod
+    const message = wasOnNoticePeriod
       ? "Notice period updated successfully"
       : "Notice period submitted successfully";
 
-    // Create notification for admin when user submits or updates notice period
+    const notificationTitle = wasOnNoticePeriod
+      ? isManagingDifferentUser
+        ? "Notice Period Updated by Admin"
+        : "Notice Period Updated"
+      : isManagingDifferentUser
+        ? "Notice Period Submitted by Admin"
+        : "New Notice Period";
+
+    const notificationMessage = isManagingDifferentUser
+      ? `An admin has ${wasOnNoticePeriod ? "updated" : "submitted"} your notice period with last staying date: ${selectedDate.toLocaleDateString()}`
+      : `${currentUser.name || "A resident"} has ${wasOnNoticePeriod ? "updated their" : "submitted a"} notice period with last staying date: ${selectedDate.toLocaleDateString()}`;
+
+    // Create notification for relevant party when user submits or updates notice period
     await Notification.create({
-      userId: "admin_id_123456789", // Admin ID
-      title: currentUser.isOnNoticePeriod
-        ? "Notice Period Updated"
-        : "New Notice Period",
-      message: `${currentUser.name || "A resident"} has ${currentUser.isOnNoticePeriod ? "updated their" : "submitted a"} notice period with last staying date: ${selectedDate.toLocaleDateString()}`,
+      userId: isManagingDifferentUser ? currentUser._id : "admin_id_123456789",
+      title: notificationTitle,
+      message: notificationMessage,
       type: "NoticePeriod",
       isRead: false,
       isActive: true,
@@ -151,7 +189,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message,
+      message: isManagingDifferentUser
+        ? wasOnNoticePeriod
+          ? "Notice period updated for user"
+          : "Notice period submitted for user"
+        : message,
       user: {
         isOnNoticePeriod: updatedUser.isOnNoticePeriod,
         lastStayingDate: updatedUser.lastStayingDate,
