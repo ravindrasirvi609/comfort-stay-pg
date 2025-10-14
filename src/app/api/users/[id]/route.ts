@@ -315,7 +315,7 @@ export async function DELETE(
 
         const room = await Room.findById(roomId);
         if (room) {
-          // Decrement room occupancy
+          // Decrement room occupancy and let schema hook adjust status
           room.currentOccupancy = Math.max(0, room.currentOccupancy - 1);
           await room.save();
         }
@@ -381,9 +381,12 @@ export async function DELETE(
 
       await archiveRecord.save();
 
-      // Mark the user as inactive (but not deleted)
+      // Mark the user as inactive (but not deleted) and clear stay metadata
       userToDelete.isActive = false;
+      userToDelete.isOnNoticePeriod = false;
       userToDelete.moveOutDate = moveOutDate;
+      userToDelete.roomId = null;
+      userToDelete.bedNumber = null;
       await userToDelete.save();
 
       return NextResponse.json({
