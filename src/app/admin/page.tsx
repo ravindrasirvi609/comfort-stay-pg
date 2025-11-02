@@ -1312,6 +1312,21 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </Link>
+
+            <Link
+              href="/admin/missing-payments"
+              className="flex items-center p-4 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-700 dark:text-red-300"
+            >
+              <div className="h-10 w-10 flex items-center justify-center bg-red-200 dark:bg-red-800 rounded-full mr-3">
+                <FiAlertCircle className="h-5 w-5 text-red-700 dark:text-red-300" />
+              </div>
+              <div>
+                <h3 className="font-medium">Missing Payments</h3>
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Track users without payment entries
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
 
