@@ -83,7 +83,6 @@ export default function ComplaintsPage() {
               `Error: ${axiosError.response.status} - ${axiosError.response.statusText}`
           );
         } else if (axiosError.request) {
-          // The request was made but no response was received
           setError("No response received from server. Please try again.");
         } else {
           // Something happened in setting up the request that triggered an Error
