@@ -4,6 +4,7 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Payment from "../models/Payment";
 import User from "../models/User";
 import UserDue from "../models/UserDue";
+import Room from "../models/Room";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import { calculateTotalDue } from "@/app/utils/proratedRentCalculation";
 import CacheInvalidator from "@/app/lib/cacheInvalidator";
@@ -96,14 +97,6 @@ async function recalculateUserDuesAfterPayment(
     );
   }
 
-  // Step 4: Handle excess payment (credit balance)
-  if (remainingPaymentToAllocate > 0) {
-    console.log(
-      `\n💳 Excess payment: ₹${remainingPaymentToAllocate} - Adding to credit balance`
-    );
-    // TODO: Implement credit balance system in future
-  }
-
   console.log(`\n✅ Enhanced settlement complete for user ${userId}`);
 
   // Step 5: Log final summary
@@ -182,11 +175,26 @@ export async function GET(request: NextRequest) {
           },
           { $unwind: "$userInfo" },
           {
+            $lookup: {
+              from: "rooms",
+              localField: "userInfo.roomId",
+              foreignField: "_id",
+              as: "roomInfo",
+            },
+          },
+          {
+            $unwind: {
+              path: "$roomInfo",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
             $match: {
               $or: [
                 { "userInfo.name": { $regex: search, $options: "i" } },
                 { "userInfo.pgId": { $regex: search, $options: "i" } },
                 { receiptNumber: { $regex: search, $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
               ],
             },
           },
@@ -214,11 +222,26 @@ export async function GET(request: NextRequest) {
           },
           { $unwind: "$userInfo" },
           {
+            $lookup: {
+              from: "rooms",
+              localField: "userInfo.roomId",
+              foreignField: "_id",
+              as: "roomInfo",
+            },
+          },
+          {
+            $unwind: {
+              path: "$roomInfo",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
             $match: {
               $or: [
                 { "userInfo.name": { $regex: search, $options: "i" } },
                 { "userInfo.pgId": { $regex: search, $options: "i" } },
                 { receiptNumber: { $regex: search, $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
               ],
             },
           },
@@ -228,7 +251,13 @@ export async function GET(request: NextRequest) {
           {
             $project: {
               _id: 1,
-              userId: "$userInfo",
+              userId: {
+                _id: "$userInfo._id",
+                name: "$userInfo.name",
+                email: "$userInfo.email",
+                pgId: "$userInfo.pgId",
+                roomId: "$roomInfo",
+              },
               amount: 1,
               months: 1,
               paymentStatus: 1,
@@ -246,7 +275,15 @@ export async function GET(request: NextRequest) {
         payments = await Payment.aggregate(searchPipeline);
       } else {
         payments = await Payment.find(query)
-          .populate("userId", "name email pgId")
+          .populate({
+            path: "userId",
+            select: "name email pgId roomId",
+            populate: {
+              path: "roomId",
+              select: "roomNumber",
+              model: Room,
+            },
+          })
           .sort({ paymentDate: -1, createdAt: -1 })
           .skip(skip)
           .limit(limit);

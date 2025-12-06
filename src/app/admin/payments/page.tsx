@@ -24,6 +24,9 @@ interface User {
   name: string;
   email: string;
   pgId: string;
+  roomId?: {
+    roomNumber: string;
+  };
 }
 
 interface Payment {
@@ -566,7 +569,7 @@ export default function PaymentsPage() {
                             )}
                             <div className="text-sm text-gray-500 dark:text-gray-400">
                               {typeof user === "object"
-                                ? user?.pgId || "N/A"
+                                ? user?.roomId?.roomNumber || "N/A"
                                 : "N/A"}
                             </div>
                           </div>
