@@ -45,6 +45,12 @@ interface UserArchive {
   stayDuration: number;
   exitSurveyCompleted: boolean;
   exitFeedback?: ExitFeedback;
+  remarks?: string;
+  keyIssued?: boolean;
+  depositReturn?: {
+    amount: number;
+    date?: string;
+  };
 }
 
 interface AnalyticsData {
@@ -254,6 +260,10 @@ export default function CheckoutsPage() {
       "Would Recommend",
       "Exit Reason",
       "Comments",
+      "Remarks",
+      "Key Returned",
+      "Deposit Return Amount",
+      "Deposit Return Date",
     ];
 
     const csvRows = [
@@ -273,6 +283,14 @@ export default function CheckoutsPage() {
           user.exitFeedback?.wouldRecommend ? "Yes" : "No",
           `"${user.exitFeedback?.exitReason || ""}"`,
           `"${user.exitFeedback?.otherComments || ""}"`,
+          `"${user.remarks || ""}"`,
+          user.keyIssued ? "Not Returned" : "Returned",
+          user.depositReturn?.amount
+            ? `₹${user.depositReturn.amount}`
+            : "Pending",
+          user.depositReturn?.date
+            ? new Date(user.depositReturn.date).toLocaleDateString()
+            : "",
         ];
         return row.join(",");
       }),
@@ -565,13 +583,13 @@ export default function CheckoutsPage() {
                           Duration
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Reason
+                          Remarks
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Survey
+                          Key Returned
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Rating
+                          Deposit Return
                         </th>
                       </tr>
                     </thead>
@@ -614,49 +632,53 @@ export default function CheckoutsPage() {
                               {user.stayDuration} days
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                user.archiveReason === "Completed Stay"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                  : user.archiveReason === "Rule Violation"
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              }`}
-                            >
-                              {user.archiveReason}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {user.exitSurveyCompleted ? (
-                              <span className="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
-                                Completed
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                                Not Completed
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {user.exitFeedback ? (
-                              <div className="flex items-center">
-                                <span className="font-medium text-gray-900 dark:text-white mr-1">
-                                  {user.exitFeedback.overallExperience}
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white max-w-xs">
+                              {user.remarks ? (
+                                <p className="italic">{user.remarks}</p>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500 italic">
+                                  No remarks
                                 </span>
-                                <svg
-                                  fill="currentColor"
-                                  className="w-4 h-4 text-yellow-400"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
-                                N/A
-                              </span>
-                            )}
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {user.keyIssued ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                  <span className="w-2 h-2 mr-1.5 bg-red-600 dark:bg-red-400 rounded-full"></span>
+                                  Not Returned
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                  <span className="w-2 h-2 mr-1.5 bg-green-600 dark:bg-green-400 rounded-full"></span>
+                                  Returned
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {user.depositReturn?.amount ? (
+                                <div className="space-y-1">
+                                  <div className="font-medium text-green-600 dark:text-green-400">
+                                    ₹{user.depositReturn.amount.toFixed(2)}
+                                  </div>
+                                  {user.depositReturn.date && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      {new Date(
+                                        user.depositReturn.date
+                                      ).toLocaleDateString("en-IN")}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500 italic">
+                                  Pending
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

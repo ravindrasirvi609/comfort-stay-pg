@@ -167,7 +167,8 @@ export default function UserDetailPage() {
     depositInfo: {
       isReturning: boolean;
       amount: number;
-    }
+    },
+    remarks?: string
   ) => {
     try {
       setIsDeleting(true);
@@ -180,6 +181,7 @@ export default function UserDetailPage() {
               date: new Date(),
             }
           : undefined,
+        remarks: remarks || "",
       };
 
       const response = await axios.delete(`/api/users/${id}`, {

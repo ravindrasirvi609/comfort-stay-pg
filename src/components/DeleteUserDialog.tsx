@@ -4,7 +4,11 @@ import { Trash2, AlertTriangle, Key, CreditCard } from "lucide-react";
 interface DeleteUserDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (keyInfo: KeyInfo, depositInfo: DepositInfo) => void;
+  onConfirm: (
+    keyInfo: KeyInfo,
+    depositInfo: DepositInfo,
+    remarks?: string
+  ) => void;
   isDeleting: boolean;
   userName: string;
   currentDepositFees?: number;
@@ -17,6 +21,12 @@ interface KeyInfo {
 interface DepositInfo {
   isReturning: boolean;
   amount: number;
+}
+
+interface DeactivationData {
+  keyIssued: boolean;
+  depositReturn: DepositInfo;
+  remarks: string;
 }
 
 const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
@@ -52,7 +62,15 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
       amount: depositAmount,
     };
 
-    onConfirm(keyInfo, depositInfo);
+    // Call parent with extended data including remarks
+    const deactivationData: DeactivationData = {
+      keyIssued,
+      depositReturn: depositInfo,
+      remarks,
+    };
+
+    // Convert to the format expected by parent component
+    onConfirm(keyInfo, depositInfo, remarks);
   };
 
   if (!isOpen) return null;
@@ -167,6 +185,24 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Remarks Field */}
+                <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <label
+                    htmlFor="remarks"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Remarks (Optional)
+                  </label>
+                  <textarea
+                    id="remarks"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Add any remarks or notes about the deactivation..."
+                    className="w-full p-3 text-sm border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white resize-none"
+                    rows={3}
+                  />
                 </div>
 
                 <div className="mt-4 p-3 rounded-md bg-yellow-50 dark:bg-yellow-900/30">

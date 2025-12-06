@@ -293,7 +293,7 @@ export async function DELETE(
 
     // Get key and deposit return data if provided
     const requestData = await request.json().catch(() => ({}));
-    const { keyIssued, depositReturn } = requestData;
+    const { keyIssued, depositReturn, remarks } = requestData;
 
     // Find the user
     const userToDelete = await User.findById(params.id).populate("roomId");
@@ -351,6 +351,7 @@ export async function DELETE(
         archiveRecord.isActive = false;
         archiveRecord.isOnNoticePeriod = false;
         archiveRecord.keyIssued = keyIssued || false;
+        archiveRecord.remarks = remarks || "";
         archiveRecord.userId = userToDelete._id; // ensure linkage
 
         if (depositReturn) {
@@ -375,6 +376,7 @@ export async function DELETE(
           isActive: false,
           isOnNoticePeriod: false,
           keyIssued: keyIssued || false,
+          remarks: remarks || "",
           depositReturn: depositReturn || undefined,
         });
       }

@@ -24,6 +24,11 @@ interface ArchivedUser {
   checkoutReason?: string;
   stayDuration?: number;
   profileImage?: string;
+  remarks?: string;
+  depositReturn?: {
+    amount: number;
+    date?: string;
+  };
 }
 
 export default function UserArchivesPage() {
@@ -66,9 +71,12 @@ export default function UserArchivesPage() {
             "PG ID": user.pgId,
             "Move In Date": new Date(user.moveInDate).toLocaleDateString(),
             "Move Out Date": new Date(user.moveOutDate).toLocaleDateString(),
-            "Last Room": user.lastRoom || "N/A",
-            "Checkout Reason": user.checkoutReason || "N/A",
             "Stay Duration (days)": user.stayDuration || "N/A",
+            Remarks: user.remarks || "N/A",
+            "Deposit Return Amount": user.depositReturn?.amount || 0,
+            "Deposit Return Date": user.depositReturn?.date
+              ? new Date(user.depositReturn.date).toLocaleDateString()
+              : "N/A",
           }));
 
           setCsvData(csvFormattedData);
@@ -278,19 +286,13 @@ export default function UserArchivesPage() {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                   >
-                    Duration
+                    Remarks
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                   >
-                    Last Room
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                  >
-                    Checkout Reason
+                    Deposit Return
                   </th>
                 </tr>
               </thead>
@@ -331,22 +333,39 @@ export default function UserArchivesPage() {
                         {new Date(user.moveInDate).toLocaleDateString()} -{" "}
                         {new Date(user.moveOutDate).toLocaleDateString()}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {user.stayDuration
                           ? `${user.stayDuration} days`
                           : "N/A"}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {user.lastRoom || "Not recorded"}
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 dark:text-white max-w-xs break-words">
+                        {user.remarks && user.remarks.trim() ? (
+                          <p className="italic">{user.remarks}</p>
+                        ) : (
+                          <span className="text-gray-400">No remarks</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {user.checkoutReason || "Not specified"}
+                        {user.depositReturn && user.depositReturn.amount > 0 ? (
+                          <div>
+                            <div className="font-medium">
+                              ₹{user.depositReturn.amount.toFixed(2)}
+                            </div>
+                            {user.depositReturn.date && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(
+                                  user.depositReturn.date
+                                ).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Not returned</span>
+                        )}
                       </div>
                     </td>
                   </tr>

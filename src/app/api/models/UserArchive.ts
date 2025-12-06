@@ -8,6 +8,7 @@ interface IUserArchive extends IUser {
   archiveDate: Date;
   exitSurveyCompleted: boolean;
   stayDuration: number; // in days
+  remarks?: string; // Admin remarks for deactivation
   exitFeedback?: {
     overallExperience: number; // 1-5 stars
     cleanliness: number; // 1-5 stars
@@ -127,6 +128,11 @@ const UserArchiveSchema = new Schema<IUserArchive>(
     archiveDate: {
       type: Date,
       default: Date.now,
+    },
+    remarks: {
+      type: String,
+      required: false,
+      default: "",
     },
     exitSurveyCompleted: {
       type: Boolean,

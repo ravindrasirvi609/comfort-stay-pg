@@ -61,6 +61,7 @@ export interface IUserArchive extends IUser {
   archiveDate: Date;
   exitSurveyCompleted: boolean;
   stayDuration: number; // in days
+  remarks?: string; // Admin remarks for deactivation
   exitFeedback?: {
     overallExperience?: number;
     cleanliness?: number;

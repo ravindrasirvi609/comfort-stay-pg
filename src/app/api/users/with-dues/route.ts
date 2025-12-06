@@ -233,6 +233,8 @@ export async function GET(request: NextRequest) {
         // User has due records - use corrected data with settlements applied
         return {
           ...user,
+          keyIssued: user.keyIssued || false, // Explicitly include
+          depositReturn: user.depositReturn || null, // Explicitly include
           currentMonthRentStatus: currentMonthStatus,
           dueAmount: actualDueAmount, // Final Actual Due after settlements
           totalDue: rentTillNow, // Total rent till now
@@ -285,6 +287,8 @@ export async function GET(request: NextRequest) {
 
         return {
           ...user,
+          keyIssued: user.keyIssued || false, // Explicitly include
+          depositReturn: user.depositReturn || null, // Explicitly include
           currentMonthRentStatus: actualStatus,
           dueAmount: actualDueAmount, // Final Actual Due after settlements
           totalDue: rentTillNow,
@@ -315,6 +319,8 @@ export async function GET(request: NextRequest) {
         // No room assigned
         return {
           ...user,
+          keyIssued: user.keyIssued || false, // Explicitly include
+          depositReturn: user.depositReturn || null, // Explicitly include
           currentMonthRentStatus: "N/A",
           dueAmount: 0,
           totalDue: 0,
