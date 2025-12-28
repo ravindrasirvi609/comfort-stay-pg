@@ -22,7 +22,7 @@ const rooms = [
   {
     type: "Twin Sharing",
     capacity: "2 Girls",
-    price: "₹9,500/month",
+    price: "₹10,000/month",
     features: [
       "Brand new room",
       "Premium twin beds",

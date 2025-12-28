@@ -26,7 +26,7 @@ const LocalBusinessSchema = () => {
       latitude: "18.595507", // Update with actual coordinates
       longitude: "73.730114", // Update with actual coordinates
     },
-    priceRange: "₹8,000 - ₹9,500",
+    priceRange: "₹8,000 - ₹10,000",
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: [

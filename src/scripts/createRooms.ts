@@ -52,9 +52,8 @@ const THREE_SHARING_POSITIONS: number[] = (() => {
   return [1, 5, 10].filter((n) => n <= ROOMS_PER_FLOOR);
 })();
 
-// Pricing based on room type
 const PRICING: Record<"2-sharing" | "3-sharing", number> = {
-  "2-sharing": 9500, // Price for 2-sharing rooms
+  "2-sharing": 10000, // Price for 2-sharing rooms
   "3-sharing": 8000, // Price for 3-sharing rooms
 };
 
