@@ -7,7 +7,7 @@ const rooms = [
   {
     type: "Triple Sharing",
     capacity: "3 Girls",
-    price: "₹8,000/month",
+    price: "₹8,500/month",
     features: [
       "Brand new room",
       "Spacious living area",

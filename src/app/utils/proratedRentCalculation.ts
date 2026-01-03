@@ -358,7 +358,7 @@ export function testProratedCalculation(): void {
   // User should pay for 16 days (16th to 31st)
 
   const checkInDate = new Date(2025, 0, 16); // January 16, 2025
-  const fullMonthRent = 8000;
+  const fullMonthRent = 8500;
   const targetMonth = 1; // January
   const targetYear = 2025;
 

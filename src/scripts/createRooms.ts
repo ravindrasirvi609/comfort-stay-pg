@@ -54,7 +54,7 @@ const THREE_SHARING_POSITIONS: number[] = (() => {
 
 const PRICING: Record<"2-sharing" | "3-sharing", number> = {
   "2-sharing": 10000, // Price for 2-sharing rooms
-  "3-sharing": 8000, // Price for 3-sharing rooms
+  "3-sharing": 8500, // Price for 3-sharing rooms
 };
 
 // Amenities common for all rooms
