@@ -369,6 +369,7 @@ export function testProratedCalculation(): void {
     targetYear
   );
 
+
   console.log("Prorated Rent Calculation Test:");
   console.log("Check-in Date:", checkInDate.toDateString());
   console.log("Full Month Rent: ₹", fullMonthRent);
