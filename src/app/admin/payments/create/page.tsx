@@ -11,14 +11,14 @@ interface User {
   name: string;
   pgId: string;
   roomId:
-    | {
-        _id: string;
-        roomNumber: string;
-        price: number;
-        type: string;
-      }
-    | string
-    | null;
+  | {
+    _id: string;
+    roomNumber: string;
+    price: number;
+    type: string;
+  }
+  | string
+  | null;
 }
 
 // Payment interface (subset) to compute current month paid & dues
@@ -279,8 +279,8 @@ export default function CreatePaymentPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent, shouldRedirect: boolean = true) => {
+    if (e) e.preventDefault();
 
     if (!selectedUser || !amount || months.length === 0 || !dueDate) {
       setError("Please fill in all required fields");
@@ -318,10 +318,31 @@ export default function CreatePaymentPage() {
       const response = await axios.post("/api/payments", paymentData);
 
       if (response.data.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/admin/payments");
-        }, 2000);
+        if (shouldRedirect) {
+          setSuccess(true);
+          setTimeout(() => {
+            router.push("/admin/payments");
+          }, 2000);
+        } else {
+          // Add and Continue logic
+          setSuccess(true);
+          // Show success for 3 seconds then clear
+          setTimeout(() => setSuccess(false), 3000);
+
+          // Reset form for next entry
+          setSelectedUser("");
+          setAmount("");
+          const currentMonth = new Date().toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          });
+          setMonths([currentMonth]);
+          setTransactionId("");
+          setRemarks("");
+          setIsDepositPayment(false);
+          setExistingPayments([]);
+          setSearchTerm("");
+        }
       } else {
         setError(response.data.message || "Failed to create payment");
       }
@@ -375,7 +396,11 @@ export default function CreatePaymentPage() {
       {/* Success message */}
       {success && (
         <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded dark:bg-green-900/50 dark:border-green-800 dark:text-green-400">
-          <p>Payment created successfully! Redirecting...</p>
+          <p>
+            {searchTerm === "" && !selectedUser
+              ? "Payment recorded successfully! You can now add another record."
+              : "Payment created successfully! Redirecting..."}
+          </p>
         </div>
       )}
 
@@ -434,13 +459,12 @@ export default function CreatePaymentPage() {
                       return (
                         <div
                           key={user._id}
-                          className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 ${
-                            due > 0
-                              ? "border-red-400 bg-red-50/30 dark:bg-red-900/10"
-                              : status === "Paid"
-                                ? "border-green-400 bg-green-50/30 dark:bg-green-900/10"
-                                : "border-transparent"
-                          }`}
+                          className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 ${due > 0
+                            ? "border-red-400 bg-red-50/30 dark:bg-red-900/10"
+                            : status === "Paid"
+                              ? "border-green-400 bg-green-50/30 dark:bg-green-900/10"
+                              : "border-transparent"
+                            }`}
                           onClick={() => handleUserSelection(user._id)}
                         >
                           <div className="flex items-center justify-between">
@@ -460,7 +484,7 @@ export default function CreatePaymentPage() {
                                 <span className="text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
                                   Room:{" "}
                                   {typeof user.roomId === "object" &&
-                                  user.roomId?.roomNumber
+                                    user.roomId?.roomNumber
                                     ? user.roomId.roomNumber
                                     : "Not Assigned"}
                                 </span>
@@ -475,13 +499,12 @@ export default function CreatePaymentPage() {
                                 <div className="mt-2 text-xs">
                                   <div className="flex flex-wrap gap-3">
                                     <span
-                                      className={`px-2 py-0.5 rounded font-medium ${
-                                        status === "Paid"
-                                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                          : status === "Unpaid"
-                                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                                      }`}
+                                      className={`px-2 py-0.5 rounded font-medium ${status === "Paid"
+                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        : status === "Unpaid"
+                                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                          : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                        }`}
                                     >
                                       {status === "Paid"
                                         ? "✅ Fully Paid"
@@ -634,19 +657,17 @@ export default function CreatePaymentPage() {
                           checked={months.includes(m)}
                           onChange={() => handleMonthSelection(m)}
                           disabled={hasExistingPayment}
-                          className={`h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded ${
-                            hasExistingPayment
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                          }`}
+                          className={`h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded ${hasExistingPayment
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                            }`}
                         />
                         <label
                           htmlFor={`month-${m}`}
-                          className={`ml-2 block text-sm ${
-                            hasExistingPayment
-                              ? "text-red-600 dark:text-red-400 line-through"
-                              : "text-gray-700 dark:text-gray-300"
-                          }`}
+                          className={`ml-2 block text-sm ${hasExistingPayment
+                            ? "text-red-600 dark:text-red-400 line-through"
+                            : "text-gray-700 dark:text-gray-300"
+                            }`}
                         >
                           {m}
                           {hasExistingPayment && (
@@ -822,27 +843,37 @@ export default function CreatePaymentPage() {
             />
           </div>
 
-          {/* Submit button */}
-          <div className="flex justify-end">
+          {/* Form Actions */}
+          <div className="flex flex-col md:flex-row gap-4 pt-4">
             <button
               type="button"
-              onClick={() => router.push("/admin/payments")}
-              className="px-4 py-2 mr-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
+              onClick={(e) => handleSubmit(e as any, true)}
               disabled={submitting}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 dark:bg-pink-700 dark:hover:bg-pink-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
-                  <FaSpinner className="animate-spin mr-2" />
+                  <FaSpinner className="animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Payment & Exit"
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e as any, false)}
+              disabled={submitting}
+              className="flex-1 bg-white dark:bg-gray-800 text-pink-600 dark:text-pink-400 border-2 border-pink-600 dark:border-pink-500 font-bold py-3 px-6 rounded-lg shadow-md hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <FaSpinner className="animate-spin" />
                   Saving...
                 </>
               ) : (
-                "Save Payment"
+                "Add & Continue"
               )}
             </button>
           </div>
