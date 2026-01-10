@@ -40,15 +40,16 @@ interface UserData {
   approvalDate?: string;
   moveInDate?: string;
   pgId?: string;
+  vehicleNumber?: string;
   roomId?:
-    | {
-        _id: string;
-        roomNumber: string;
-        price: number;
-        type: string;
-      }
-    | string
-    | null;
+  | {
+    _id: string;
+    roomNumber: string;
+    price: number;
+    type: string;
+  }
+  | string
+  | null;
 }
 
 interface ErrorResponse {
@@ -84,6 +85,7 @@ export default function EditUserPage() {
     moveInDate: "",
     roomId: "",
     pgId: "",
+    vehicleNumber: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,6 +121,7 @@ export default function EditUserPage() {
             moveInDate: user.moveInDate || "",
             roomId: user.roomId || "",
             pgId: user.pgId || "",
+            vehicleNumber: user.vehicleNumber || "",
           });
           setError(null);
         } else {
@@ -286,6 +289,25 @@ export default function EditUserPage() {
                   placeholder="Guardian Mobile Number"
                 />
               </div>
+
+              {/* Vehicle Number */}
+              <div>
+                <label
+                  htmlFor="vehicleNumber"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Vehicle Number
+                </label>
+                <input
+                  type="text"
+                  id="vehicleNumber"
+                  name="vehicleNumber"
+                  value={userData.vehicleNumber}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Vehicle Number"
+                />
+              </div>
             </div>
           </div>
         );
@@ -413,7 +435,7 @@ export default function EditUserPage() {
                   name="roomId"
                   value={
                     typeof userData.roomId === "object" &&
-                    userData.roomId?.roomNumber
+                      userData.roomId?.roomNumber
                       ? userData.roomId.roomNumber
                       : ""
                   }
@@ -460,8 +482,8 @@ export default function EditUserPage() {
                   value={
                     userData.moveInDate
                       ? new Date(userData.moveInDate)
-                          .toISOString()
-                          .split("T")[0]
+                        .toISOString()
+                        .split("T")[0]
                       : ""
                   }
                   onChange={handleInputChange}
@@ -674,11 +696,10 @@ export default function EditUserPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("personal")}
-                className={`px-4 py-3 font-medium text-sm flex items-center ${
-                  activeTab === "personal"
-                    ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                className={`px-4 py-3 font-medium text-sm flex items-center ${activeTab === "personal"
+                  ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
               >
                 <UserRound size={18} className="mr-2" />
                 Personal Info
@@ -686,11 +707,10 @@ export default function EditUserPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("address")}
-                className={`px-4 py-3 font-medium text-sm flex items-center ${
-                  activeTab === "address"
-                    ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                className={`px-4 py-3 font-medium text-sm flex items-center ${activeTab === "address"
+                  ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
               >
                 <MapPin size={18} className="mr-2" />
                 Address & Company
@@ -698,11 +718,10 @@ export default function EditUserPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("accommodation")}
-                className={`px-4 py-3 font-medium text-sm flex items-center ${
-                  activeTab === "accommodation"
-                    ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                className={`px-4 py-3 font-medium text-sm flex items-center ${activeTab === "accommodation"
+                  ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
               >
                 <Home size={18} className="mr-2" />
                 Accommodation
@@ -710,11 +729,10 @@ export default function EditUserPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("status")}
-                className={`px-4 py-3 font-medium text-sm flex items-center ${
-                  activeTab === "status"
-                    ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                className={`px-4 py-3 font-medium text-sm flex items-center ${activeTab === "status"
+                  ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
               >
                 <Settings size={18} className="mr-2" />
                 Status & Role
@@ -722,11 +740,10 @@ export default function EditUserPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("documents")}
-                className={`px-4 py-3 font-medium text-sm flex items-center ${
-                  activeTab === "documents"
-                    ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                className={`px-4 py-3 font-medium text-sm flex items-center ${activeTab === "documents"
+                  ? "border-b-2 border-pink-500 text-pink-600 dark:text-pink-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
               >
                 <FileText size={18} className="mr-2" />
                 Documents

@@ -81,7 +81,9 @@ export default function RegisterPage() {
     companyAddress: "",
     employeeId: "",
     profileImage: "",
-    agreeToTerms: false, // Added field for rules agreement
+    agreeToTerms: false,
+    hasVehicle: false,
+    vehicleNumber: "",
   });
 
   useEffect(() => {
@@ -219,6 +221,7 @@ export default function RegisterPage() {
         employeeId: formData.employeeId,
         profileImage: formData.profileImage,
         agreeToTerms: formData.agreeToTerms,
+        vehicleNumber: formData.hasVehicle ? formData.vehicleNumber : "",
       });
 
       if (response.data.success) {
@@ -241,6 +244,8 @@ export default function RegisterPage() {
           employeeId: "",
           profileImage: "",
           agreeToTerms: false,
+          hasVehicle: false,
+          vehicleNumber: "",
         });
       } else {
         setError(response.data.message || "Registration request failed");
@@ -255,7 +260,7 @@ export default function RegisterPage() {
         } else {
           setError(
             err.response?.data?.message ||
-              "An error occurred during registration request"
+            "An error occurred during registration request"
           );
         }
       } else {
@@ -350,22 +355,20 @@ export default function RegisterPage() {
                 {Array.from({ length: totalSteps }).map((_, index) => (
                   <div
                     key={index}
-                    className={`flex flex-col items-center ${
-                      index + 1 === currentStep
-                        ? "text-pink-600 dark:text-pink-400"
-                        : index + 1 < currentStep
-                          ? "text-green-500 dark:text-green-400"
-                          : "text-gray-400 dark:text-gray-500"
-                    }`}
+                    className={`flex flex-col items-center ${index + 1 === currentStep
+                      ? "text-pink-600 dark:text-pink-400"
+                      : index + 1 < currentStep
+                        ? "text-green-500 dark:text-green-400"
+                        : "text-gray-400 dark:text-gray-500"
+                      }`}
                   >
                     <div
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mb-1 ${
-                        index + 1 === currentStep
-                          ? "bg-pink-100 dark:bg-pink-900 text-pink-600 dark:text-pink-400 border-2 border-pink-500"
-                          : index + 1 < currentStep
-                            ? "bg-green-100 dark:bg-green-900 text-green-500 dark:text-green-400"
-                            : "bg-gray-100 dark:bg-gray-800"
-                      }`}
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mb-1 ${index + 1 === currentStep
+                        ? "bg-pink-100 dark:bg-pink-900 text-pink-600 dark:text-pink-400 border-2 border-pink-500"
+                        : index + 1 < currentStep
+                          ? "bg-green-100 dark:bg-green-900 text-green-500 dark:text-green-400"
+                          : "bg-gray-100 dark:bg-gray-800"
+                        }`}
                     >
                       {index + 1 < currentStep ? (
                         <svg
@@ -618,6 +621,49 @@ export default function RegisterPage() {
                         </select>
                       </div>
                     </div>
+
+                    <div className="md:col-span-2">
+                      <div className="flex items-center space-x-2 p-2">
+                        <input
+                          id="hasVehicle"
+                          name="hasVehicle"
+                          type="checkbox"
+                          className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                          checked={(formData as any).hasVehicle}
+                          onChange={handleChange}
+                        />
+                        <label
+                          htmlFor="hasVehicle"
+                          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                          Do you have a vehicle?
+                        </label>
+                      </div>
+                    </div>
+
+                    {(formData as any).hasVehicle && (
+                      <div className="relative group md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                        <div className="relative bg-white/60 dark:bg-gray-900/60 rounded-lg p-1">
+                          <label
+                            htmlFor="vehicleNumber"
+                            className="block text-xs font-medium text-gray-700 dark:text-gray-300 pl-3 pt-1"
+                          >
+                            Vehicle Number *
+                          </label>
+                          <input
+                            id="vehicleNumber"
+                            name="vehicleNumber"
+                            type="text"
+                            required={(formData as any).hasVehicle}
+                            className="block w-full pl-3 pr-10 py-2.5 bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 sm:text-sm"
+                            placeholder="Enter your vehicle registration number"
+                            value={(formData as any).vehicleNumber}
+                            onChange={handleChange}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -917,9 +963,8 @@ export default function RegisterPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`px-5 py-2.5 sm:px-6 sm:py-3 w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium flex items-center justify-center text-sm ${
-                      loading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                    className={`px-5 py-2.5 sm:px-6 sm:py-3 w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium flex items-center justify-center text-sm ${loading ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
                   >
                     {loading ? (
                       <>

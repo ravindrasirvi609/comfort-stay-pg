@@ -78,6 +78,10 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: false,
     },
+    vehicleNumber: {
+      type: String,
+      required: false,
+    },
 
     // Document links
     validIdPhoto: {

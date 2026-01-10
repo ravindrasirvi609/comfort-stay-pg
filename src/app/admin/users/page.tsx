@@ -28,14 +28,14 @@ interface User {
   phone?: string;
   profileImage?: string;
   roomId?:
-    | {
-        _id: string;
-        roomNumber: string;
-        type: string;
-        price: number; // Rent amount
-      }
-    | string
-    | null;
+  | {
+    _id: string;
+    roomNumber: string;
+    type: string;
+    price: number; // Rent amount
+  }
+  | string
+  | null;
   isActive: boolean;
   isDeleted?: boolean;
   createdAt: string;
@@ -57,6 +57,7 @@ interface User {
   isOnNoticePeriod?: boolean;
   keyIssued?: boolean;
   agreeToTerms?: boolean;
+  vehicleNumber?: string;
 }
 
 // (Sorting config removed)
@@ -207,7 +208,9 @@ export default function UsersPage() {
           (user.pgId &&
             user.pgId.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (user.companyName &&
-            user.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
+            user.companyName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.vehicleNumber &&
+            user.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -822,13 +825,12 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.currentMonthRentStatus === "Paid"
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.currentMonthRentStatus === "Paid"
                             ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                             : user.currentMonthRentStatus === "Unpaid"
                               ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                               : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400"
-                        }`}
+                          }`}
                       >
                         {user.currentMonthRentStatus || "N/A"}
                       </span>
@@ -1010,11 +1012,10 @@ export default function UsersPage() {
                           ) : (
                             <button
                               onClick={() => handlePageChange(page as number)}
-                              className={`relative inline-flex items-center px-4 py-2 border ${
-                                currentPage === page
+                              className={`relative inline-flex items-center px-4 py-2 border ${currentPage === page
                                   ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-500 dark:border-purple-600"
                                   : "bg-white/70 dark:bg-gray-800/70 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                              } text-sm font-medium`}
+                                } text-sm font-medium`}
                             >
                               {page}
                             </button>

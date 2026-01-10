@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       employeeId,
       profileImage,
       agreeToTerms,
+      vehicleNumber,
     } = requestData;
 
     if (
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
       companyAddress,
       employeeId,
       profileImage,
+      vehicleNumber,
       agreeToTerms: true, // User has agreed to terms and regulations
     });
 

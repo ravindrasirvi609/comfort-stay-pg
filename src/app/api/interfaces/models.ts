@@ -23,6 +23,7 @@ export interface IUser {
   employeeId: string;
   validIdPhoto: string;
   profileImage: string;
+  vehicleNumber?: string;
   documents?: string[];
   roomId?: Schema.Types.ObjectId | IRoom;
   bedNumber?: number;
@@ -53,11 +54,11 @@ export interface IUserArchive extends IUser {
   // Reference to the original (still existing) user document
   userId?: string; // stored for reliable linkage (email might change)
   archiveReason:
-    | "Completed Stay"
-    | "Early Departure"
-    | "Rule Violation"
-    | "Payment Issues"
-    | "Other";
+  | "Completed Stay"
+  | "Early Departure"
+  | "Rule Violation"
+  | "Payment Issues"
+  | "Other";
   archiveDate: Date;
   exitSurveyCompleted: boolean;
   stayDuration: number; // in days
@@ -136,12 +137,12 @@ export interface IComplaint {
   title: string;
   description: string;
   category:
-    | "Maintenance"
-    | "Housekeeping"
-    | "Food"
-    | "Security"
-    | "Billing"
-    | "Other";
+  | "Maintenance"
+  | "Housekeeping"
+  | "Food"
+  | "Security"
+  | "Billing"
+  | "Other";
   priority: "Low" | "Medium" | "High" | "Urgent";
   status: "Open" | "In Progress" | "Resolved" | "Closed";
   assignedTo?: string;
@@ -198,26 +199,26 @@ export interface INotification {
   title: string;
   message: string;
   type:
-    | "Payment"
-    | "Complaint"
-    | "RoomChange"
-    | "System"
-    | "Email"
-    | "Other"
-    | "NoticePeriod"
-    | "Notice"
-    | "Checkout"
-    | "Contact";
+  | "Payment"
+  | "Complaint"
+  | "RoomChange"
+  | "System"
+  | "Email"
+  | "Other"
+  | "NoticePeriod"
+  | "Notice"
+  | "Checkout"
+  | "Contact";
   relatedId?: Schema.Types.ObjectId;
   relatedModel?:
-    | "Payment"
-    | "Complaint"
-    | "RoomChangeRequest"
-    | "User"
-    | "Room"
-    | "Notice"
-    | "UserArchive"
-    | "ContactInquiry";
+  | "Payment"
+  | "Complaint"
+  | "RoomChangeRequest"
+  | "User"
+  | "Room"
+  | "Notice"
+  | "UserArchive"
+  | "ContactInquiry";
   isRead: boolean;
   isEmailSent: boolean;
   emailDetails?: {
@@ -296,11 +297,11 @@ export interface IDueSettlement {
   month: string; // "Month Year" format (e.g., "September 2025")
   amount: number; // Settlement amount
   reason:
-    | "Mid-month entry"
-    | "Special discount"
-    | "Compensation"
-    | "Admin discretion"
-    | "Other";
+  | "Mid-month entry"
+  | "Special discount"
+  | "Compensation"
+  | "Admin discretion"
+  | "Other";
   remarks?: string; // Optional additional details
   settledBy: Schema.Types.ObjectId | IUser; // Admin who settled
   settledAt: Date; // Settlement timestamp

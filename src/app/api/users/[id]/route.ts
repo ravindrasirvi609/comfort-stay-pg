@@ -139,6 +139,7 @@ export async function PUT(
         moveInDate,
         moveOutDate,
         isActive,
+        vehicleNumber,
       } = userData;
 
       if (name) userToUpdate.name = name;
@@ -159,6 +160,7 @@ export async function PUT(
       if (profileImage) userToUpdate.profileImage = profileImage;
       if (documents) userToUpdate.documents = documents;
       if (pgId) userToUpdate.pgId = pgId;
+      if (vehicleNumber !== undefined) userToUpdate.vehicleNumber = vehicleNumber;
       // Handle room assignment
       if (roomId !== undefined) {
         // If room is being changed and no bed number is specified, auto-assign one

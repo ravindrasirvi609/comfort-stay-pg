@@ -56,6 +56,7 @@ interface UserData {
   employeeId?: string;
   validIdPhoto?: string;
   profileImage?: string;
+  vehicleNumber?: string;
   documents?: string[];
   bedNumber?: string | null;
   isActive?: boolean;
@@ -71,14 +72,14 @@ interface UserData {
   isOnNoticePeriod?: boolean;
   lastStayingDate?: string | null;
   roomId?:
-    | {
-        _id: string;
-        roomNumber: string;
-        type: string;
-        price: number;
-      }
-    | string
-    | null;
+  | {
+    _id: string;
+    roomNumber: string;
+    type: string;
+    price: number;
+  }
+  | string
+  | null;
   payments?: {
     _id: string;
     amount: number;
@@ -177,9 +178,9 @@ export default function UserDetailPage() {
         keyIssued: keyInfo.keyIssued,
         depositReturn: depositInfo.isReturning
           ? {
-              amount: depositInfo.amount,
-              date: new Date(),
-            }
+            amount: depositInfo.amount,
+            date: new Date(),
+          }
           : undefined,
         remarks: remarks || "",
       };
@@ -261,17 +262,17 @@ export default function UserDetailPage() {
         setUser((prev) =>
           prev
             ? {
-                ...prev,
-                isOnNoticePeriod: updatedInfo.isOnNoticePeriod ?? true,
-                lastStayingDate: updatedInfo.lastStayingDate || noticeLastDate,
-              }
+              ...prev,
+              isOnNoticePeriod: updatedInfo.isOnNoticePeriod ?? true,
+              lastStayingDate: updatedInfo.lastStayingDate || noticeLastDate,
+            }
             : prev
         );
         setNoticeSuccess(
           response.data.message ||
-            (dayDiff > 15
-              ? "Notice period submitted. Resident eligible for ₹1500 refund."
-              : "Notice period submitted successfully.")
+          (dayDiff > 15
+            ? "Notice period submitted. Resident eligible for ₹1500 refund."
+            : "Notice period submitted successfully.")
         );
         toast.success(
           user.isOnNoticePeriod
@@ -316,10 +317,10 @@ export default function UserDetailPage() {
         setUser((prev) =>
           prev
             ? {
-                ...prev,
-                isOnNoticePeriod: false,
-                lastStayingDate: null,
-              }
+              ...prev,
+              isOnNoticePeriod: false,
+              lastStayingDate: null,
+            }
             : prev
         );
         setWithdrawSuccess(
@@ -427,20 +428,18 @@ export default function UserDetailPage() {
             </p>
             <div className="mt-2 flex items-center">
               <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                  user.isActive
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                }`}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${user.isActive
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  }`}
               >
                 {user.isActive ? "Active" : "Inactive"}
               </span>
               <span
-                className={`inline-flex items-center ml-2 px-3 py-1 rounded-full text-xs font-medium ${
-                  user.role === "admin"
-                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                }`}
+                className={`inline-flex items-center ml-2 px-3 py-1 rounded-full text-xs font-medium ${user.role === "admin"
+                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                  }`}
               >
                 <Shield size={14} className="mr-1" />
                 {user.role || "User"}
@@ -505,6 +504,20 @@ export default function UserDetailPage() {
                     </p>
                   </div>
                 </div>
+
+                {user.vehicleNumber && (
+                  <div className="flex items-start">
+                    <Shield className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-3 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Vehicle Number
+                      </p>
+                      <p className="text-base font-medium text-gray-900 dark:text-white">
+                        {user.vehicleNumber}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1139,13 +1152,12 @@ export default function UserDetailPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            payment.paymentStatus === "Paid"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : payment.paymentStatus === "Partial"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          }`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.paymentStatus === "Paid"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : payment.paymentStatus === "Partial"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            }`}
                         >
                           {payment.paymentStatus}
                         </span>
