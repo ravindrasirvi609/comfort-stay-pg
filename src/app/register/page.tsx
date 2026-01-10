@@ -86,9 +86,30 @@ export default function RegisterPage() {
     vehicleNumber: "",
   });
 
+  // Load form data from local storage on mount
   useEffect(() => {
     setMounted(true);
+    const savedData = localStorage.getItem("registrationFormData");
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setFormData((prev) => ({
+          ...prev,
+          ...parsedData,
+          agreeToTerms: false, // Don't persist terms agreement for security/legal reasons
+        }));
+      } catch (error) {
+        console.error("Error parsing saved form data:", error);
+      }
+    }
   }, []);
+
+  // Save form data to local storage on change
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("registrationFormData", JSON.stringify(formData));
+    }
+  }, [formData, mounted]);
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -247,6 +268,8 @@ export default function RegisterPage() {
           hasVehicle: false,
           vehicleNumber: "",
         });
+        // Clear local storage
+        localStorage.removeItem("registrationFormData");
       } else {
         setError(response.data.message || "Registration request failed");
       }
