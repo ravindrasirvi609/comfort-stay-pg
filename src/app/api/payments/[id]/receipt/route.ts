@@ -300,7 +300,7 @@ export async function GET(request: Request, context: unknown) {
               color: #e69d00;
             }
             .footer {
-              margin-top: 50px;
+              margin-top: 45px;
               text-align: center;
               font-size: 12px;
               color: #777;
@@ -331,7 +331,7 @@ export async function GET(request: Request, context: unknown) {
             }
             .qr-code {
               text-align: center;
-              margin-top: 30px;
+              margin-top: 25px;
               display: flex;
               flex-direction: column;
               align-items: center;
@@ -362,7 +362,7 @@ export async function GET(request: Request, context: unknown) {
             .signature-section {
               display: flex;
               justify-content: flex-end;
-              margin-top: 60px;
+              margin-top: 50px;
               border-top: 1px dashed #ccc;
               padding-top: 15px;
               font-size: 12px;
