@@ -6,7 +6,6 @@ import User from "../models/User";
 import UserDue from "../models/UserDue";
 import Room from "../models/Room";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
-import { calculateTotalDue } from "@/app/utils/proratedRentCalculation";
 import CacheInvalidator from "@/app/lib/cacheInvalidator";
 
 // Helper function to recalculate user dues after payment (ENHANCED VERSION)
