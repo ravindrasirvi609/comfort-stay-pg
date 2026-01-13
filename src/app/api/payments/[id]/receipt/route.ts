@@ -496,12 +496,12 @@ export async function GET(request: Request, context: unknown) {
                   <tr>
                     <td>Rent</td>
                     <td>${payment.months && payment.months.length > 0 ? payment.months.join(", ") : "N/A"}</td>
-                    <td>₹${(payment.amount * 0.7).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>₹${(payment.amount * 0.6).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr>
                     <td>Electricity, Food, and Cleaning</td>
                     <td>${payment.months && payment.months.length > 0 ? payment.months.join(", ") : "N/A"}</td>
-                    <td>₹${(payment.amount * 0.3).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>₹${(payment.amount * 0.4).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   ${payment.remarks
         ? `
