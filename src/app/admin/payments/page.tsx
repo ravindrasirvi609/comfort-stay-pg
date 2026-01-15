@@ -236,13 +236,7 @@ export default function PaymentsPage() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <FaSpinner className="animate-spin text-4xl text-pink-600" />
-      </div>
-    );
-  }
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -346,19 +340,19 @@ export default function PaymentsPage() {
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
             {showRentInfo
               ? `₹${payments
-                  .filter((p) => {
-                    const currentMonth = new Date().toLocaleString("default", {
-                      month: "long",
-                      year: "numeric",
-                    });
-                    return (
-                      p.months &&
-                      p.months.some((month) => month === currentMonth) &&
-                      (p.paymentStatus === "Paid" || p.status === "Paid")
-                    );
-                  })
-                  .reduce((sum, payment) => sum + payment.amount, 0)
-                  .toLocaleString()}`
+                .filter((p) => {
+                  const currentMonth = new Date().toLocaleString("default", {
+                    month: "long",
+                    year: "numeric",
+                  });
+                  return (
+                    p.months &&
+                    p.months.some((month) => month === currentMonth) &&
+                    (p.paymentStatus === "Paid" || p.status === "Paid")
+                  );
+                })
+                .reduce((sum, payment) => sum + payment.amount, 0)
+                .toLocaleString()}`
               : "***"}
           </h3>
         </div>
@@ -665,11 +659,10 @@ export default function PaymentsPage() {
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={!paginationInfo.hasPrevPage}
-                className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
-                  !paginationInfo.hasPrevPage
+                className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${!paginationInfo.hasPrevPage
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <IoChevronBackOutline className="h-4 w-4" />
               </button>
@@ -702,11 +695,10 @@ export default function PaymentsPage() {
                     <button
                       key={pageNumber}
                       onClick={() => paginate(pageNumber)}
-                      className={`relative inline-flex items-center px-3 py-2 border ${
-                        currentPage === pageNumber
+                      className={`relative inline-flex items-center px-3 py-2 border ${currentPage === pageNumber
                           ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 font-medium"
                           : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      } text-sm rounded-md`}
+                        } text-sm rounded-md`}
                     >
                       {pageNumber}
                     </button>
@@ -717,11 +709,10 @@ export default function PaymentsPage() {
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={!paginationInfo.hasNextPage}
-                className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
-                  !paginationInfo.hasNextPage
+                className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${!paginationInfo.hasNextPage
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <IoChevronForwardOutline className="h-4 w-4" />
               </button>
