@@ -429,15 +429,16 @@ export async function GET(request: Request, context: unknown) {
                   <div class="label">PG ID:</div>
                   <div class="value">${payment.userId.pgId}</div>
                 </div>
-                ${payment.userId.roomId
-        ? `
+                ${
+                  payment.userId.roomId
+                    ? `
                 <div class="receipt-detail">
                   <div class="label">Room No.:</div>
                   <div class="value">${payment.userId.roomId.roomNumber}</div>
                 </div>
                 `
-        : ""
-      }
+                    : ""
+                }
                 <div class="receipt-detail">
                   <div class="label">Email:</div>
                   <div class="value">${payment.userId.email}</div>
@@ -470,15 +471,16 @@ export async function GET(request: Request, context: unknown) {
                     </span>
                   </div>
                 </div>
-                ${payment.transactionId
-        ? `
+                ${
+                  payment.transactionId
+                    ? `
                 <div class="receipt-detail">
                   <div class="label">Transaction ID:</div>
                   <div class="value">${payment.transactionId}</div>
                 </div>
                 `
-        : ""
-      }
+                    : ""
+                }
               </div>
             </div>
             
@@ -494,25 +496,21 @@ export async function GET(request: Request, context: unknown) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Rent</td>
+                    <td>Accommodation</td>
                     <td>${payment.months && payment.months.length > 0 ? payment.months.join(", ") : "N/A"}</td>
-                    <td>₹${(payment.amount * 0.6).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>₹${payment.amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr>
-                    <td>Electricity, Food, and Cleaning</td>
-                    <td>${payment.months && payment.months.length > 0 ? payment.months.join(", ") : "N/A"}</td>
-                    <td>₹${(payment.amount * 0.4).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  </tr>
-                  ${payment.remarks
-        ? `
+                  ${
+                    payment.remarks
+                      ? `
                   <tr>
                     <td colspan="3" style="font-style: italic; color: #666;">
                       Note: ${payment.remarks}
                     </td>
                   </tr>
                   `
-        : ""
-      }
+                      : ""
+                  }
                 </tbody>
               </table>
               
