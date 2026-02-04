@@ -121,10 +121,14 @@ interface UserWithDues extends User {
   amount?: number;
 }
 
+const PRIVACY_PASSWORD = "Comfort@887";
+
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showRentAmount, setShowRentAmount] = useState(false);
+  const [privacyEnabled, setPrivacyEnabled] = useState(false);
+  const [privacyError, setPrivacyError] = useState("");
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalRooms: 0,
@@ -555,6 +559,24 @@ export default function AdminDashboard() {
     return `₹${amount.toLocaleString("en-IN")}`;
   };
 
+  const handlePrivacyToggle = useCallback(() => {
+    if (privacyEnabled) {
+      setPrivacyEnabled(false);
+      setPrivacyError("");
+      return;
+    }
+
+    const enteredPassword = window.prompt("Enter privacy mode password");
+    if (enteredPassword === null) return;
+
+    if (enteredPassword === PRIVACY_PASSWORD) {
+      setPrivacyEnabled(true);
+      setPrivacyError("");
+    } else {
+      setPrivacyError("Incorrect password. Privacy mode not enabled.");
+    }
+  }, [privacyEnabled]);
+
   useEffect(() => {
     fetchDashboardData();
     // Add a refresh interval every 5 minutes
@@ -643,6 +665,21 @@ export default function AdminDashboard() {
                 />
               </button>
             </div>
+            <div className="flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-lg">
+              <span className="text-sm">Privacy Mode</span>
+              <button
+                onClick={handlePrivacyToggle}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-purple-600 ${
+                  privacyEnabled ? "bg-green-500" : "bg-gray-400"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    privacyEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
             <button
               onClick={refreshDashboard}
               disabled={refreshing}
@@ -682,72 +719,390 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* At-a-glance insights */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                New Users (30d)
-              </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {newUsersLast30}
-              </h3>
+      {privacyError ? (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {privacyError}
+        </div>
+      ) : null}
+
+      {privacyEnabled ? (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-purple-200 bg-purple-50 px-6 py-4 text-purple-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide">
+                  Privacy Mode Enabled
+                </p>
+                <p className="text-sm text-purple-700">
+                  Showing payment-related data only.
+                </p>
+              </div>
+              <div className="flex items-center text-sm font-medium text-purple-700">
+                <FiDollarSign className="mr-2 h-4 w-4" />
+                Payment View
+              </div>
             </div>
-            <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
-              <FiUsers className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Rent Collected (This Month)
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {formatRentAmount(stats.rentCollected)}
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                  <FiDollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Payments This Month
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {currentMonthPaymentsCount}
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                  <FiDollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Rent Growth
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {rentGrowthRate}%
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                  <FiTrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Users With Dues
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {usersWithDues.length}
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
+                  <FiBell className="h-5 w-5 text-red-600 dark:text-red-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+                <RiLineChartLine className="h-5 w-5 text-indigo-600 mr-2" />
+                Revenue Trend (Last 6 Months)
+              </h2>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="privacyRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.5} />
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip
+                    formatter={(value) => [`₹${Number(value).toLocaleString("en-IN")}`, "Revenue"]}
+                    contentStyle={{
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#6366f1" fillOpacity={1} fill="url(#privacyRevenue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Recent Payments */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+                  <FiDollarSign className="h-5 w-5 text-green-600 mr-2" />
+                  Recent Payments
+                </h2>
+                <Link
+                  href="/admin/payments"
+                  className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 font-medium flex items-center"
+                >
+                  View all
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
+              </div>
+              {recentPayments.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Month
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {recentPayments.map((payment) => (
+                        <tr
+                          key={payment._id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {payment.userId?.name || "Unknown User"}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              ID: {payment.userId?.pgId || "N/A"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              ₹{payment.amount.toLocaleString("en-IN")}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {payment.month}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {payment.paymentDate &&
+                                new Date(payment.paymentDate).toLocaleDateString(
+                                  "en-IN"
+                                )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${
+                            payment.paymentStatus === "Paid"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                              : payment.paymentStatus === "Due"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                          }`}
+                            >
+                              {payment.paymentStatus}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="px-6 py-8 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No payments found
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Users with Unpaid Dues */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+                  <FiBell className="h-5 w-5 text-red-600 mr-2" />
+                  Unpaid Dues
+                </h2>
+                <Link
+                  href="/admin/payments"
+                  className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium flex items-center"
+                >
+                  View all
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
+              </div>
+              {usersWithDues.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {usersWithDues.map((user) => (
+                        <tr
+                          key={user._id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {user.name}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              ID: {user.pgId}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              ₹{user.amount?.toLocaleString("en-IN") ?? "0"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button
+                              onClick={() => handleSendReminder(user._id)}
+                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 disabled:opacity-50"
+                              disabled={sendingReminder === user._id}
+                            >
+                              {sendingReminder === user._id
+                                ? "Sending..."
+                                : "Send Reminder"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="px-6 py-8 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No unpaid dues found
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Complaints Resolved
-              </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {resolvedComplaintsCount}
-              </h3>
-              <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                {resolutionRate}% rate
-              </span>
+      ) : (
+        <>
+          {/* At-a-glance insights */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    New Users (30d)
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {newUsersLast30}
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                  <FiUsers className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
             </div>
-            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
-              <FiCheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Complaints Resolved
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {resolvedComplaintsCount}
+                  </h3>
+                  <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                    {resolutionRate}% rate
+                  </span>
+                </div>
+                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                  <FiCheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Avg Resolution Time
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {avgResolutionDays ? `${avgResolutionDays}d` : "—"}
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                  <FiClipboard className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Payments This Month
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {currentMonthPaymentsCount}
+                  </h3>
+                </div>
+                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                  <FiDollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Avg Resolution Time
-              </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {avgResolutionDays ? `${avgResolutionDays}d` : "—"}
-              </h3>
-            </div>
-            <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <FiClipboard className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Payments This Month
-              </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {currentMonthPaymentsCount}
-              </h3>
-            </div>
-            <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-              <FiDollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Main Stats Cards */}
