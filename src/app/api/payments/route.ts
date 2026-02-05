@@ -288,13 +288,161 @@ export async function GET(request: NextRequest) {
           .limit(limit);
       }
 
+      // Calculate statistics for the entire filtered set (not just current page)
+      let stats = {
+        totalPaidAmount: 0,
+        pendingPaymentsCount: 0,
+        thisMonthPaidAmount: 0,
+      };
+
+      const currentMonthYear = new Date().toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+
+      if (search) {
+        // Use aggregation to get stats when search is applied
+        const statsPipeline = [
+          { $match: query },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "userInfo",
+            },
+          },
+          { $unwind: "$userInfo" },
+          {
+            $lookup: {
+              from: "rooms",
+              localField: "userInfo.roomId",
+              foreignField: "_id",
+              as: "roomInfo",
+            },
+          },
+          {
+            $unwind: {
+              path: "$roomInfo",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $match: {
+              $or: [
+                { "userInfo.name": { $regex: search, $options: "i" } },
+                { "userInfo.pgId": { $regex: search, $options: "i" } },
+                { receiptNumber: { $regex: search, $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
+              ],
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalPaidAmount: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$paymentStatus", "Paid"] },
+                    "$amount",
+                    0
+                  ]
+                }
+              },
+              pendingPaymentsCount: {
+                $sum: {
+                  $cond: [
+                    { $in: ["$paymentStatus", ["Due", "Overdue"]] },
+                    1,
+                    0
+                  ]
+                }
+              },
+              thisMonthPaidAmount: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $eq: ["$paymentStatus", "Paid"] },
+                        { $in: [currentMonthYear, { $ifNull: ["$months", []] }] }
+                      ]
+                    },
+                    "$amount",
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        ];
+
+        const statsResult = await Payment.aggregate(statsPipeline);
+        if (statsResult.length > 0) {
+          stats = {
+            totalPaidAmount: statsResult[0].totalPaidAmount,
+            pendingPaymentsCount: statsResult[0].pendingPaymentsCount,
+            thisMonthPaidAmount: statsResult[0].thisMonthPaidAmount,
+          };
+        }
+      } else {
+        // Use simple aggregation when no search is applied
+        const statsResult = await Payment.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: null,
+              totalPaidAmount: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$paymentStatus", "Paid"] },
+                    "$amount",
+                    0
+                  ]
+                }
+              },
+              pendingPaymentsCount: {
+                $sum: {
+                  $cond: [
+                    { $in: ["$paymentStatus", ["Due", "Overdue"]] },
+                    1,
+                    0
+                  ]
+                }
+              },
+              thisMonthPaidAmount: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $eq: ["$paymentStatus", "Paid"] },
+                        { $in: [currentMonthYear, { $ifNull: ["$months", []] }] }
+                      ]
+                    },
+                    "$amount",
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        ]);
+
+        if (statsResult.length > 0) {
+          stats = {
+            totalPaidAmount: statsResult[0].totalPaidAmount,
+            pendingPaymentsCount: statsResult[0].pendingPaymentsCount,
+            thisMonthPaidAmount: statsResult[0].thisMonthPaidAmount,
+          };
+        }
+      }
+
       // Add pagination metadata to response
       const totalPages = Math.ceil(totalCount / limit);
       const hasNextPage = page < totalPages;
       const hasPrevPage = page > 1;
 
       // Make sure virtuals are included
-      const paymentsWithVirtuals = payments.map((payment) => {
+      const paymentsWithVirtuals = payments.map((payment: any) => {
         const paymentObj =
           typeof payment.toObject === "function"
             ? payment.toObject({ virtuals: true })
@@ -322,6 +470,7 @@ export async function GET(request: NextRequest) {
           hasPrevPage,
           limit,
         },
+        stats,
       });
     } else {
       // For normal users, only get their payments with pagination

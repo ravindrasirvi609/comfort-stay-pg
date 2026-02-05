@@ -83,6 +83,8 @@ export default function PaymentsPage() {
 
   // Sum of payments for current filter (now calculated server-side)
   const [totalAmount, setTotalAmount] = useState(0);
+  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
+  const [thisMonthPaidAmount, setThisMonthPaidAmount] = useState(0);
 
   // Generate months array for filter dropdown
   const months = [
@@ -144,17 +146,12 @@ export default function PaymentsPage() {
         setPayments(response.data.payments);
         setPaginationInfo(response.data.pagination);
 
-        // Calculate total amount from current page payments
-        const total = response.data.payments.reduce(
-          (sum: number, payment: Payment) => {
-            return payment.paymentStatus === "Paid" || payment.status === "Paid"
-              ? sum + payment.amount
-              : sum;
-          },
-          0
-        );
-
-        setTotalAmount(total);
+        // Update stats from server-side calculations
+        if (response.data.stats) {
+          setTotalAmount(response.data.stats.totalPaidAmount || 0);
+          setPendingPaymentsCount(response.data.stats.pendingPaymentsCount || 0);
+          setThisMonthPaidAmount(response.data.stats.thisMonthPaidAmount || 0);
+        }
       } else {
         setError("Failed to load payment data");
       }
@@ -288,7 +285,7 @@ export default function PaymentsPage() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {paginationInfo.totalCount}
+            {showRentInfo ? paginationInfo.totalCount : "***"}
           </h3>
         </div>
 
@@ -316,15 +313,7 @@ export default function PaymentsPage() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {
-              payments.filter(
-                (p) =>
-                  p.paymentStatus === "Due" ||
-                  p.paymentStatus === "Overdue" ||
-                  p.status === "Due" ||
-                  p.status === "Overdue"
-              ).length
-            }
+            {showRentInfo ? pendingPaymentsCount : "***"}
           </h3>
         </div>
 
@@ -339,20 +328,7 @@ export default function PaymentsPage() {
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
             {showRentInfo
-              ? `₹${payments
-                .filter((p) => {
-                  const currentMonth = new Date().toLocaleString("default", {
-                    month: "long",
-                    year: "numeric",
-                  });
-                  return (
-                    p.months &&
-                    p.months.some((month) => month === currentMonth) &&
-                    (p.paymentStatus === "Paid" || p.status === "Paid")
-                  );
-                })
-                .reduce((sum, payment) => sum + payment.amount, 0)
-                .toLocaleString()}`
+              ? `₹${thisMonthPaidAmount.toLocaleString()}`
               : "***"}
           </h3>
         </div>
@@ -660,8 +636,8 @@ export default function PaymentsPage() {
                 onClick={() => paginate(currentPage - 1)}
                 disabled={!paginationInfo.hasPrevPage}
                 className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${!paginationInfo.hasPrevPage
-                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
               >
                 <IoChevronBackOutline className="h-4 w-4" />
@@ -696,8 +672,8 @@ export default function PaymentsPage() {
                       key={pageNumber}
                       onClick={() => paginate(pageNumber)}
                       className={`relative inline-flex items-center px-3 py-2 border ${currentPage === pageNumber
-                          ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 font-medium"
-                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 font-medium"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         } text-sm rounded-md`}
                     >
                       {pageNumber}
@@ -710,8 +686,8 @@ export default function PaymentsPage() {
                 onClick={() => paginate(currentPage + 1)}
                 disabled={!paginationInfo.hasNextPage}
                 className={`relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${!paginationInfo.hasNextPage
-                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
               >
                 <IoChevronForwardOutline className="h-4 w-4" />
