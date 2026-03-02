@@ -9,9 +9,9 @@ const __dirname = path.dirname(__filename);
 // Load env values from project root before importing db helper
 config({ path: path.resolve(__dirname, "../../.env.local") });
 
-const TARGET_PRICING: Record<"2-sharing" | "3-sharing", number> = {
-  "2-sharing": 10000,
-  "3-sharing": 8500,
+const TARGET_BY_OCCUPANCY = {
+  2: { type: "2-sharing" as const, price: 10000 },
+  3: { type: "3-sharing" as const, price: 8500 },
 };
 
 async function updateRoomPricing() {
@@ -21,23 +21,69 @@ async function updateRoomPricing() {
 
     await connectToDatabase();
 
-    const twoSharingResult = await Room.updateMany(
-      { type: "2-sharing" },
-      { $set: { price: TARGET_PRICING["2-sharing"] } }
+    // Primary rule: room capacity determines sharing type and rent.
+    const twoByCapacityResult = await Room.updateMany(
+      { capacity: 2 },
+      {
+        $set: {
+          type: TARGET_BY_OCCUPANCY[2].type,
+          price: TARGET_BY_OCCUPANCY[2].price,
+        },
+      }
     );
 
-    const threeSharingResult = await Room.updateMany(
-      { type: "3-sharing" },
-      { $set: { price: TARGET_PRICING["3-sharing"] } }
+    const threeByCapacityResult = await Room.updateMany(
+      { capacity: 3 },
+      {
+        $set: {
+          type: TARGET_BY_OCCUPANCY[3].type,
+          price: TARGET_BY_OCCUPANCY[3].price,
+        },
+      }
     );
 
-    console.log("Room pricing update completed.");
+    // Fallback for legacy/invalid docs: infer from current occupancy only when
+    // capacity is missing or not 2/3 to avoid changing valid partially occupied rooms.
+    const twoFallbackResult = await Room.updateMany(
+      { capacity: { $nin: [2, 3] }, currentOccupancy: 2 },
+      {
+        $set: {
+          capacity: 2,
+          type: TARGET_BY_OCCUPANCY[2].type,
+          price: TARGET_BY_OCCUPANCY[2].price,
+        },
+      }
+    );
+
+    const threeFallbackResult = await Room.updateMany(
+      { capacity: { $nin: [2, 3] }, currentOccupancy: 3 },
+      {
+        $set: {
+          capacity: 3,
+          type: TARGET_BY_OCCUPANCY[3].type,
+          price: TARGET_BY_OCCUPANCY[3].price,
+        },
+      }
+    );
+
+    const unknownCapacityCount = await Room.countDocuments({
+      capacity: { $nin: [2, 3] },
+    });
+
+    console.log("Room pricing/type update completed.");
     console.log(
-      `2-sharing -> ₹${TARGET_PRICING["2-sharing"]}: ${twoSharingResult.modifiedCount} updated (matched ${twoSharingResult.matchedCount})`
+      `Capacity 2 -> ${TARGET_BY_OCCUPANCY[2].type}, ₹${TARGET_BY_OCCUPANCY[2].price}: ${twoByCapacityResult.modifiedCount} updated (matched ${twoByCapacityResult.matchedCount})`
     );
     console.log(
-      `3-sharing -> ₹${TARGET_PRICING["3-sharing"]}: ${threeSharingResult.modifiedCount} updated (matched ${threeSharingResult.matchedCount})`
+      `Capacity 3 -> ${TARGET_BY_OCCUPANCY[3].type}, ₹${TARGET_BY_OCCUPANCY[3].price}: ${threeByCapacityResult.modifiedCount} updated (matched ${threeByCapacityResult.matchedCount})`
     );
+    console.log(
+      `Fallback (currentOccupancy=2): ${twoFallbackResult.modifiedCount} updated (matched ${twoFallbackResult.matchedCount})`
+    );
+    console.log(
+      `Fallback (currentOccupancy=3): ${threeFallbackResult.modifiedCount} updated (matched ${threeFallbackResult.matchedCount})`
+    );
+    console.log(`Rooms with unknown capacity after update: ${unknownCapacityCount}`);
   } catch (error) {
     console.error("Failed to update room pricing:", error);
     process.exitCode = 1;
