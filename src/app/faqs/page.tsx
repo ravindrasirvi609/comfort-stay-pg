@@ -28,7 +28,7 @@ export default function FAQs() {
     {
       question: "What are the room options and pricing at Comfort Stay PG?",
       answer:
-        "We offer two room types: Triple Sharing at ₹8,000/month and Twin Sharing at ₹9,500/month. All rooms include meals, electricity, water, WiFi, and housekeeping services. Our rooms feature brand new furnishings, personal storage, and attached bathrooms.",
+        "We offer two room types: Triple Sharing at ₹8,500/month and Twin Sharing at ₹10,000/month. All rooms include meals, electricity, water, WiFi, and housekeeping services. Our rooms feature brand new furnishings, personal storage, and attached bathrooms.",
     },
     {
       question: "Where is Comfort Stay PG located?",
