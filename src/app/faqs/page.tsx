@@ -23,7 +23,7 @@ export default function FAQs() {
     {
       question: "What amenities are included in Comfort Stay PG?",
       answer:
-        "Comfort Stay PG offers high-speed WiFi, nutritious meals three times a day, 24/7 hot water, comfortable beds, enhanced security with female guards and CCTV, secure parking, laundry services, flexible timings with digital access, entertainment areas, common kitchen, study room, and more.",
+        "Comfort Stay PG offers high-speed WiFi, nutritious meals three times a day, 24/7 hot water, comfortable beds, enhanced security with female guards and CCTV, secure parking, laundry services, flexible timings with digital access, entertainment areas, common kitchen, and more.",
     },
     {
       question: "What are the room options and pricing at Comfort Stay PG?",

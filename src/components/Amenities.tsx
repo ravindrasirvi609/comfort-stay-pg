@@ -67,11 +67,7 @@ const amenities = [
     title: "Lounge & Kitchen",
     description: "Fully equipped common kitchen and with self cooking facility",
   },
-  {
-    icon: <Book size={24} />,
-    title: "Study Room",
-    description: "Quiet study space with high-speed internet for work/study",
-  },
+
   // {
   //   icon: <UserCircle2 size={24} />,
   //   title: "Beauty Corner",

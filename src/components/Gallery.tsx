@@ -19,11 +19,7 @@ const images = [
     alt: "Dining Area",
     category: "dining",
   },
-  {
-    src: "/gallery/3sharing1.jpg",
-    alt: "Study Room",
-    category: "common",
-  },
+
   {
     src: "/gallery/bathroom.jpg",
     alt: "Bathroom",
