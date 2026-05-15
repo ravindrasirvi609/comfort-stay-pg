@@ -2,6 +2,8 @@
 
 A comprehensive Paying Guest (PG) Management System for Comfort Stay PG, built with Next.js, MongoDB, and Tailwind CSS.
 
+
+
 ## Features
 
 ### Authentication & Authorization
