@@ -120,14 +120,16 @@ export default function RootLayout({
       </head>
       <body className={poppins.className}>
         <Providers>
-          <div className="min-h-screen bg-gradient-to-br from-[#fff5f8] via-[#fff8fb] to-[#fff2f6] dark:from-[#472e3e] dark:via-[#422937] dark:to-[#3e2534] overflow-x-hidden">
+          <div className="app-shell min-h-screen bg-gradient-to-br from-[#fff5f8] via-[#fff8fb] to-[#fff2f6] dark:from-[#472e3e] dark:via-[#422937] dark:to-[#3e2534] overflow-x-hidden">
             <div className="fixed top-[-10%] right-[-5%] w-2/5 h-2/5 bg-gradient-to-br from-pink-50 to-transparent rounded-full blur-3xl -z-10 dark:from-pink-900/5"></div>
             <div className="fixed bottom-[-10%] left-[-5%] w-2/5 h-2/5 bg-gradient-to-tr from-pink-50 to-transparent rounded-full blur-3xl -z-10 dark:from-pink-900/5"></div>
             <div className="fixed top-1/4 left-[-10%] w-1/3 h-1/3 bg-gradient-to-tr from-pink-100/20 to-transparent rounded-full blur-3xl -z-10 dark:from-pink-800/5"></div>
             <div className="fixed bottom-1/4 right-[-10%] w-1/3 h-1/3 bg-gradient-to-bl from-pink-100/20 to-transparent rounded-full blur-3xl -z-10 dark:from-pink-800/5"></div>
             <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmZmVhZjAiPjwvcmVjdD4KPC9zdmc+')] opacity-30 -z-10"></div>
             <Navbar />
-            <main className="container mx-auto px-4 py-8">{children}</main>
+            <main className="app-content container mx-auto px-4 py-8">
+              {children}
+            </main>
             <Footer />
             <LocalBusinessSchema />
             <Analytics />

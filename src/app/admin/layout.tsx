@@ -18,6 +18,14 @@ export default function AdminLayout({
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    document.body.classList.add("admin-shell-active");
+
+    return () => {
+      document.body.classList.remove("admin-shell-active");
+    };
+  }, []);
+
   if (!mounted) {
     return null;
   }
@@ -373,7 +381,7 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
+    <div className="admin-app-shell h-screen flex overflow-hidden bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -465,7 +473,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
         {/* Top header */}
         <header className="backdrop-blur-xl bg-white/50 dark:bg-gray-900/50 border-b border-white/20 dark:border-gray-700/30 shadow-sm">
           <div className="px-4 sm:px-6 h-16 flex justify-between items-center">
@@ -507,7 +515,9 @@ export default function AdminLayout({
         </header>
 
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
+          {children}
+        </main>
       </div>
     </div>
   );

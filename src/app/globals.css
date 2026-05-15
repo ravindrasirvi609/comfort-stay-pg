@@ -38,6 +38,38 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+body.admin-shell-active,
+body:has(.admin-app-shell) {
+  overflow: hidden;
+}
+
+body.admin-shell-active .app-shell,
+.app-shell:has(.admin-app-shell) {
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+body.admin-shell-active .app-shell > header,
+body.admin-shell-active .app-shell > footer,
+.app-shell:has(.admin-app-shell) > header,
+.app-shell:has(.admin-app-shell) > footer {
+  display: none;
+}
+
+body.admin-shell-active .app-content,
+.app-shell:has(.admin-app-shell) > .app-content {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
+
 /* Modern animations */
 @keyframes float {
   0% {
