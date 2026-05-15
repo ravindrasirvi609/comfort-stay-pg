@@ -568,7 +568,7 @@ export async function POST(request: NextRequest) {
     } = await request.json();
 
     // Validate required fields
-    if (!userId || !amount || !months || !dueDate) {
+    if (!userId || !amount || !months) {
       return NextResponse.json(
         { success: false, message: "Please provide all required fields" },
         { status: 400 }
@@ -625,6 +625,8 @@ export async function POST(request: NextRequest) {
 
     // Generate sequential receipt number (C00001, C00002, etc.)
     const receiptNumber = await generateReceiptNumber();
+    const resolvedPaymentStatus = paymentStatus || status || "Paid";
+    const resolvedDueDate = dueDate ? new Date(dueDate) : undefined;
 
     // Create new payment record
     // Note: paymentDate is always set to current timestamp when payment is created via admin
@@ -634,8 +636,8 @@ export async function POST(request: NextRequest) {
       amount,
       months: Array.isArray(months) ? months : [months], // Ensure months is an array
       paymentDate: new Date(), // Always use current timestamp when payment is created
-      dueDate,
-      paymentStatus: paymentStatus || status || "Paid", // Use paymentStatus field if provided, otherwise use status
+      dueDate: resolvedDueDate,
+      paymentStatus: resolvedPaymentStatus, // Default to Paid when status is not explicitly sent
       receiptNumber,
       paymentMethod,
       transactionId,

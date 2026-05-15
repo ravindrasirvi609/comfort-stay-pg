@@ -40,15 +40,9 @@ export default function CreatePaymentPage() {
   const [amount, setAmount] = useState<number | "">("");
   const [months, setMonths] = useState<string[]>([]);
   // paymentDate is now auto-set by the API to current timestamp
-  const [dueDate, setDueDate] = useState<string>(
-    new Date(new Date().setDate(new Date().getDate() + 30))
-      .toISOString()
-      .split("T")[0]
-  );
   const [paymentMethod, setPaymentMethod] = useState<string>("Cash");
   const [transactionId, setTransactionId] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
-  const [status, setStatus] = useState<string>("Paid");
   // State for deposit payment
   const [isDepositPayment, setIsDepositPayment] = useState<boolean>(false);
 
@@ -274,15 +268,12 @@ export default function CreatePaymentPage() {
   const handleDepositToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     setIsDepositPayment(isChecked);
-    if (isChecked) {
-      setStatus("Paid"); // Auto-set status to Paid for deposit payments
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent, shouldRedirect: boolean = true) => {
     if (e) e.preventDefault();
 
-    if (!selectedUser || !amount || months.length === 0 || !dueDate) {
+    if (!selectedUser || !amount || months.length === 0) {
       setError("Please fill in all required fields");
       return;
     }
@@ -307,8 +298,6 @@ export default function CreatePaymentPage() {
         amount: Number(amount),
         months: months,
         // paymentDate is now automatically set to current timestamp by the API
-        dueDate,
-        paymentStatus: status,
         paymentMethod,
         transactionId: transactionId || undefined,
         remarks: remarks || undefined,
@@ -368,9 +357,9 @@ export default function CreatePaymentPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-4 lg:py-5">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4">
         <Link
           href="/admin/payments"
           className="flex items-center text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300 mb-2"
@@ -407,11 +396,11 @@ export default function CreatePaymentPage() {
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6"
+        className="backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-4 lg:p-5"
       >
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* User selection */}
-          <div className="bg-white/50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white/50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
             <label
               htmlFor="user"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -438,7 +427,7 @@ export default function CreatePaymentPage() {
                     </button>
                   )}
                 </div>
-                <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   {filteredUsers.length === 0 ? (
                     <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                       <p className="font-medium">No residents found</p>
@@ -459,7 +448,7 @@ export default function CreatePaymentPage() {
                       return (
                         <div
                           key={user._id}
-                          className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 ${due > 0
+                          className={`p-3 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 ${due > 0
                             ? "border-red-400 bg-red-50/30 dark:bg-red-900/10"
                             : status === "Paid"
                               ? "border-green-400 bg-green-50/30 dark:bg-green-900/10"
@@ -496,7 +485,7 @@ export default function CreatePaymentPage() {
                                 )}
                               </div>
                               {roomPrice > 0 && (
-                                <div className="mt-2 text-xs">
+                                <div className="mt-1.5 text-xs">
                                   <div className="flex flex-wrap gap-3">
                                     <span
                                       className={`px-2 py-0.5 rounded font-medium ${status === "Paid"
@@ -514,7 +503,7 @@ export default function CreatePaymentPage() {
                                     </span>
                                   </div>
                                   {status !== "N/A" && (
-                                    <div className="mt-1 text-gray-600 dark:text-gray-300 space-y-1">
+                                    <div className="mt-1 text-gray-600 dark:text-gray-300 space-y-0.5">
                                       <div>
                                         💸 <strong>Amount Due:</strong>{" "}
                                         {due > 0 ? (
@@ -605,9 +594,9 @@ export default function CreatePaymentPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Amount */}
-            <div>
+            <div className="lg:col-span-3">
               <label
                 htmlFor="amount"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -630,7 +619,7 @@ export default function CreatePaymentPage() {
             </div>
 
             {/* Month selection */}
-            <div>
+            <div className="lg:col-span-5">
               <label
                 htmlFor="months"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -646,7 +635,7 @@ export default function CreatePaymentPage() {
                     Checking existing payments...
                   </div>
                 )}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto">
                   {availableMonths.map((m) => {
                     const hasExistingPayment = existingPayments.includes(m);
                     return (
@@ -695,37 +684,9 @@ export default function CreatePaymentPage() {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Deposit payment toggle */}
-          <div className="mt-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="depositPayment"
-                checked={isDepositPayment}
-                onChange={handleDepositToggle}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="depositPayment"
-                className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-              >
-                This is a security deposit and booking payment
-              </label>
-            </div>
-            {isDepositPayment && (
-              <div className="mt-2 ml-6 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  Note: This payment will be recorded as a security deposit and
-                  will automatically approve the user&apos;s registration.
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* Payment Date - Note: This will be automatically set to current timestamp */}
-          <div>
+          <div className="lg:col-span-2">
             <label
               htmlFor="paymentDate"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -745,46 +706,8 @@ export default function CreatePaymentPage() {
             </p>
           </div>
 
-          {/* Due Date */}
-          <div>
-            <label
-              htmlFor="dueDate"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Due Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              id="dueDate"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-              required
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-            >
-              <option value="Paid">Paid</option>
-              <option value="Due">Due</option>
-              <option value="Partial">Partial</option>
-            </select>
-          </div>
-
           {/* Payment Method */}
-          <div>
+          <div className="lg:col-span-2">
             <label
               htmlFor="paymentMethod"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -804,10 +727,38 @@ export default function CreatePaymentPage() {
               <option value="Other">Other</option>
             </select>
           </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            {/* Deposit payment toggle */}
+            <div className="lg:col-span-5">
+              <div className="flex items-center min-h-[42px]">
+                <input
+                  type="checkbox"
+                  id="depositPayment"
+                  checked={isDepositPayment}
+                  onChange={handleDepositToggle}
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="depositPayment"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
+                  This is a security deposit and booking payment
+                </label>
+              </div>
+              {isDepositPayment && (
+                <div className="mt-2 p-2.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    This payment will be recorded as a security deposit and auto-approve registration.
+                  </p>
+                </div>
+              )}
+            </div>
 
           {/* Transaction ID (only show for non-cash payment methods) */}
           {paymentMethod !== "Cash" && (
-            <div>
+            <div className="lg:col-span-3">
               <label
                 htmlFor="transactionId"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -826,7 +777,7 @@ export default function CreatePaymentPage() {
           )}
 
           {/* Remarks */}
-          <div>
+          <div className={paymentMethod !== "Cash" ? "lg:col-span-4" : "lg:col-span-7"}>
             <label
               htmlFor="remarks"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -837,14 +788,15 @@ export default function CreatePaymentPage() {
               id="remarks"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              rows={3}
+              rows={2}
               className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
               placeholder="Add any additional notes"
             />
           </div>
+          </div>
 
           {/* Form Actions */}
-          <div className="flex flex-col md:flex-row gap-4 pt-4">
+          <div className="flex flex-col md:flex-row gap-3 pt-2">
             <button
               type="button"
               onClick={(e) => handleSubmit(e as any, true)}
