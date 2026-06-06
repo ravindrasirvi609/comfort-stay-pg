@@ -73,7 +73,12 @@ export async function proxy(request: NextRequest) {
   // If no token found, redirect to login
   if (!token) {
     console.log("[Middleware] No token found, redirecting to login");
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set(
+      "redirect",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`
+    );
+    return NextResponse.redirect(loginUrl);
   }
 
   // Verify token and get user data
@@ -83,7 +88,12 @@ export async function proxy(request: NextRequest) {
   // If token is invalid, redirect to login
   if (!user) {
     console.log("[Middleware] Invalid token, redirecting to login");
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set(
+      "redirect",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`
+    );
+    return NextResponse.redirect(loginUrl);
   }
 
   // Check for admin paths

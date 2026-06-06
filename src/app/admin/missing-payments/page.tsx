@@ -242,9 +242,6 @@ export default function MissingPaymentsPage() {
       return;
     }
 
-    const amount = user.roomId?.rentAmount || 0;
-    const sharingType = user.roomId?.type || "assigned room";
-  
     const message = [
       `Hello ${user.name},`,
       "",
@@ -259,23 +256,23 @@ export default function MissingPaymentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 dark:from-gray-900 dark:to-gray-800 sm:p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <FaUserSlash className="text-red-500" />
-                Missing Payments
+        <div className="mb-6 md:mb-8">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="flex items-center gap-2 text-2xl font-bold leading-tight text-gray-900 dark:text-white sm:gap-3 md:text-4xl">
+                <FaUserSlash className="shrink-0 text-red-500" />
+                <span className="break-words">Missing Payments</span>
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
+              <p className="mt-2 max-w-xl text-sm text-gray-600 dark:text-gray-400 sm:text-base">
                 Track users without payment entries for selected month
               </p>
             </div>
             <Link
               href="/admin"
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:w-auto"
             >
               Back to Dashboard
             </Link>
@@ -283,60 +280,60 @@ export default function MissingPaymentsPage() {
 
           {/* Summary Cards */}
           {summary && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+              <div className="rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:p-5 md:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Missing Payments
                     </p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-2xl font-bold text-red-600 break-words">
                       {summary.totalUsersWithoutPayment}
                     </p>
                   </div>
-                  <FaExclamationTriangle className="text-3xl text-red-500" />
+                  <FaExclamationTriangle className="shrink-0 text-2xl text-red-500 sm:text-3xl" />
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:p-5 md:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Total Active Users
                     </p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-blue-600 break-words">
                       {summary.totalActiveUsers}
                     </p>
                   </div>
-                  <FaHome className="text-3xl text-blue-500" />
+                  <FaHome className="shrink-0 text-2xl text-blue-500 sm:text-3xl" />
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:p-5 md:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Missing Percentage
                     </p>
-                    <p className="text-2xl font-bold text-orange-600">
+                    <p className="text-2xl font-bold text-orange-600 break-words">
                       {summary.percentageWithoutPayment}%
                     </p>
                   </div>
-                  <FaMoneyBillWave className="text-3xl text-orange-500" />
+                  <FaMoneyBillWave className="shrink-0 text-2xl text-orange-500 sm:text-3xl" />
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:p-5 md:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Selected Month
                     </p>
-                    <p className="text-xl font-bold text-purple-600">
+                    <p className="break-words text-lg font-bold text-purple-600 sm:text-xl">
                       {summary.monthYear}
                     </p>
                   </div>
-                  <FaCalendarAlt className="text-3xl text-purple-500" />
+                  <FaCalendarAlt className="shrink-0 text-2xl text-purple-500 sm:text-3xl" />
                 </div>
               </div>
             </div>
@@ -344,15 +341,15 @@ export default function MissingPaymentsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <div className="mb-6 rounded-lg bg-white p-4 shadow-lg dark:bg-gray-800 sm:p-6">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               <FaFilter />
               Filters
             </h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="md:hidden px-4 py-2 bg-blue-500 text-white rounded-lg"
+              className="rounded-lg bg-blue-500 px-4 py-2 text-white md:hidden"
             >
               {showFilters ? "Hide" : "Show"} Filters
             </button>
@@ -472,7 +469,7 @@ export default function MissingPaymentsPage() {
                 placeholder="Search by name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pl-12 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
@@ -480,26 +477,26 @@ export default function MissingPaymentsPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg bg-white shadow-lg dark:bg-gray-800">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <FaSpinner className="animate-spin text-4xl text-blue-500" />
             </div>
           ) : users.length === 0 ? (
-            <div className="text-center py-12">
-              <FaUserSlash className="text-6xl text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <div className="px-4 py-12 text-center">
+              <FaUserSlash className="mx-auto mb-4 text-5xl text-gray-400 sm:text-6xl" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-300 sm:text-xl">
                 No Missing Payments Found
               </h3>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
                 All active users have payment entries for {selectedMonth}{" "}
                 {selectedYear}
               </p>
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[760px]">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -575,10 +572,80 @@ export default function MissingPaymentsPage() {
                 </table>
               </div>
 
+              <div className="divide-y divide-gray-200 dark:divide-gray-700 md:hidden">
+                {users.map((user) => (
+                  <div key={user._id} className="p-4">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/admin/users/${user._id}`}
+                          className="break-words text-base font-semibold text-blue-600 transition hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          {user.name}
+                        </Link>
+                      
+                      </div>
+                      <div className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-300">
+                        Missing
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 text-sm">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          Contact
+                        </p>
+                        <p className="break-words text-gray-900 dark:text-white">
+                          {user.email || "N/A"}
+                        </p>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          {user.phone || "N/A"}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Room
+                          </p>
+                          <div className="mt-1 flex items-center gap-2 text-gray-900 dark:text-white">
+                            <FaHome className="shrink-0 text-gray-400" />
+                            <span className="break-words">
+                              {user.roomId?.building || "N/A"}-
+                              {user.roomId?.roomNumber || "N/A"}
+                            </span>
+                          </div>
+                        </div>
+
+                        
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          Rent Amount
+                        </p>
+                        <p className="mt-1 font-semibold text-green-600">
+                          ₹{user.roomId?.rentAmount || 0}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSendReminder(user)}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-600"
+                    >
+                      <FaWhatsapp />
+                      Send Reminder
+                    </button>
+                  </div>
+                ))}
+              </div>
+
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-between">
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                <div className="flex flex-col gap-4 bg-gray-50 px-4 py-4 dark:bg-gray-700 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="text-center text-sm text-gray-700 dark:text-gray-300 sm:text-left">
                     Showing{" "}
                     {(pagination.currentPage - 1) * pagination.limit + 1} to{" "}
                     {Math.min(
@@ -587,17 +654,17 @@ export default function MissingPaymentsPage() {
                     )}{" "}
                     of {pagination.totalCount} users
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex justify-center gap-2">
                     <button
                       onClick={() =>
                         handlePageChange(pagination.currentPage - 1)
                       }
                       disabled={!pagination.hasPrevPage}
-                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       <IoChevronBackOutline />
                     </button>
-                    <span className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                    <span className="rounded-lg bg-blue-500 px-4 py-2 text-white">
                       {pagination.currentPage}
                     </span>
                     <button
@@ -605,7 +672,7 @@ export default function MissingPaymentsPage() {
                         handlePageChange(pagination.currentPage + 1)
                       }
                       disabled={!pagination.hasNextPage}
-                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       <IoChevronForwardOutline />
                     </button>

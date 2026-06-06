@@ -42,14 +42,6 @@ export default function useAuth() {
 
   const login = async (userData: User) => {
     setUser(userData);
-    // Redirect based on user role
-    if (userData.role === "admin") {
-      window.location.href = "/admin";
-    } else if (userData.role === "manager") {
-      window.location.href = "/manager";
-    } else {
-      window.location.href = "/dashboard";
-    }
   };
 
   const logout = async () => {

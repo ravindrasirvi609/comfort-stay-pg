@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 // import Link from "next/link"; // Removed unused import
 import useAuth from "../../hooks/useAuth";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, loading, login } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,6 +21,18 @@ export default function LoginPage() {
   });
 
   const [showUserPassword, setShowUserPassword] = useState(false);
+  const redirectTo = searchParams.get("redirect") || "";
+  const safeRedirect =
+    redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : "";
+
+  const getRoleRedirect = (role: string) => {
+    if (safeRedirect) return safeRedirect;
+    if (role === "admin") return "/admin";
+    if (role === "manager") return "/manager";
+    return "/dashboard";
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -28,9 +41,9 @@ export default function LoginPage() {
   // Redirect if user is already logged in
   useEffect(() => {
     if (mounted && !loading && isAuthenticated) {
-      router.push("/dashboard");
+      router.push(safeRedirect || "/dashboard");
     }
-  }, [mounted, loading, isAuthenticated, router]);
+  }, [mounted, loading, isAuthenticated, router, safeRedirect]);
 
   // Handle user form input change
   const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,14 +64,7 @@ export default function LoginPage() {
       if (response.data.success) {
         const user = response.data.user;
         login(user);
-        // Redirect based on role
-        if (user.role === "admin") {
-          router.push("/admin");
-        } else if (user.role === "manager") {
-          router.push("/manager");
-        } else {
-          router.push("/dashboard");
-        }
+        router.push(getRoleRedirect(user.role));
       } else {
         setError(response.data.message || "Login failed");
       }
@@ -260,5 +266,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

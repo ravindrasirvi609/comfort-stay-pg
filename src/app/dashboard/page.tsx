@@ -22,9 +22,11 @@ import {
   FaBed,
   FaIdCard,
   FaFileInvoiceDollar,
+  FaCar,
 } from "react-icons/fa";
 import { BiSolidMessageSquareDetail } from "react-icons/bi";
 import ExitSurvey from "@/components/ExitSurvey";
+import VehicleNumberForm from "@/components/VehicleNumberForm";
 
 interface User {
   _id: string;
@@ -59,6 +61,7 @@ interface User {
   isActive?: boolean;
   depositFees?: number;
   moveOutDate?: string;
+  vehicleNumber?: string;
 }
 
 interface Payment {
@@ -918,6 +921,33 @@ export default function DashboardPage() {
 
         {/* Right Column */}
         <div className="space-y-8">
+          {/* Vehicle Number */}
+          <section className="backdrop-blur-lg bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30 shadow-lg p-6">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center">
+                  <FaCar className="mr-3 text-pink-600" /> Vehicle Number
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Save your parking vehicle with your PG profile.
+                </p>
+              </div>
+              {user?.vehicleNumber && (
+                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                  Added
+                </span>
+              )}
+            </div>
+            <VehicleNumberForm
+              initialVehicleNumber={user?.vehicleNumber || ""}
+              onSaved={(vehicleNumber) =>
+                setUser((current) =>
+                  current ? { ...current, vehicleNumber } : current
+                )
+              }
+            />
+          </section>
+
           {/* Complaints / Requests */}
           <section
             id="complaints"
