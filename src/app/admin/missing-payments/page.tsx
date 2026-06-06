@@ -244,19 +244,11 @@ export default function MissingPaymentsPage() {
 
     const amount = user.roomId?.rentAmount || 0;
     const sharingType = user.roomId?.type || "assigned room";
-    const roomDetails = user.roomId
-      ? `${user.roomId.building}-${user.roomId.roomNumber}`
-      : "your assigned room";
-
+  
     const message = [
       `Hello ${user.name},`,
       "",
       `This is a rent reminder from Comfort Stay PG for ${selectedMonth} ${selectedYear}.`,
-      `Your rent for the ${sharingType} room (${roomDetails}) is due.`,
-      `Amount due: ${formatCurrency(amount)}.`,
-      "",
-      "Please make the payment at the earliest.",
-      "Thank you.",
     ].join("\n");
 
     window.open(
