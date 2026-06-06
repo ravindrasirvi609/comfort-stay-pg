@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 // import Link from "next/link"; // Removed unused import
@@ -9,7 +9,7 @@ import useAuth from "../../hooks/useAuth";
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, loading, login } = useAuth();
+  const { user, isAuthenticated, loading, login } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -27,12 +27,15 @@ function LoginPageContent() {
       ? redirectTo
       : "";
 
-  const getRoleRedirect = (role: string) => {
-    if (safeRedirect) return safeRedirect;
-    if (role === "admin") return "/admin";
-    if (role === "manager") return "/manager";
-    return "/dashboard";
-  };
+  const getRoleRedirect = useCallback(
+    (role: string) => {
+      if (safeRedirect) return safeRedirect;
+      if (role === "admin") return "/admin";
+      if (role === "manager") return "/manager";
+      return "/dashboard";
+    },
+    [safeRedirect]
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -41,9 +44,9 @@ function LoginPageContent() {
   // Redirect if user is already logged in
   useEffect(() => {
     if (mounted && !loading && isAuthenticated) {
-      router.push(safeRedirect || "/dashboard");
+      router.push(getRoleRedirect(user?.role || "user"));
     }
-  }, [mounted, loading, isAuthenticated, router, safeRedirect]);
+  }, [mounted, loading, isAuthenticated, router, user, getRoleRedirect]);
 
   // Handle user form input change
   const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {

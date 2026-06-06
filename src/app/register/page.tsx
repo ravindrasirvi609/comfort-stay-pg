@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import useAuth from "../../hooks/useAuth";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -111,12 +111,18 @@ export default function RegisterPage() {
     }
   }, [formData, mounted]);
 
+  const getRoleRedirect = useCallback((role: string) => {
+    if (role === "admin") return "/admin";
+    if (role === "manager") return "/manager";
+    return "/dashboard";
+  }, []);
+
   // Redirect if user is already logged in
   useEffect(() => {
     if (mounted && !authLoading && isAuthenticated) {
-      router.push("/dashboard");
+      router.push(getRoleRedirect(user?.role || "user"));
     }
-  }, [mounted, authLoading, isAuthenticated, router]);
+  }, [mounted, authLoading, isAuthenticated, router, user, getRoleRedirect]);
 
   // Handle form input changes
   const handleChange = (
