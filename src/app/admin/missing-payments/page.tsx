@@ -356,9 +356,8 @@ export default function MissingPaymentsPage() {
           </div>
 
           <div
-            className={`grid grid-cols-1 md:grid-cols-5 gap-4 ${
-              showFilters ? "block" : "hidden md:grid"
-            }`}
+            className={`grid grid-cols-1 md:grid-cols-5 gap-4 ${showFilters ? "block" : "hidden md:grid"
+              }`}
           >
             {/* Month Selection */}
             <div>
@@ -583,7 +582,7 @@ export default function MissingPaymentsPage() {
                         >
                           {user.name}
                         </Link>
-                      
+
                       </div>
                       <div className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-300">
                         Missing
@@ -591,17 +590,7 @@ export default function MissingPaymentsPage() {
                     </div>
 
                     <div className="space-y-3 text-sm">
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                          Contact
-                        </p>
-                        <p className="break-words text-gray-900 dark:text-white">
-                          {user.email || "N/A"}
-                        </p>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          {user.phone || "N/A"}
-                        </p>
-                      </div>
+
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -616,18 +605,18 @@ export default function MissingPaymentsPage() {
                             </span>
                           </div>
                         </div>
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Rent Amount
+                          </p>
+                          <p className="mt-1 font-semibold text-green-600">
+                            ₹{user.roomId?.rentAmount || 0}
+                          </p>
+                        </div>
 
-                        
                       </div>
 
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                          Rent Amount
-                        </p>
-                        <p className="mt-1 font-semibold text-green-600">
-                          ₹{user.roomId?.rentAmount || 0}
-                        </p>
-                      </div>
+
                     </div>
 
                     <button
