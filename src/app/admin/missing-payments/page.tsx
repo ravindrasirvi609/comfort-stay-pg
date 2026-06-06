@@ -14,6 +14,7 @@ import {
   FaMoneyBillWave,
   FaExclamationTriangle,
   FaFileExport,
+  FaWhatsapp,
 } from "react-icons/fa";
 import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 import Link from "next/link";
@@ -218,6 +219,51 @@ export default function MissingPaymentsPage() {
     } finally {
       setExporting(false);
     }
+  };
+
+  const formatCurrency = (amount: number) =>
+    `₹${amount.toLocaleString("en-IN")}`;
+
+  const normalizeWhatsAppPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+
+    if (digits.length === 10) {
+      return `91${digits}`;
+    }
+
+    return digits;
+  };
+
+  const handleSendReminder = (user: User) => {
+    const whatsappPhone = normalizeWhatsAppPhone(user.phone || "");
+
+    if (!whatsappPhone) {
+      alert("This user does not have a valid phone number.");
+      return;
+    }
+
+    const amount = user.roomId?.rentAmount || 0;
+    const sharingType = user.roomId?.type || "assigned room";
+    const roomDetails = user.roomId
+      ? `${user.roomId.building}-${user.roomId.roomNumber}`
+      : "your assigned room";
+
+    const message = [
+      `Hello ${user.name},`,
+      "",
+      `This is a rent reminder from Comfort Stay PG for ${selectedMonth} ${selectedYear}.`,
+      `Your rent for the ${sharingType} room (${roomDetails}) is due.`,
+      `Amount due: ${formatCurrency(amount)}.`,
+      "",
+      "Please make the payment at the earliest.",
+      "Thank you.",
+    ].join("\n");
+
+    window.open(
+      `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   return (
@@ -522,13 +568,14 @@ export default function MissingPaymentsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Link
-                            href={`/admin/payments/create?userId=${user._id}`}
-                            className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition"
+                          <button
+                            type="button"
+                            onClick={() => handleSendReminder(user)}
+                            className="inline-flex items-center gap-2 px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition"
                           >
-                            <FaMoneyBillWave />
-                            Add Payment
-                          </Link>
+                            <FaWhatsapp />
+                            Send Reminder
+                          </button>
                         </td>
                       </tr>
                     ))}
