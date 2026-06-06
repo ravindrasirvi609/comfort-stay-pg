@@ -18,6 +18,7 @@ import {
 } from "react-icons/fa";
 import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 import Link from "next/link";
+import { useInView } from "react-intersection-observer";
 
 interface Room {
   _id: string;
@@ -76,6 +77,12 @@ export default function MissingPaymentsPage() {
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("active");
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // For infinite scroll
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0.1,
+  });
 
   // Generate months and years
   const months = [
@@ -110,24 +117,42 @@ export default function MissingPaymentsPage() {
 
   useEffect(() => {
     if (selectedMonth && selectedYear) {
-      fetchMissingPayments();
+      // If we are on first page or filter changed, fetch first page and reset list
+      fetchMissingPayments(false, 1);
     }
   }, [
     selectedMonth,
     selectedYear,
-    pagination.currentPage,
     searchQuery,
     selectedBuilding,
     selectedStatus,
   ]);
 
-  const fetchMissingPayments = async () => {
+  useEffect(() => {
+    if (inView && pagination.hasNextPage && !loading && !isLoadingMore) {
+      loadMoreUsers();
+    }
+  }, [inView, pagination.hasNextPage, loading, isLoadingMore]);
+
+  const loadMoreUsers = () => {
+    const nextPage = pagination.currentPage + 1;
+    fetchMissingPayments(true, nextPage);
+  };
+
+  const fetchMissingPayments = async (isLoadMore = false, pageNum?: number) => {
     try {
-      setLoading(true);
+      const currentPage = pageNum || pagination.currentPage;
+
+      if (isLoadMore) {
+        setIsLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
       const params = new URLSearchParams({
         month: selectedMonth,
         year: selectedYear,
-        page: pagination.currentPage.toString(),
+        page: currentPage.toString(),
         limit: pagination.limit.toString(),
       });
 
@@ -140,28 +165,30 @@ export default function MissingPaymentsPage() {
       );
 
       if (response.data.success) {
-        setUsers(response.data.data);
+        if (isLoadMore) {
+          setUsers((prev) => [...prev, ...response.data.data]);
+        } else {
+          setUsers(response.data.data);
+        }
         setPagination(response.data.pagination);
         setSummary(response.data.summary);
       }
     } catch (error: any) {
       console.error("Error fetching missing payments:", error);
-      alert(
-        error.response?.data?.message || "Failed to fetch missing payments"
-      );
     } finally {
       setLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
   const handlePageChange = (newPage: number) => {
-    setPagination((prev) => ({ ...prev, currentPage: newPage }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    fetchMissingPayments(false, newPage);
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
-    fetchMissingPayments();
+    fetchMissingPayments(false, 1);
   };
 
   const handleExport = async () => {
@@ -368,7 +395,6 @@ export default function MissingPaymentsPage() {
                 value={selectedMonth}
                 onChange={(e) => {
                   setSelectedMonth(e.target.value);
-                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
                 }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
@@ -389,7 +415,6 @@ export default function MissingPaymentsPage() {
                 value={selectedYear}
                 onChange={(e) => {
                   setSelectedYear(e.target.value);
-                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
                 }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
@@ -410,7 +435,6 @@ export default function MissingPaymentsPage() {
                 value={selectedBuilding}
                 onChange={(e) => {
                   setSelectedBuilding(e.target.value);
-                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
                 }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
@@ -429,7 +453,6 @@ export default function MissingPaymentsPage() {
                 value={selectedStatus}
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);
-                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
                 }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
@@ -629,11 +652,24 @@ export default function MissingPaymentsPage() {
                     </button>
                   </div>
                 ))}
+
+                {/* Infinite Scroll Sentinel */}
+                <div ref={loadMoreRef} className="py-8 flex justify-center">
+                  {isLoadingMore && (
+                    <div className="flex flex-col items-center gap-2">
+                      <FaSpinner className="animate-spin text-2xl text-blue-500" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Loading more users...</p>
+                    </div>
+                  )}
+                  {!isLoadingMore && !pagination.hasNextPage && users.length > 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">No more users to load</p>
+                  )}
+                </div>
               </div>
 
-              {/* Pagination */}
+              {/* Pagination (Hidden on Mobile) */}
               {pagination.totalPages > 1 && (
-                <div className="flex flex-col gap-4 bg-gray-50 px-4 py-4 dark:bg-gray-700 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <div className="hidden md:flex flex-col gap-4 bg-gray-50 px-4 py-4 dark:bg-gray-700 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <div className="text-center text-sm text-gray-700 dark:text-gray-300 sm:text-left">
                     Showing{" "}
                     {(pagination.currentPage - 1) * pagination.limit + 1} to{" "}
