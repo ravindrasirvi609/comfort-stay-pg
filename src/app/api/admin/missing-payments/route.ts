@@ -4,6 +4,37 @@ import User from "@/app/api/models/User";
 import Payment from "@/app/api/models/Payment";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 
+const getRoomNumberSortValue = (roomNumber?: string) => {
+  if (!roomNumber) return Number.MAX_SAFE_INTEGER;
+
+  const numericRoomNumber = Number.parseInt(roomNumber, 10);
+  return Number.isNaN(numericRoomNumber)
+    ? Number.MAX_SAFE_INTEGER
+    : numericRoomNumber;
+};
+
+const sortByBlockAndRoom = (a: any, b: any) => {
+  const buildingCompare = (a.roomId?.building || "").localeCompare(
+    b.roomId?.building || "",
+    undefined,
+    { numeric: true, sensitivity: "base" }
+  );
+
+  if (buildingCompare !== 0) {
+    return buildingCompare;
+  }
+
+  const roomCompare =
+    getRoomNumberSortValue(a.roomId?.roomNumber) -
+    getRoomNumberSortValue(b.roomId?.roomNumber);
+
+  if (roomCompare !== 0) {
+    return roomCompare;
+  }
+
+  return (a.bedNumber || 0) - (b.bedNumber || 0);
+};
+
 export async function GET(request: NextRequest) {
   try {
     // Authentication check
@@ -107,7 +138,7 @@ export async function GET(request: NextRequest) {
     // Filter users who don't have payment entries
     const usersWithoutPayments = filteredUsers.filter(
       (user: any) => !paidUserIds.has(user._id.toString())
-    );
+    ).sort(sortByBlockAndRoom);
 
     // Calculate pagination
     const totalCount = usersWithoutPayments.length;
@@ -227,7 +258,7 @@ export async function POST(request: NextRequest) {
 
     const usersWithoutPayments = allUsersWithRentAmount.filter(
       (user: any) => !paidUserIds.has(user._id.toString())
-    );
+    ).sort(sortByBlockAndRoom);
 
     return NextResponse.json({
       success: true,
