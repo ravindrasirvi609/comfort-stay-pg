@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 import {
   Facebook,
-  Twitter,
   Instagram,
   MapPin,
   Phone,
@@ -14,7 +14,19 @@ import {
   ArrowUp,
   Heart,
   Loader2,
+  Send,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
+
+const quickLinks = [
+  { name: "About Us", href: "/about" },
+  { name: "Facilities", href: "/facilities" },
+  { name: "Gallery", href: "/gallery" },
+  { name: "Testimonials", href: "/testimonials" },
+  { name: "FAQs", href: "/faqs" },
+  { name: "Contact", href: "/contact" },
+];
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -22,25 +34,18 @@ const Footer = () => {
   const [loading, setLoading] = useState(false);
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!email || !email.includes("@")) {
       toast.error("Please enter a valid email address");
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await axios.post("/api/subscribers", { email });
-
       if (response.data.success) {
         toast.success(response.data.message);
         setEmail("");
@@ -59,89 +64,105 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-b from-transparent to-pink-50/50 dark:from-transparent dark:to-pink-950/20 pt-16 sm:pt-20">
-      <div className="container mx-auto px-4 sm:px-6">
-        {/* Back to top button */}
-        <div className="flex justify-center -mt-10 sm:-mt-12 mb-8 sm:mb-10">
-          <button
+    <footer className="relative mt-20">
+      <div className="container mx-auto px-4 sm:px-6 pb-6">
+        {/* Floating back-to-top */}
+        <div className="flex justify-center -mb-6 relative z-20">
+          <motion.button
             onClick={scrollToTop}
-            className="bg-white dark:bg-pink-900/60 w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg flex items-center justify-center transform hover:translate-y-[-5px] transition-all duration-300 group"
+            whileHover={{ y: -4 }}
+            whileTap={{ scale: 0.94 }}
+            className="h-12 w-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/40 flex items-center justify-center"
             aria-label="Back to top"
           >
-            <ArrowUp
-              size={18}
-              className="text-pink-500 dark:text-pink-300 group-hover:scale-110 transition-transform duration-300"
-            />
-          </button>
+            <ArrowUp size={18} />
+          </motion.button>
         </div>
 
-        <div className="glass-effect rounded-xl sm:rounded-2xl p-5 sm:p-8 md:p-10 mb-5 sm:mb-6 shadow-soft">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* About Section */}
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
-                Comfort Stay
-              </h3>
-              <p className="text-gray-600 dark:text-pink-100/70 mb-4 text-sm leading-relaxed">
-                Premium girls PG accommodation in Hinjewadi, Pune. Experience
-                comfort, security, and modern amenities in a safe and welcoming
-                environment.
+        <div className="relative overflow-hidden rounded-3xl border border-pink-100/60 dark:border-pink-900/40 bg-white/75 dark:bg-[#2b1a26]/60 backdrop-blur-xl shadow-xl pt-16 pb-8 px-6 md:px-10">
+          {/* Decorative blob */}
+          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-gradient-to-br from-pink-300/40 to-rose-300/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-gradient-to-tr from-rose-200/30 to-pink-200/10 blur-3xl pointer-events-none" />
+
+          <div className="relative grid grid-cols-1 md:grid-cols-12 gap-10">
+            {/* Brand */}
+            <div className="md:col-span-4">
+              <Link href="/" className="inline-flex items-center gap-3 mb-5">
+                <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-pink-400 via-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                  <span className="text-white font-black">CS</span>
+                </div>
+                <div>
+                  <div className="font-bold text-lg text-gray-900 dark:text-white">
+                    Comfort<span className="text-pink-500">Stay</span>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Girls PG • Hinjewadi
+                  </div>
+                </div>
+              </Link>
+              <p className="text-sm text-gray-600 dark:text-pink-100/70 leading-relaxed mb-5">
+                Premium girls PG accommodation in Hinjewadi, Pune. Comfort,
+                security, and modern amenities in a warm community — designed
+                for working women and students.
               </p>
-              <div className="flex items-center space-x-3 sm:space-x-4 mt-4">
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 dark:bg-pink-900/30 px-3 py-1 text-[11px] font-semibold text-pink-700 dark:text-pink-200">
+                  <ShieldCheck className="w-3 h-3" /> Verified PG
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 dark:bg-pink-900/30 px-3 py-1 text-[11px] font-semibold text-pink-700 dark:text-pink-200">
+                  <Sparkles className="w-3 h-3" /> Opened 2025
+                </span>
+              </div>
+              <div className="flex items-center gap-3 mt-6">
                 <a
                   href="#"
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
+                  className="h-9 w-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
                   aria-label="Facebook"
                 >
                   <Facebook
-                    size={16}
-                    className="text-pink-500 dark:text-pink-300"
+                    size={15}
+                    className="text-pink-600 dark:text-pink-300"
                   />
                 </a>
                 <a
                   href="#"
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
-                  aria-label="Twitter"
-                >
-                  <Twitter
-                    size={16}
-                    className="text-pink-500 dark:text-pink-300"
-                  />
-                </a>
-                <a
-                  href="#"
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
+                  className="h-9 w-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
                   aria-label="Instagram"
                 >
                   <Instagram
-                    size={16}
-                    className="text-pink-500 dark:text-pink-300"
+                    size={15}
+                    className="text-pink-600 dark:text-pink-300"
+                  />
+                </a>
+                <a
+                  href="https://wa.me/919922538989"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="h-9 w-9 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-800/50 transition-colors"
+                  aria-label="WhatsApp"
+                >
+                  <Phone
+                    size={15}
+                    className="text-pink-600 dark:text-pink-300"
                   />
                 </a>
               </div>
             </div>
 
             {/* Quick Links */}
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
-                Quick Links
+            <div className="md:col-span-2">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-pink-600 dark:text-pink-300 mb-4">
+                Explore
               </h3>
-              <ul className="space-y-2">
-                {[
-                  { name: "Home", href: "/" },
-                  { name: "About", href: "#about" },
-                  { name: "Amenities", href: "#amenities" },
-                  { name: "Rooms", href: "#rooms" },
-                  { name: "Gallery", href: "#gallery" },
-                  { name: "Location", href: "#location" },
-                  { name: "Contact", href: "#contact" },
-                ].map((link) => (
+              <ul className="space-y-2.5">
+                {quickLinks.map((link) => (
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-gray-600 dark:text-pink-100/70 hover:text-pink-500 dark:hover:text-pink-300 transition-colors flex items-center text-sm"
+                      className="group inline-flex items-center gap-2 text-sm text-gray-600 dark:text-pink-100/70 hover:text-pink-600 dark:hover:text-pink-300 transition-colors"
                     >
-                      <span className="mr-2 text-pink-400">›</span> {link.name}
+                      <span className="w-0 group-hover:w-3 h-px bg-pink-500 transition-all duration-300" />
+                      {link.name}
                     </Link>
                   </li>
                 ))}
@@ -149,53 +170,58 @@ const Footer = () => {
             </div>
 
             {/* Contact Info */}
-            <div className="sm:col-span-2 lg:col-span-1">
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
-                Contact Info
+            <div className="md:col-span-3">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-pink-600 dark:text-pink-300 mb-4">
+                Reach us
               </h3>
-              <ul className="space-y-3 sm:space-y-4 text-gray-600 dark:text-pink-100/70">
+              <ul className="space-y-4 text-sm text-gray-600 dark:text-pink-100/70">
                 <li className="flex items-start gap-3">
                   <MapPin
-                    size={18}
-                    className="text-pink-400 mt-1 flex-shrink-0"
+                    size={17}
+                    className="text-pink-500 mt-0.5 flex-shrink-0"
                   />
-                  <span className="text-sm">
+                  <span>
                     Comfort Stay PG, Mukai Nagar,
                     <br />
                     Hinjawadi Rajiv Gandhi Infotech Park,
                     <br />
-                    Pune, Pimpri-Chinchwad,
-                    <br />
-                    Maharashtra 411057
+                    Pune, Maharashtra 411057
                   </span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={18} className="text-pink-400 flex-shrink-0" />
-                  <span className="text-sm">+91 9922 538 989</span>
+                <li>
+                  <a
+                    href="tel:+919922538989"
+                    className="flex items-center gap-3 hover:text-pink-600 dark:hover:text-pink-300 transition-colors"
+                  >
+                    <Phone size={17} className="text-pink-500 flex-shrink-0" />
+                    +91 9922 538 989
+                  </a>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Mail size={18} className="text-pink-400 flex-shrink-0" />
-                  <span className="text-sm">info@comfortstay.com</span>
+                <li>
+                  <a
+                    href="mailto:info@comfortstay.com"
+                    className="flex items-center gap-3 hover:text-pink-600 dark:hover:text-pink-300 transition-colors"
+                  >
+                    <Mail size={17} className="text-pink-500 flex-shrink-0" />
+                    info@comfortstay.com
+                  </a>
                 </li>
               </ul>
             </div>
 
             {/* Newsletter */}
-            <div className="sm:col-span-2 lg:col-span-1">
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-pink-500 dark:text-pink-300">
-                Subscribe
+            <div className="md:col-span-3">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-pink-600 dark:text-pink-300 mb-4">
+                Newsletter
               </h3>
-              <p className="text-gray-600 dark:text-pink-100/70 mb-3 sm:mb-4 text-sm">
-                Subscribe to our newsletter for updates and special offers.
+              <p className="text-sm text-gray-600 dark:text-pink-100/70 mb-4">
+                Subscribe for updates, offers, and community news.
               </p>
-              <form
-                onSubmit={handleSubscribe}
-                className="flex flex-col sm:flex-row"
-              >
+              <form onSubmit={handleSubscribe} className="relative group">
                 <input
                   type="email"
-                  placeholder="Your email address"
-                  className="rounded-lg sm:rounded-r-none py-2 px-3 bg-white dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800/50 focus:outline-none focus:ring-2 focus:ring-pink-300 dark:focus:ring-pink-500 w-full text-sm"
+                  placeholder="your@email.com"
+                  className="w-full h-12 rounded-full pl-4 pr-14 bg-white dark:bg-pink-950/30 border border-pink-200/60 dark:border-pink-800/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent text-sm shadow-sm"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -203,45 +229,42 @@ const Footer = () => {
                 />
                 <button
                   type="submit"
-                  className="btn-primary mt-2 sm:mt-0 sm:rounded-l-none text-sm py-2 px-4 flex items-center justify-center min-w-[100px]"
                   disabled={loading}
+                  className="absolute right-1.5 top-1.5 h-9 w-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/50 transition-shadow"
+                  aria-label="Subscribe"
                 >
                   {loading ? (
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    "Subscribe"
+                    <Send size={15} />
                   )}
                 </button>
               </form>
             </div>
           </div>
-        </div>
 
-        {/* Copyright */}
-        <div className="py-5 sm:py-6 text-center text-gray-500 dark:text-pink-100/40 text-xs">
-          <p>
-            &copy; {currentYear} Comfort Stay PG. All rights reserved. Made with{" "}
-            in Pune
-          </p>
-          <p className="mt-2">
-            Developed and maintained by{" "}
-            <Heart
-              size={12}
-              className="inline-block text-pink-800 fill-pink-800 mb-0.5"
-            />{" "}
-            <a
-              href="https://ravindrachoudhary.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-pink-600 hover:text-pink-800 dark:hover:text-pink-800 transition-colors"
-            >
-              <strong>Ravindra Choudhary</strong>
-            </a>{" "}
-            <Heart
-              size={12}
-              className="inline-block text-pink-800 fill-pink-800 mb-0.5"
-            />{" "}
-          </p>
+          {/* Bottom strip */}
+          <div className="relative mt-10 pt-6 border-t border-pink-100/60 dark:border-pink-900/40 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-500 dark:text-pink-100/50">
+            <p>
+              &copy; {currentYear} Comfort Stay PG. All rights reserved.
+            </p>
+            <p className="inline-flex items-center gap-1.5">
+              Crafted with
+              <Heart
+                size={12}
+                className="text-pink-500 fill-pink-500 animate-pulse"
+              />
+              in Pune •{" "}
+              <a
+                href="https://ravindrachoudhary.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-pink-600 hover:text-pink-700 dark:text-pink-300 transition-colors"
+              >
+                Ravindra Choudhary
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

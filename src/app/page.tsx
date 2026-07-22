@@ -1,16 +1,18 @@
-import Hero from "@/components/Hero";
-import About from "@/components/About";
-import Amenities from "@/components/Amenities";
-import Rooms from "@/components/Rooms";
-import Gallery from "@/components/Gallery";
-import Location from "@/components/Location";
-import Testimonials from "@/components/Testimonials";
-import Contact from "@/components/Contact";
+import HeroV2 from "@/components/marketing/HeroV2";
+import FeatureMarquee from "@/components/marketing/FeatureMarquee";
+import AboutV2 from "@/components/marketing/AboutV2";
+import StatsStrip from "@/components/marketing/StatsStrip";
+import AmenitiesV2 from "@/components/marketing/AmenitiesV2";
+import RoomsV2 from "@/components/marketing/RoomsV2";
+import GalleryV2 from "@/components/marketing/GalleryV2";
+import LocationV2 from "@/components/marketing/LocationV2";
+import TestimonialsCarousel from "@/components/marketing/TestimonialsCarousel";
+import CTASection from "@/components/marketing/CTASection";
+import ContactV2 from "@/components/marketing/ContactV2";
 import SEOHead from "@/components/SEOHead";
-import CTA from "@/components/CTA";
+import { RoomProductSchema } from "@/components/StructuredData";
 import { Metadata } from "next";
 
-// Override default metadata for homepage
 export const metadata: Metadata = {
   title: "Comfort Stay PG - Premium Girls PG Accommodation in Hinjawadi, Pune",
   description:
@@ -36,17 +38,20 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="space-y-20">
+    <div>
       <SEOHead type="homepage" />
-      <Hero />
-      <About />
-      <Amenities />
-      <Rooms />
-      <CTA />
-      <Gallery />
-      <Location />
-      <Testimonials />
-      <Contact />
+      <RoomProductSchema />
+      <HeroV2 />
+      <FeatureMarquee />
+      <AboutV2 />
+      <StatsStrip />
+      <AmenitiesV2 />
+      <RoomsV2 />
+      <CTASection />
+      <GalleryV2 />
+      <LocationV2 />
+      <TestimonialsCarousel />
+      <ContactV2 />
     </div>
   );
 }

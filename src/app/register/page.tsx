@@ -312,18 +312,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-pink-100 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center py-6 px-2 sm:p-4 md:p-6 lg:p-8 overflow-hidden relative">
-      {/* Background decorative elements - optimized for different screen sizes */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-10 sm:top-20 left-5 sm:left-20 w-32 sm:w-64 h-32 sm:h-64 bg-pink-300 dark:bg-pink-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
-        <div className="absolute top-20 sm:top-40 right-10 sm:right-40 w-40 sm:w-72 h-40 sm:h-72 bg-purple-300 dark:bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-10 sm:bottom-20 left-1/4 w-48 sm:w-80 h-48 sm:h-80 bg-blue-300 dark:bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <div className="max-w-4xl w-full backdrop-blur-lg bg-white/40 dark:bg-gray-800/50 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-2xl overflow-hidden p-4 sm:p-6 md:p-8 z-10 hover:shadow-pink-200/20 dark:hover:shadow-pink-700/20 transition-all duration-300">
+    <div className="relative py-6">
+      <div className="max-w-5xl mx-auto rounded-3xl border border-pink-100/60 dark:border-pink-900/40 bg-white/85 dark:bg-pink-950/25 backdrop-blur-xl shadow-xl shadow-pink-500/10 overflow-hidden p-5 sm:p-7 md:p-10 relative">
+        <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-pink-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-rose-200/30 blur-3xl" />
         {success ? (
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="relative text-center max-w-md mx-auto py-10">
+            <div className="mx-auto mb-5 w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 text-green-500"
@@ -339,8 +334,8 @@ export default function RegisterPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
-              Registration Request Submitted!
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3">
+              Registration Request Submitted
             </h2>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-6">
               Thank you for registering with ComfortStay PG. Your request has
@@ -348,32 +343,20 @@ export default function RegisterPage() {
               your login credentials via email.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:space-x-4">
-              <Link
-                href="/login"
-                className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 font-medium text-sm sm:text-base"
-              >
-                Go to Login
-              </Link>
-              <Link
-                href="/"
-                className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all duration-300 font-medium text-sm sm:text-base"
-              >
-                Back to Home
-              </Link>
+              <Link href="/login" className="btn-primary justify-center">Go to Login</Link>
+              <Link href="/" className="btn-secondary justify-center">Back to Home</Link>
             </div>
           </div>
         ) : (
           <>
-            <div className="text-center mb-6 sm:mb-8">
-              <div className="flex justify-center">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                  CS
-                </div>
+            <div className="relative text-center mb-8">
+              <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30">
+                <span className="font-black">CS</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
+              <h1 className="font-display text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
                 New Resident Registration
-              </h2>
-              <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              </h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-pink-100/70">
                 Create your account to request residence at ComfortStay PG
               </p>
             </div>
