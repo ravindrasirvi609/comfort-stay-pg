@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import SEOHead from "@/components/SEOHead";
 import PageHero from "@/components/PageHero";
-import FAQAccordion from "@/components/marketing/FAQAccordion";
+import FAQAccordion, { faqs } from "@/components/marketing/FAQAccordion";
 import CTASection from "@/components/marketing/CTASection";
+import { FAQSchema } from "@/components/StructuredData";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions | Comfort Stay PG",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function FAQsPage() {
   return (
     <div>
-      <SEOHead type="faq" />
+      <FAQSchema items={faqs} />
       <PageHero
         eyebrow="FAQs"
         title="Everything you'd like to know."

@@ -27,7 +27,7 @@ const rooms = [
       "Brand new triple-sharing room with attached bathroom, personal cupboard, WiFi, and premium bedding. Includes 3 meals, housekeeping, WiFi, water and electricity.",
     price: "8500",
     image: `${siteUrl}/gallery/3sharing.jpg`,
-    url: `${siteUrl}/rooms/triple-sharing`,
+    url: `${siteUrl}/facilities#rooms`,
   },
   {
     name: "Twin Sharing Room — Comfort Stay PG",
@@ -35,7 +35,7 @@ const rooms = [
       "Brand new twin-sharing room with attached bathroom, larger cupboards, WiFi, and premium bedding. Includes 3 meals, housekeeping, WiFi, water and electricity.",
     price: "10000",
     image: `${siteUrl}/gallery/2sharing.jpg`,
-    url: `${siteUrl}/rooms/twin-sharing`,
+    url: `${siteUrl}/facilities#rooms`,
   },
 ];
 
@@ -102,6 +102,29 @@ export function BreadcrumbSchema({
   return (
     <Script
       id={`breadcrumb-${items.map((i) => i.name).join("-")}`}
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+export function FAQSchema({
+  items,
+}: {
+  items: { q: string; a: string }[];
+}) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((it) => ({
+      "@type": "Question",
+      name: it.q,
+      acceptedAnswer: { "@type": "Answer", text: it.a },
+    })),
+  };
+  return (
+    <Script
+      id="faq-schema-dynamic"
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />

@@ -13,12 +13,13 @@ const galleryImages = [
   `${baseUrl}/gallery/building.jpg`,
   `${baseUrl}/gallery/2sharing.jpg`,
   `${baseUrl}/gallery/3sharing.jpg`,
+  `${baseUrl}/gallery/3sharing1.jpg`,
   `${baseUrl}/gallery/dining.jpg`,
   `${baseUrl}/gallery/bathroom.jpg`,
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const mainPages: MetadataRoute.Sitemap = [
+  return [
     {
       url: `${baseUrl}`,
       lastModified: getRecentDate(1),
@@ -37,10 +38,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/facilities`,
       lastModified: getRecentDate(30),
       changeFrequency: "monthly",
-      priority: 0.8,
+      priority: 0.9,
       images: [
         `${baseUrl}/gallery/2sharing.jpg`,
         `${baseUrl}/gallery/3sharing.jpg`,
+        `${baseUrl}/gallery/3sharing1.jpg`,
+        `${baseUrl}/gallery/bathroom.jpg`,
       ],
     },
     {
@@ -68,24 +71,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.9,
     },
-  ];
-
-  const roomPages: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/rooms/triple-sharing`,
-      lastModified: getRecentDate(2),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      images: [`${baseUrl}/gallery/3sharing.jpg`],
-    },
-    {
-      url: `${baseUrl}/rooms/twin-sharing`,
-      lastModified: getRecentDate(2),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      images: [`${baseUrl}/gallery/2sharing.jpg`],
+      url: `${baseUrl}/rules-regulations`,
+      lastModified: getRecentDate(30),
+      changeFrequency: "yearly",
+      priority: 0.4,
     },
   ];
-
-  return [...mainPages, ...roomPages];
 }

@@ -69,9 +69,11 @@ const LocalBusinessSchema = () => {
       },
     ],
     image: [
-      "https://www.comfortstaypg.com/images/comfort-stay-building.jpg",
-      "https://www.comfortstaypg.com/images/comfort-stay-room.jpg",
-      "https://www.comfortstaypg.com/images/comfort-stay-dining.jpg",
+      "https://www.comfortstaypg.com/gallery/building.jpg",
+      "https://www.comfortstaypg.com/gallery/2sharing.jpg",
+      "https://www.comfortstaypg.com/gallery/3sharing.jpg",
+      "https://www.comfortstaypg.com/gallery/dining.jpg",
+      "https://www.comfortstaypg.com/gallery/bathroom.jpg",
     ],
     maximumAttendeeCapacity: "50",
     audience: {
