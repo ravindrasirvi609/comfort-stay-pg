@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     description:
       "Brand new PG opened July 2025 with premium 2 & 3 sharing rooms in Hinjewadi Phase 1, Pune. Designed specifically for working women and students.",
     type: "website",
+    
   },
 };
 
