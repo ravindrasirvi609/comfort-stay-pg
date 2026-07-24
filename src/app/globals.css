@@ -82,14 +82,13 @@ html {
 
 body.admin-shell-active,
 body:has(.admin-app-shell) {
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 body.admin-shell-active .app-shell,
 .app-shell:has(.admin-app-shell) {
-  height: 100vh;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 body.admin-shell-active .app-shell > header,
@@ -103,9 +102,8 @@ body.admin-shell-active .app-content,
 .app-shell:has(.admin-app-shell) > .app-content {
   width: 100%;
   max-width: none;
-  height: 100vh;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ─── Modern animations ─────────────────────────────────────── */

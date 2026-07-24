@@ -381,7 +381,7 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="admin-app-shell h-screen flex overflow-hidden bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
+    <div className="admin-app-shell min-h-screen md:flex bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -394,7 +394,7 @@ export default function AdminLayout({
       <div
         className={`fixed inset-y-0 left-0 flex flex-col z-50 w-64 transition-transform duration-300 ease-in-out transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 md:relative md:z-0`}
+        } md:sticky md:top-0 md:h-screen md:translate-x-0`}
       >
         <div className="h-full backdrop-blur-xl bg-white/50 dark:bg-gray-900/50 border-r border-white/20 dark:border-gray-700/30 shadow-xl flex flex-col">
           {/* Logo */}
@@ -473,9 +473,9 @@ export default function AdminLayout({
       </div>
 
       {/* Main content */}
-      <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
+      <div className="min-w-0 flex-1 flex flex-col">
         {/* Top header */}
-        <header className="backdrop-blur-xl bg-white/50 dark:bg-gray-900/50 border-b border-white/20 dark:border-gray-700/30 shadow-sm">
+        <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/50 dark:bg-gray-900/50 border-b border-white/20 dark:border-gray-700/30 shadow-sm">
           <div className="px-4 sm:px-6 h-16 flex justify-between items-center">
             <div className="flex items-center">
               <button
@@ -515,7 +515,7 @@ export default function AdminLayout({
         </header>
 
         {/* Main content area */}
-        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
+        <main className="flex-1 scroll-smooth">
           {children}
         </main>
       </div>
