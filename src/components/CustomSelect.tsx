@@ -26,6 +26,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -85,10 +86,15 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           role="listbox"
           aria-label={placeholder}
           onWheel={(event) => {
-            // Keep wheel events in the open list. This matters when the select
-            // is rendered inside a modal or another scrollable container.
+            // Explicitly scroll the list so outer modal/page scroll handlers
+            // cannot consume the mouse wheel before the dropdown does.
+            const list = event.currentTarget;
+            const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+            list.scrollTop += delta;
+            event.preventDefault();
             event.stopPropagation();
           }}
+          ref={optionsRef}
           className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto overscroll-contain touch-pan-y"
         >
           {options.map((option) => (
