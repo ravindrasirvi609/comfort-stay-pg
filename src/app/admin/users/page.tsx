@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import Image from "next/image";
-import { FiUsers, FiBell, FiX } from "react-icons/fi";
+import { FiUsers, FiBell, FiX, FiFilter, FiChevronDown } from "react-icons/fi";
 import { FaFileExport, FaFileInvoiceDollar } from "react-icons/fa";
 import SettlementModal from "@/components/SettlementModal";
 
@@ -94,6 +94,13 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
   const [filterPayment, setFilterPayment] = useState("all");
+  const [filterRoom, setFilterRoom] = useState("all");
+  const [filterState, setFilterState] = useState("all");
+  const [filterCompany, setFilterCompany] = useState("all");
+  const [filterCity, setFilterCity] = useState("all");
+  const [filterNotice, setFilterNotice] = useState("all");
+  const [filterVehicle, setFilterVehicle] = useState("all");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(getInitialPage());
   const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
@@ -121,6 +128,12 @@ export default function UsersPage() {
     searchTerm: "",
     filterStatus: "active",
     filterPayment: "all",
+    filterRoom: "all",
+    filterState: "all",
+    filterCompany: "all",
+    filterCity: "all",
+    filterNotice: "all",
+    filterVehicle: "all",
     showUnpaidDuesOnly: false,
   });
 
@@ -167,7 +180,7 @@ export default function UsersPage() {
       try {
         setLoading(true);
         // Fetch users with their due information
-        const usersResponse = await axios.get("/api/users/with-dues");
+        const usersResponse = await axios.get("/api/users/with-dues?status=all");
         const usersData = usersResponse.data.users || [];
 
         // Map the response to include due amount from UserDue model
@@ -233,6 +246,40 @@ export default function UsersPage() {
       result = result.filter((user) => (user.dueAmount || 0) === 0);
     }
 
+    if (filterRoom === "assigned") {
+      result = result.filter((user) => typeof user.roomId === "object" && user.roomId);
+    } else if (filterRoom === "unassigned") {
+      result = result.filter((user) => !user.roomId || typeof user.roomId !== "object");
+    }
+
+    if (filterState !== "all") {
+      result = result.filter(
+        (user) => user.state === filterState
+      );
+    }
+
+    if (filterCompany !== "all") {
+      result = result.filter((user) => user.companyName === filterCompany);
+    }
+
+    if (filterCity !== "all") {
+      result = result.filter((user) => user.city === filterCity);
+    }
+
+    if (filterNotice !== "all") {
+      result = result.filter((user) =>
+        filterNotice === "on" ? user.isOnNoticePeriod === true : user.isOnNoticePeriod !== true
+      );
+    }
+
+    if (filterVehicle !== "all") {
+      result = result.filter((user) =>
+        filterVehicle === "registered"
+          ? Boolean(user.vehicleNumber?.trim())
+          : !user.vehicleNumber?.trim()
+      );
+    }
+
     // Enhanced unpaid dues filtering
     if (showUnpaidDuesOnly) {
       result = result.filter(
@@ -252,6 +299,12 @@ export default function UsersPage() {
       searchTerm,
       filterStatus,
       filterPayment,
+      filterRoom,
+      filterState,
+      filterCompany,
+      filterCity,
+      filterNotice,
+      filterVehicle,
       showUnpaidDuesOnly,
     };
     const prevFilters = prevFiltersRef.current;
@@ -268,6 +321,12 @@ export default function UsersPage() {
     filterStatus,
     showUnpaidDuesOnly,
     filterPayment,
+    filterRoom,
+    filterState,
+    filterCompany,
+    filterCity,
+    filterNotice,
+    filterVehicle,
     handlePageChange,
     currentPage,
   ]);
@@ -403,7 +462,7 @@ export default function UsersPage() {
   const handleSettlementSuccess = async () => {
     // Refresh users data to reflect the settlement
     try {
-      const usersResponse = await axios.get("/api/users/with-dues");
+      const usersResponse = await axios.get("/api/users/with-dues?status=all");
       const usersData = usersResponse.data.users || [];
 
       const processedUsers = usersData.map((user: any) => {
@@ -514,7 +573,7 @@ export default function UsersPage() {
         );
 
         // Refresh the data
-        const usersResponse = await axios.get("/api/users/with-dues");
+        const usersResponse = await axios.get("/api/users/with-dues?status=all");
         if (usersResponse.data.success) {
           const processedUsers = usersResponse.data.users.map((user: any) => ({
             ...user,
@@ -544,6 +603,38 @@ export default function UsersPage() {
   const unpaidUsersCount = users.filter(
     (user) => user.currentMonthRentStatus === "Unpaid"
   ).length;
+  const activeFilterCount = [
+    filterStatus !== "active",
+    filterPayment !== "all",
+    filterRoom !== "all",
+    filterState !== "all",
+    filterCompany !== "all",
+    filterCity !== "all",
+    filterNotice !== "all",
+    filterVehicle !== "all",
+  ].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterStatus("active");
+    setFilterPayment("all");
+    setFilterRoom("all");
+    setFilterState("all");
+    setFilterCompany("all");
+    setFilterCity("all");
+    setFilterNotice("all");
+    setFilterVehicle("all");
+  };
+
+  const stateOptions = Array.from(
+    new Set(users.map((user) => user.state?.trim()).filter(Boolean))
+  ).sort();
+  const companyOptions = Array.from(
+    new Set(users.map((user) => user.companyName?.trim()).filter(Boolean))
+  ).sort();
+  const cityOptions = Array.from(
+    new Set(users.map((user) => user.city?.trim()).filter(Boolean))
+  ).sort();
 
   if (loading) {
     return (
@@ -635,6 +726,28 @@ export default function UsersPage() {
 
         {/* Filters */}
         <div className="backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-2xl p-6 mb-6 border border-white/20 dark:border-gray-700/30 shadow-lg">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FiFilter className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Find residents</h2>
+                {activeFilterCount > 0 && (
+                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                    {activeFilterCount} active
+                  </span>
+                )}
+              </div>
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-medium text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search input */}
             <div className="relative group">
@@ -697,6 +810,66 @@ export default function UsersPage() {
                 </select>
               </div>
             </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowMoreFilters((visible) => !visible)}
+            className="inline-flex w-fit items-center gap-2 text-sm font-medium text-gray-700 transition-colors hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400"
+          >
+            {showMoreFilters ? "Hide additional filters" : "More filters"}
+            <FiChevronDown className={`h-4 w-4 transition-transform ${showMoreFilters ? "rotate-180" : ""}`} />
+          </button>
+
+          {showMoreFilters && (
+            <div className="grid grid-cols-1 gap-4 border-t border-gray-200/60 pt-4 dark:border-gray-700/60 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Room assignment
+                <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterRoom} onChange={(e) => setFilterRoom(e.target.value)}>
+                  <option value="all">All residents</option>
+                  <option value="assigned">Room assigned</option>
+                  <option value="unassigned">Room not assigned</option>
+                </select>
+              </label>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                State
+                <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterState} onChange={(e) => setFilterState(e.target.value)}>
+                  <option value="all">All states</option>
+                  {stateOptions.map((state) => <option key={state} value={state}>{state}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Company
+                <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterCompany} onChange={(e) => setFilterCompany(e.target.value)}>
+                  <option value="all">All companies</option>
+                  {companyOptions.map((company) => <option key={company} value={company}>{company}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                City
+                <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
+                  <option value="all">All cities</option>
+                  {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Notice period
+                <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterNotice} onChange={(e) => setFilterNotice(e.target.value)}>
+                  <option value="all">All notice status</option>
+                  <option value="on">On notice period</option>
+                  <option value="off">Not on notice</option>
+                </select>
+              </label>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Vehicle
+                <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterVehicle} onChange={(e) => setFilterVehicle(e.target.value)}>
+                  <option value="all">All vehicle status</option>
+                  <option value="registered">Vehicle registered</option>
+                  <option value="none">No vehicle</option>
+                </select>
+              </label>
+            </div>
+          )}
           </div>
         </div>
 
