@@ -52,6 +52,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("details");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [fetchSucceeded, setFetchSucceeded] = useState(false);
 
   const [pgDetails, setPgDetails] = useState<PGDetails>({
     name: "",
@@ -96,16 +97,33 @@ export default function SettingsPage() {
       const response = await axios.get("/api/pg-details");
       if (response.data.success) {
         setPgDetails(response.data.pgDetails);
+        setFetchSucceeded(true);
+        setErrorMessage("");
+      } else {
+        setFetchSucceeded(false);
+        setErrorMessage(
+          "Failed to load PG details. Please refresh before saving to avoid overwriting existing data."
+        );
       }
     } catch (error) {
       console.error("Error fetching PG details:", error);
-      setErrorMessage("Failed to load PG details. Please try again.");
+      setFetchSucceeded(false);
+      setErrorMessage(
+        "Failed to load PG details. Please refresh before saving to avoid overwriting existing data."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
+    if (!fetchSucceeded) {
+      setErrorMessage(
+        "Cannot save: current settings could not be loaded. Please refresh the page before saving to avoid overwriting existing data."
+      );
+      return;
+    }
+
     try {
       setSaving(true);
       setErrorMessage("");
@@ -221,8 +239,8 @@ export default function SettingsPage() {
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-75"
+            disabled={saving || !fetchSucceeded}
+            className="inline-flex items-center rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed"
           >
             {saving ? (
               <FiRefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -262,6 +280,12 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {!loading && !fetchSucceeded && (
+        <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+          ⚠️ Settings could not be loaded. Please refresh before saving to avoid overwriting existing data.
         </div>
       )}
 

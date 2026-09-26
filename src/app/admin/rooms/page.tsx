@@ -45,8 +45,6 @@ export default function RoomsPage() {
         const response = await axios.get("/api/rooms?includeResidents=true");
         const roomsData = response.data.rooms || [];
 
-        console.log("API Response:", roomsData);
-
         if (!roomsData.length) {
           console.error("No rooms data received from API");
           setError("No rooms data available");
@@ -67,8 +65,6 @@ export default function RoomsPage() {
             building: room.building || "A", // Default to building A if not specified
           };
         });
-
-        console.log("Processed Rooms:", processedRooms);
 
         // Extract unique buildings
         const uniqueBuildings = Array.from(
@@ -120,14 +116,6 @@ export default function RoomsPage() {
       result = result.filter((room) => String(room.floor) === filterFloor);
     }
 
-    console.log(
-      "Filtered Rooms:",
-      result.length,
-      "Filter Floor:",
-      filterFloor,
-      "Filter Building:",
-      filterBuilding
-    );
     setFilteredRooms(result);
   }, [
     searchTerm,

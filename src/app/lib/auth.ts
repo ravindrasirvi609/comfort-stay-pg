@@ -92,9 +92,9 @@ export async function generateToken(
   // Decide expiration: provided overrides role-based default
   let expiresIn = options?.expiresIn;
   if (!expiresIn) {
-    // Admin tokens short (1 day), standard users longer (30 days)
+    // Admin and manager tokens short (1 day), standard users longer (30 days)
     // Any other roles default to 1 day for safety
-    expiresIn = user.role === "admin" ? "1d" : "30d";
+    expiresIn = user.role === "admin" || user.role === "manager" ? "1d" : "30d";
   }
 
   const token = await new SignJWT({
@@ -153,4 +153,14 @@ export async function isAuthenticated(): Promise<{
 // Check if user has admin role
 export function isAdmin(user: UserData): boolean {
   return user.role === "admin";
+}
+
+// Check if user has manager role
+export function isManager(user: UserData): boolean {
+  return user.role === "manager";
+}
+
+// Check if user has admin or manager role
+export function isAdminOrManager(user: UserData): boolean {
+  return user.role === "admin" || user.role === "manager";
 }

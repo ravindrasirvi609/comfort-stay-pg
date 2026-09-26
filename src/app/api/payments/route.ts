@@ -8,13 +8,16 @@ import Room from "../models/Room";
 import { generateReceiptNumber } from "@/app/utils/receiptNumberGenerator";
 import CacheInvalidator from "@/app/lib/cacheInvalidator";
 
+/** Escape special regex characters in a user-supplied search string */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // Helper function to recalculate user dues after payment (ENHANCED VERSION)
 async function recalculateUserDuesAfterPayment(
   userId: string,
   monthsArray: string[]
 ) {
-  console.log(`🔄 Starting enhanced settlement for user ${userId}`);
-
   // Step 1: Get ALL active dues for the user, sorted chronologically
   const allUserDues = await UserDue.find({
     userId,
@@ -22,11 +25,8 @@ async function recalculateUserDuesAfterPayment(
   }).sort({ year: 1, monthNumber: 1 }); // Critical: Sort chronologically
 
   if (allUserDues.length === 0) {
-    console.log(`No dues found for user ${userId}`);
     return;
   }
-
-  console.log(`📋 Found ${allUserDues.length} dues for user ${userId}`);
 
   // Step 2: Get ALL payments for this user (not just for specific months)
   const allPayments = await Payment.find({
@@ -41,23 +41,17 @@ async function recalculateUserDuesAfterPayment(
     0
   );
 
-  console.log(`💰 Total payments by user: ₹${totalPaidByUser}`);
-
   // Step 3: Allocate total payments to dues chronologically (CRITICAL FIX)
   let remainingPaymentToAllocate = totalPaidByUser;
 
   for (const due of allUserDues) {
-    const monthYear = `${due.month} ${due.year}`;
     const currentMonthDue = due.proratedRent;
-
-    console.log(`\n📅 Processing ${monthYear} - Due: ₹${currentMonthDue}`);
 
     if (remainingPaymentToAllocate <= 0) {
       // No more payment to allocate
       due.totalPaid = 0;
       due.remainingDue = currentMonthDue;
       due.dueStatus = "Unpaid";
-      console.log(`   ❌ No payment remaining - Status: Unpaid`);
     } else {
       // Allocate payment to this due (up to the due amount)
       const paymentForThisDue = Math.min(
@@ -75,35 +69,17 @@ async function recalculateUserDuesAfterPayment(
       // Update status based on payment
       if (due.remainingDue === 0) {
         due.dueStatus = "Paid";
-        console.log(`   ✅ Fully paid - Status: Paid`);
       } else if (paymentForThisDue > 0) {
         due.dueStatus = "Partial";
-        console.log(
-          `   🔄 Partially paid - Status: Partial, Remaining: ₹${due.remainingDue}`
-        );
       } else {
         due.dueStatus = "Unpaid";
-        console.log(`   ❌ Not paid - Status: Unpaid`);
       }
     }
 
     // Update the due record
     due.updatedAt = new Date();
     await due.save();
-
-    console.log(
-      `   💾 Updated ${monthYear}: Paid=₹${due.totalPaid}, Remaining=₹${due.remainingDue}, Status=${due.dueStatus}`
-    );
   }
-
-  console.log(`\n✅ Enhanced settlement complete for user ${userId}`);
-
-  // Step 5: Log final summary
-  const totalOutstanding = allUserDues.reduce(
-    (sum, due) => sum + due.remainingDue,
-    0
-  );
-  console.log(`📊 Total outstanding after settlement: ₹${totalOutstanding}`);
 }
 
 // Get all payments
@@ -149,10 +125,10 @@ export async function GET(request: NextRequest) {
         query.months = { $in: [monthYear] };
       } else if (month) {
         // If only month is provided, search for any year with that month
-        query.months = { $regex: new RegExp(`^${month} `, "i") };
+        query.months = { $regex: new RegExp(`^${escapeRegex(month)} `, "i") };
       } else if (year) {
         // If only year is provided, search for any month with that year
-        query.months = { $regex: new RegExp(` ${year}$`, "i") };
+        query.months = { $regex: new RegExp(` ${escapeRegex(year)}$`, "i") };
       }
 
       // Calculate skip value for pagination
@@ -190,10 +166,10 @@ export async function GET(request: NextRequest) {
           {
             $match: {
               $or: [
-                { "userInfo.name": { $regex: search, $options: "i" } },
-                { "userInfo.pgId": { $regex: search, $options: "i" } },
-                { receiptNumber: { $regex: search, $options: "i" } },
-                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
+                { "userInfo.name": { $regex: escapeRegex(search), $options: "i" } },
+                { "userInfo.pgId": { $regex: escapeRegex(search), $options: "i" } },
+                { receiptNumber: { $regex: escapeRegex(search), $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: escapeRegex(search), $options: "i" } },
               ],
             },
           },
@@ -237,10 +213,10 @@ export async function GET(request: NextRequest) {
           {
             $match: {
               $or: [
-                { "userInfo.name": { $regex: search, $options: "i" } },
-                { "userInfo.pgId": { $regex: search, $options: "i" } },
-                { receiptNumber: { $regex: search, $options: "i" } },
-                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
+                { "userInfo.name": { $regex: escapeRegex(search), $options: "i" } },
+                { "userInfo.pgId": { $regex: escapeRegex(search), $options: "i" } },
+                { receiptNumber: { $regex: escapeRegex(search), $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: escapeRegex(search), $options: "i" } },
               ],
             },
           },
@@ -330,10 +306,10 @@ export async function GET(request: NextRequest) {
           {
             $match: {
               $or: [
-                { "userInfo.name": { $regex: search, $options: "i" } },
-                { "userInfo.pgId": { $regex: search, $options: "i" } },
-                { receiptNumber: { $regex: search, $options: "i" } },
-                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
+                { "userInfo.name": { $regex: escapeRegex(search), $options: "i" } },
+                { "userInfo.pgId": { $regex: escapeRegex(search), $options: "i" } },
+                { receiptNumber: { $regex: escapeRegex(search), $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: escapeRegex(search), $options: "i" } },
               ],
             },
           },

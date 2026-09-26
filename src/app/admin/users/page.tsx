@@ -105,10 +105,6 @@ export default function UsersPage() {
   const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
-  // Debug current page changes
-  useEffect(() => {
-    console.log("Current page changed to:", currentPage);
-  }, [currentPage]);
   // Removed unused sort config state
   const [showUnpaidDuesOnly] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -158,7 +154,6 @@ export default function UsersPage() {
   // Function to handle page changes
   const handlePageChange = useCallback(
     (newPage: number) => {
-      console.log("handlePageChange called with:", newPage);
       setCurrentPage(newPage);
       updateURLWithPage(newPage);
     },
@@ -211,7 +206,6 @@ export default function UsersPage() {
 
     // Existing filtering logic
     if (searchTerm) {
-      debugger;
       result = result.filter(
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -380,15 +374,6 @@ export default function UsersPage() {
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-
-  // Debug pagination info
-  useEffect(() => {
-    console.log("Pagination info:", {
-      currentPage,
-      totalPages,
-      filteredUsersLength: filteredUsers.length,
-    });
-  }, [currentPage, totalPages, filteredUsers.length]);
 
   // Function to handle row click
   const handleRowClick = (userId: string) => {

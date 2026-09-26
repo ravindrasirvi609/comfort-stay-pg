@@ -60,8 +60,7 @@ interface Room {
   floor: string;
   capacity: number;
   currentOccupancy: number;
-  roomType: string;
-  bedType: string;
+  type: string;
   price: number;
 }
 
@@ -637,7 +636,7 @@ export default function UserArchiveDetail() {
                       <option value="">Select a room</option>
                       {rooms.map((room) => (
                         <option key={room._id} value={room._id}>
-                          Room {room.roomNumber} - {room.roomType} (
+                          Room {room.roomNumber} - {room.type} (
                           {room.currentOccupancy}/{room.capacity} occupied) - ₹
                           {room.price}
                         </option>
@@ -755,8 +754,7 @@ export default function UserArchiveDetail() {
                             <option value="Cash">Cash</option>
                             <option value="UPI">UPI</option>
                             <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="Debit Card">Debit Card</option>
+                            <option value="Card">Card</option>
                             <option value="Other">Other</option>
                           </select>
                         </div>

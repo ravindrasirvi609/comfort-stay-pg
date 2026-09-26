@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import { isAuthenticated, isAdmin } from "@/app/lib/auth";
+import { isAuthenticated, isAdmin, isAdminOrManager } from "@/app/lib/auth";
 import Expense from "../models/Expense";
 import mongoose from "mongoose";
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   let query = {};
   if (mine === "true") {
-    // Only use user._id if it is a valid ObjectId
+    // Scope to the calling user's own expenses
     if (
       typeof user._id === "string" &&
       mongoose.Types.ObjectId.isValid(user._id)
@@ -32,8 +32,16 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+  } else {
+    // Only admin or manager can list all expenses
+    if (!isAdminOrManager(user)) {
+      return NextResponse.json(
+        { success: false, message: "Admin or manager access required" },
+        { status: 403 }
+      );
+    }
   }
-  // Admin can see all
+  // Admin/manager can see all
   const expenses = await Expense.find(query)
     .populate("createdBy", "email name")
     .sort({ createdAt: -1 });
@@ -49,6 +57,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { success: false, message: "Not authenticated" },
       { status: 401 }
+    );
+  }
+
+  // Only admin or manager can create expenses
+  if (!isAdminOrManager(user)) {
+    return NextResponse.json(
+      { success: false, message: "Admin or manager access required" },
+      { status: 403 }
     );
   }
 

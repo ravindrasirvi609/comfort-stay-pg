@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import { isAuthenticated, isAdmin } from "@/app/lib/auth";
+import { isAuthenticated, isAdmin, isManager } from "@/app/lib/auth";
 import Complaint from "@/app/api/models/Complaint";
 import User from "@/app/api/models/User";
 
@@ -41,7 +41,7 @@ export async function GET(
     }
 
     // Normal users can only see their own complaints
-    if (!isAdmin(user) && complaint.userId._id.toString() !== user._id) {
+    if (!isAdmin(user) && !isManager(user) && complaint.userId._id.toString() !== user._id) {
       return NextResponse.json(
         { success: false, message: "Access denied" },
         { status: 403 }
@@ -94,8 +94,8 @@ export async function PUT(
       );
     }
 
-    // Only owner of complaint or admin can update
-    if (complaintToUpdate.userId.toString() !== user._id && !isAdmin(user)) {
+    // Only owner of complaint or admin/manager can update
+    if (complaintToUpdate.userId.toString() !== user._id && !isAdmin(user) && !isManager(user)) {
       return NextResponse.json(
         { success: false, message: "Access denied" },
         { status: 403 }
@@ -105,7 +105,7 @@ export async function PUT(
     const updateData = await request.json();
 
     // If normal user, they can only update title and description
-    if (!isAdmin(user)) {
+    if (!isAdmin(user) && !isManager(user)) {
       const { title, description } = updateData;
 
       // Only if complaint is still 'Open'
@@ -187,8 +187,8 @@ export async function DELETE(
       );
     }
 
-    // Only owner of complaint or admin can delete
-    if (complaintToDelete.userId.toString() !== user._id && !isAdmin(user)) {
+    // Only owner of complaint or admin/manager can delete
+    if (complaintToDelete.userId.toString() !== user._id && !isAdmin(user) && !isManager(user)) {
       return NextResponse.json(
         { success: false, message: "Access denied" },
         { status: 403 }

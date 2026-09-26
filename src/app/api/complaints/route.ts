@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/db";
-import { isAuthenticated, isAdmin } from "@/app/lib/auth";
+import { isAuthenticated, isAdmin, isManager } from "@/app/lib/auth";
 import Complaint from "@/app/api/models/Complaint";
 import User from "@/app/api/models/User";
 import Notification from "@/app/api/models/Notification";
@@ -25,8 +25,8 @@ export async function GET() {
 
     let complaints;
 
-    // If admin, get all complaints
-    if (isAdmin(user)) {
+    // If admin or manager, get all complaints
+    if (isAdmin(user) || isManager(user)) {
       complaints = await Complaint.find({ isActive: true })
         .populate("userId", "name email pgId")
         .sort({ createdAt: -1 });

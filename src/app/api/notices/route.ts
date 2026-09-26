@@ -4,7 +4,6 @@ import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import Notice from "@/app/api/models/Notice";
 import User from "@/app/api/models/User";
 import Notification from "@/app/api/models/Notification";
-import mongoose from "mongoose";
 
 // Get all notices
 export async function GET() {
@@ -74,16 +73,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle the special case for hardcoded admin ID
-    let createdByValue;
-
-    if (user._id === "admin_id_123456789") {
-      // For the hardcoded admin ID, create a MongoDB ObjectId
-      createdByValue = new mongoose.Types.ObjectId();
-    } else {
-      // For regular users, use their ID directly (it should already be an ObjectId)
-      createdByValue = user._id;
-    }
+    // Use the authenticated admin's real ID as createdBy.
+    // The isAdmin() check above ensures only real admin accounts reach here.
+    const createdByValue = user._id;
 
     // Create new notice with the appropriate createdBy value
     const newNotice = new Notice({

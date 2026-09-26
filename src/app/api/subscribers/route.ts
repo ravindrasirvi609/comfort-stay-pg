@@ -3,6 +3,7 @@ import Subscriber from "@/app/api/models/Subscriber";
 import Notification from "@/app/api/models/Notification";
 import User from "@/app/api/models/User";
 import { connectToDatabase } from "@/app/lib/db";
+import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,6 +90,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const { isAuth, user } = await isAuthenticated();
+    if (!isAuth || !user || !isAdmin(user)) {
+      return NextResponse.json(
+        { success: false, message: "Admin access required" },
+        { status: 401 }
+      );
+    }
+
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);

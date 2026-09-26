@@ -97,7 +97,7 @@ interface Notice {
   createdAt: string;
   createdBy: {
     name: string;
-  };
+  } | null;
 }
 
 export default function DashboardPage() {
@@ -904,7 +904,7 @@ export default function DashboardPage() {
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-3">
                         Posted by:{" "}
                         <span className="font-medium">
-                          {notice.createdBy.name}
+                          {notice.createdBy?.name ?? "Admin"}
                         </span>
                       </div>
                     </div>

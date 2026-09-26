@@ -3,6 +3,11 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import DueSettlement from "../models/DueSettlement";
 
+/** Escape special regex characters in a user-supplied search string */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // GET /api/settlements - List all settlements (admin only) with pagination and filters
 export async function GET(request: NextRequest) {
   try {
@@ -30,9 +35,9 @@ export async function GET(request: NextRequest) {
     if (month && year) {
       match.month = `${month} ${year}`;
     } else if (month) {
-      match.month = { $regex: new RegExp(`^${month} `, "i") };
+      match.month = { $regex: new RegExp(`^${escapeRegex(month)} `, "i") };
     } else if (year) {
-      match.month = { $regex: new RegExp(` ${year}$`, "i") };
+      match.month = { $regex: new RegExp(` ${escapeRegex(year)}$`, "i") };
     }
     if (reason) {
       match.reason = reason;
@@ -78,9 +83,9 @@ export async function GET(request: NextRequest) {
           {
             $match: {
               $or: [
-                { "userInfo.name": { $regex: search, $options: "i" } },
-                { "userInfo.pgId": { $regex: search, $options: "i" } },
-                { "roomInfo.roomNumber": { $regex: search, $options: "i" } },
+                { "userInfo.name": { $regex: escapeRegex(search), $options: "i" } },
+                { "userInfo.pgId": { $regex: escapeRegex(search), $options: "i" } },
+                { "roomInfo.roomNumber": { $regex: escapeRegex(search), $options: "i" } },
               ],
             },
           },

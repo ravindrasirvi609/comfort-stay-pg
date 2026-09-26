@@ -11,6 +11,22 @@ export const isAdmin = (user: IUser | any): boolean => {
 };
 
 /**
+ * Check if a user has manager privileges
+ */
+export const isManager = (user: IUser | any): boolean => {
+  if (!user) return false;
+  return user.role === "manager";
+};
+
+/**
+ * Check if a user has admin or manager privileges
+ */
+export const isAdminOrManager = (user: IUser | any): boolean => {
+  if (!user) return false;
+  return user.role === "admin" || user.role === "manager";
+};
+
+/**
  * Check if the current user can access or modify the target user
  * @param currentUser The user making the request
  * @param targetUserId The ID of the user being accessed/modified
