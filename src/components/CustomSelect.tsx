@@ -44,6 +44,42 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Attach a non-passive native wheel listener so that preventDefault() is
+  // honoured by the browser. React 19 registers onWheel as a passive listener
+  // at the root, which means calling preventDefault() there is silently
+  // ignored and the parent modal/page steals the scroll instead of the list.
+  useEffect(() => {
+    const el = optionsRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Normalise delta across all three deltaMode values.
+      let delta: number;
+      if (e.deltaMode === 1) {
+        delta = e.deltaY * 16;          // lines → px
+      } else if (e.deltaMode === 2) {
+        delta = e.deltaY * el.clientHeight; // pages → px
+      } else {
+        delta = e.deltaY;               // already pixels
+      }
+
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const atTop    = delta < 0 && scrollTop === 0;
+      const atBottom = delta > 0 && scrollTop + clientHeight >= scrollHeight;
+
+      // When the list still has room to scroll in the requested direction,
+      // consume the event so the parent container does not move.
+      if (!atTop && !atBottom) {
+        e.preventDefault();
+        e.stopPropagation();
+        el.scrollTop += delta;
+      }
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [isOpen]); // re-attach each time the dropdown opens so optionsRef is populated
+
   const getBuildingColor = (building?: string) => {
     switch (building) {
       case "A":
@@ -85,15 +121,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <div
           role="listbox"
           aria-label={placeholder}
-          onWheel={(event) => {
-            // Explicitly scroll the list so outer modal/page scroll handlers
-            // cannot consume the mouse wheel before the dropdown does.
-            const list = event.currentTarget;
-            const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
-            list.scrollTop += delta;
-            event.preventDefault();
-            event.stopPropagation();
-          }}
           ref={optionsRef}
           className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto overscroll-contain touch-pan-y"
         >
