@@ -85,7 +85,7 @@ export default function ProratedRentPage() {
     setLoading(true);
     try {
       const [usersResponse, statsResponse] = await Promise.all([
-        axios.get("/api/users/with-dues?status=active"),
+        axios.get("/api/users/with-dues?status=active&export=true"),
         axios.get("/api/user-dues/recalculate"),
       ]);
 

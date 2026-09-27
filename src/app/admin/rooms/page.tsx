@@ -24,6 +24,19 @@ interface Room {
   hasResidentsOnNotice?: boolean;
 }
 
+// Module-level cache: survives client-side navigation within the same tab
+// session (e.g. navigating to a room detail page and back). This lets the
+// rooms list render immediately on back-navigation instead of showing the
+// loading spinner again, which in turn allows the browser's scroll
+// restoration to actually find content to scroll to.
+interface RoomsCacheEntry {
+  rooms: Room[];
+  timestamp: number;
+}
+let _roomsCache: RoomsCacheEntry | null = null;
+let _scrollPositionCache = 0;
+const ROOMS_CACHE_TTL_MS = 60_000; // 1 minute
+
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
@@ -36,6 +49,21 @@ export default function RoomsPage() {
   const [filterFloor, setFilterFloor] = useState("all");
   const [buildings, setBuildings] = useState<string[]>(["A", "B"]);
 
+  // Restore scroll position on mount (e.g. when navigating back from a room
+  // detail page) and save it on unmount (before navigating away).
+  useEffect(() => {
+    if (_roomsCache && _scrollPositionCache > 0) {
+      // Use requestAnimationFrame so the DOM has been painted before scrolling
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: _scrollPositionCache, behavior: "instant" });
+      });
+    }
+
+    return () => {
+      _scrollPositionCache = window.scrollY;
+    };
+  }, []);
+
   // Floors derived from the loaded rooms data, so any floor present in the
   // data (including floor 7+) is shown instead of being silently hidden.
   const availableFloors = useMemo(
@@ -45,7 +73,62 @@ export default function RoomsPage() {
 
   // Fetch rooms data
   useEffect(() => {
+    // Process raw rooms to check for residents on notice and fill defaults
+    const processRooms = (roomsData: Room[]) =>
+      roomsData.map((room: Room) => {
+        const hasResidentsOnNotice = room.residents?.some(
+          (resident) => resident.isOnNoticePeriod
+        );
+
+        return {
+          ...room,
+          hasResidentsOnNotice,
+          floor: room.floor || 1,
+          building: room.building || "A", // Default to building A if not specified
+        };
+      });
+
+    // Push processed rooms into state (and derive the buildings list)
+    const applyRooms = (processedRooms: Room[]) => {
+      setRooms(processedRooms);
+      setFilteredRooms(processedRooms);
+
+      const uniqueBuildings = Array.from(
+        new Set(processedRooms.map((room) => room.building))
+      ) as string[];
+      if (uniqueBuildings.length > 0) {
+        setBuildings(uniqueBuildings);
+      }
+    };
+
     const fetchRooms = async () => {
+      // If we have a fresh cache (e.g. returning from a room detail page via
+      // back-navigation), use it immediately so content renders without a
+      // loading-spinner flash — this is what lets scroll restoration work.
+      if (
+        _roomsCache &&
+        Date.now() - _roomsCache.timestamp < ROOMS_CACHE_TTL_MS
+      ) {
+        applyRooms(_roomsCache.rooms);
+        setLoading(false);
+
+        // Still refresh silently in the background to pick up any changes
+        try {
+          const response = await axios.get("/api/rooms?includeResidents=true");
+          const roomsData = response.data.rooms || [];
+          if (roomsData.length) {
+            const processedRooms = processRooms(roomsData);
+            _roomsCache = { rooms: processedRooms, timestamp: Date.now() };
+            applyRooms(processedRooms);
+          }
+        } catch (err) {
+          console.error("Error refreshing rooms in background:", err);
+          // Silently ignore background refresh errors — cached data is still showing
+        }
+        return;
+      }
+
+      // No usable cache: show the spinner as before and wait for data
       try {
         setLoading(true);
         const response = await axios.get("/api/rooms?includeResidents=true");
@@ -58,30 +141,9 @@ export default function RoomsPage() {
           return;
         }
 
-        // Process rooms to check for residents on notice
-        const processedRooms = roomsData.map((room: Room) => {
-          const hasResidentsOnNotice = room.residents?.some(
-            (resident) => resident.isOnNoticePeriod
-          );
-
-          return {
-            ...room,
-            hasResidentsOnNotice,
-            floor: room.floor || 1,
-            building: room.building || "A", // Default to building A if not specified
-          };
-        });
-
-        // Extract unique buildings
-        const uniqueBuildings = Array.from(
-          new Set(processedRooms.map((room: Room) => room.building))
-        ) as string[];
-
-        setRooms(processedRooms);
-        setFilteredRooms(processedRooms);
-        if (uniqueBuildings.length > 0) {
-          setBuildings(uniqueBuildings);
-        }
+        const processedRooms = processRooms(roomsData);
+        _roomsCache = { rooms: processedRooms, timestamp: Date.now() };
+        applyRooms(processedRooms);
 
         setLoading(false);
       } catch (err) {

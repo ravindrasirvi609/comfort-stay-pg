@@ -102,7 +102,7 @@ export default function CreatePaymentPage() {
         setLoading(true);
 
         // Fetch users with their due information from the new API
-        const usersRes = await axios.get("/api/users/with-dues");
+        const usersRes = await axios.get("/api/users/with-dues?export=true");
 
         if (!usersRes.data.success) {
           setError("Failed to load users");

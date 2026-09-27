@@ -47,7 +47,6 @@ export async function PUT(request: NextRequest) {
       roomId,
       checkInDate,
       clearNoticePeriod = true,
-      archiveId, // optional: if provided, remove or mark archive as reactivated
       // Payment related fields
       collectDeposit = false,
       depositAmount = 0,
@@ -281,31 +280,8 @@ export async function PUT(request: NextRequest) {
       // Save user changes
       await userToActivate.save();
 
-      // If archiveId provided, delete that archive entry
-      if (archiveId) {
-        const archiveRecord = await UserArchive.findById(archiveId);
-        if (archiveRecord) {
-          await archiveRecord.deleteOne();
-        }
-      } else if (!existingUser) {
-        // If no archiveId provided AND we created a new user from archive,
-        // try to find and delete by userId
-        let archiveRecord = await UserArchive.findOne({ userId: userId });
-
-        // If not found by userId, try by _id
-        if (!archiveRecord) {
-          archiveRecord = await UserArchive.findById(userId);
-        }
-
-        // If still not found, try by _id as string
-        if (!archiveRecord) {
-          archiveRecord = await UserArchive.findOne({ _id: userId });
-        }
-
-        if (archiveRecord) {
-          await archiveRecord.deleteOne();
-        }
-      }
+      // Archive records are preserved permanently — they form the stay history
+      // for returning residents. Do NOT delete them on reactivation.
 
       // Create payment entries if requested
       const payments = [];

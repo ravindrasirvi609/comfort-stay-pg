@@ -323,11 +323,6 @@ export async function DELETE(
         }
       }
 
-      // Instead of deleting, deactivate and add to archives if not already archived
-      let archiveRecord = await UserArchive.findOne({
-        email: userToDelete.email,
-      });
-
       // Calculate the stay duration
       const moveInDate = userToDelete.moveInDate || userToDelete.createdAt;
       const moveOutDate = new Date();
@@ -343,45 +338,26 @@ export async function DELETE(
         };
       }
 
-      if (archiveRecord) {
-        // Update existing archive record
-        archiveRecord.archiveReason = "Other"; // Default reason for admin deactivation
-        archiveRecord.archiveDate = new Date();
-        archiveRecord.exitSurveyCompleted = false;
-        archiveRecord.stayDuration = stayDuration;
-        archiveRecord.moveOutDate = moveOutDate;
-        archiveRecord.isActive = false;
-        archiveRecord.isOnNoticePeriod = false;
-        archiveRecord.keyIssued = keyIssued || false;
-        archiveRecord.remarks = remarks || "";
-        archiveRecord.userId = userToDelete._id; // ensure linkage
+      // Always create a new archive record for each stay — never overwrite an
+      // existing one. Each checkout produces its own permanent archive entry so
+      // that a returning resident's full stay history is preserved.
+      const userObj = userToDelete.toObject();
+      delete userObj._id; // Remove the original _id to let MongoDB generate a new one
 
-        if (depositReturn) {
-          archiveRecord.depositReturn = {
-            amount: depositReturn.amount,
-            date: depositReturn.date || new Date(),
-          };
-        }
-      } else {
-        // Create new archive record with a new ObjectId
-        const userObj = userToDelete.toObject();
-        delete userObj._id; // Remove the original _id to prevent conflicts
-
-        archiveRecord = new UserArchive({
-          ...userObj,
-          userId: userToDelete._id, // Store the original user ID as a reference
-          archiveReason: "Other", // Default reason for admin deactivation
-          archiveDate: new Date(),
-          exitSurveyCompleted: false,
-          stayDuration,
-          moveOutDate,
-          isActive: false,
-          isOnNoticePeriod: false,
-          keyIssued: keyIssued || false,
-          remarks: remarks || "",
-          depositReturn: depositReturn || undefined,
-        });
-      }
+      const archiveRecord = new UserArchive({
+        ...userObj,
+        userId: userToDelete._id, // Store the original user ID as a reference
+        archiveReason: "Other",   // Default reason for admin deactivation
+        archiveDate: new Date(),
+        exitSurveyCompleted: false,
+        stayDuration,
+        moveOutDate,
+        isActive: false,
+        isOnNoticePeriod: false,
+        keyIssued: keyIssued || false,
+        remarks: remarks || "",
+        depositReturn: depositReturn || undefined,
+      });
 
       await archiveRecord.save();
 

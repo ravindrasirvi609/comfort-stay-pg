@@ -29,6 +29,7 @@ import {
   CheckCircle,
   Bed,
   BellRing,
+  History,
 } from "lucide-react";
 import AdminRoomChange from "@/components/AdminRoomChange";
 import DeleteUserDialog from "@/components/DeleteUserDialog";
@@ -94,6 +95,16 @@ interface UserData {
   }[];
 }
 
+interface StayRecord {
+  _id: string;
+  moveInDate: string;
+  moveOutDate?: string;
+  stayDuration?: number;
+  archiveReason?: string;
+  archiveDate?: string;
+  roomId?: { roomNumber?: string; building?: string; floor?: string } | null;
+}
+
 interface ErrorResponse {
   success: boolean;
   message: string;
@@ -132,6 +143,8 @@ export default function UserDetailPage() {
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [isNoticeSubmitting, setIsNoticeSubmitting] = useState(false);
   const [isWithdrawProcessing, setIsWithdrawProcessing] = useState(false);
+  const [stayHistory, setStayHistory] = useState<StayRecord[]>([]);
+
   const [dueSummary, setDueSummary] = useState<{
     currentMonthDue: number;
     previousUnpaidDue: number;
@@ -173,6 +186,16 @@ export default function UserDetailPage() {
         }
       } catch {
         // Balance summary is non-critical — silently ignore failures
+      }
+
+      // Fetch stay history (past stays for returning residents)
+      try {
+        const stayRes = await axios.get(`/api/user-archives?userId=${id}`);
+        if (stayRes.data.success) {
+          setStayHistory(stayRes.data.archives || []);
+        }
+      } catch {
+        // Stay history is non-critical — silently ignore failures
       }
     };
 
@@ -1249,6 +1272,79 @@ export default function UserDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Stay History — only shown for returning residents who have past stays */}
+      {stayHistory.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+            <History className="w-5 h-5 text-indigo-500" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Stay History
+            </h2>
+            <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full font-medium">
+              {stayHistory.length} {stayHistory.length === 1 ? "stay" : "stays"}
+            </span>
+          </div>
+          <div className="p-6">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">#</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Move In</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Move Out</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Room</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Leave Reason</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {[...stayHistory].reverse().map((stay, index) => {
+                    const roomLabel = stay.roomId
+                      ? [
+                          stay.roomId.building && `Block ${stay.roomId.building}`,
+                          stay.roomId.roomNumber && `Room ${stay.roomId.roomNumber}`,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")
+                      : "—";
+                    return (
+                      <tr key={stay._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 font-medium">
+                          Stay {index + 1}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {stay.moveInDate ? formatDate(stay.moveInDate) : "—"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {stay.moveOutDate ? formatDate(stay.moveOutDate) : "—"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {stay.stayDuration != null
+                            ? `${stay.stayDuration} day${stay.stayDuration !== 1 ? "s" : ""}`
+                            : "—"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {roomLabel}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {stay.archiveReason ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                              {stay.archiveReason}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-400">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 import UserDue from "@/app/api/models/UserDue";
 import Payment from "@/app/api/models/Payment";
 import DueSettlement from "@/app/api/models/DueSettlement";
-import duesToCache from "@/app/lib/cache";
+
+/** Escape special regex characters in a user-supplied search string */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 // GET /api/users/with-dues - Get users with enhanced due information
+// Supports server-side filtering, search and pagination.
 export async function GET(request: NextRequest) {
   try {
     const { isAuth, user } = await isAuthenticated();
@@ -31,29 +37,30 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month");
     const year = searchParams.get("year");
 
-    // Generate cache key based on query parameters
-    const cacheKey = duesToCache.generateKey("users-with-dues", {
-      status,
-      month: month || "current",
-      year: year || "current",
-    });
+    // Filtering params
+    const search = (searchParams.get("search") || "").trim();
+    const paymentFilter = searchParams.get("paymentFilter") || ""; // "unpaid" | "no-dues" | ""
+    const roomId = searchParams.get("roomId") || "";
+    const state = searchParams.get("state") || "";
+    const company = searchParams.get("company") || "";
+    const city = searchParams.get("city") || "";
+    const noticePeriod = searchParams.get("noticePeriod") || "";
+    const vehicle = searchParams.get("vehicle") || "";
 
-    // Check if data exists in cache
-    const cachedData = duesToCache.get(cacheKey);
-    if (cachedData) {
-      console.log(`[CACHE HIT] users-with-dues: ${cacheKey}`);
-      return NextResponse.json({
-        ...cachedData,
-        cached: true,
-        cacheHit: true,
-      });
-    }
-
-    console.log(`[CACHE MISS] users-with-dues: ${cacheKey}`);
+    // Pagination / export params
+    const isExport = searchParams.get("export") === "true";
+    const pageParam = parseInt(searchParams.get("page") || "1", 10);
+    const limitParam = parseInt(searchParams.get("limit") || "10", 10);
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const limit =
+      Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 10;
+    const skip = isExport ? 0 : (page - 1) * limit;
 
     await connectToDatabase();
 
+    // ------------------------------------------------------------------
     // Build user query
+    // ------------------------------------------------------------------
     let userQuery: any = {};
     if (status === "active") {
       userQuery.isActive = true;
@@ -63,38 +70,136 @@ export async function GET(request: NextRequest) {
     } else if (status === "deleted") {
       userQuery.isDeleted = true;
     }
+    // status === "all" -> no restriction
 
-    // Get users with populated room data
-    const users = await User.find(userQuery)
-      .populate("roomId", "roomNumber type price")
-      .sort({ createdAt: -1 })
-      .lean();
+    // Direct-match filters
+    if (state) {
+      userQuery.state = state;
+    }
+    if (company) {
+      // Substring, case-insensitive match on company name
+      userQuery.companyName = new RegExp(escapeRegex(company), "i");
+    }
+    if (city) {
+      userQuery.city = city;
+    }
+    if (noticePeriod === "true") {
+      userQuery.isOnNoticePeriod = true;
+    } else if (noticePeriod === "false") {
+      userQuery.isOnNoticePeriod = { $ne: true };
+    }
+    if (vehicle === "true") {
+      userQuery.vehicleNumber = { $exists: true, $ne: "" };
+    } else if (vehicle === "false") {
+      userQuery.$or = (userQuery.$or || []).concat([
+        { vehicleNumber: { $exists: false } },
+        { vehicleNumber: "" },
+      ]);
+    }
+    if (roomId === "assigned") {
+      userQuery.roomId = { $exists: true, $ne: null };
+    } else if (roomId === "unassigned") {
+      userQuery.$or = (userQuery.$or || []).concat([
+        { roomId: { $exists: false } },
+        { roomId: null },
+      ]);
+    } else if (roomId) {
+      // A specific room's ObjectId. Guard against an invalid ObjectId
+      // crashing the query - fall back to a filter that matches no
+      // documents instead of throwing.
+      userQuery.roomId = mongoose.Types.ObjectId.isValid(roomId)
+        ? new mongoose.Types.ObjectId(roomId)
+        : new mongoose.Types.ObjectId();
+    }
+
+    // Search across multiple fields - merge with existing query via $and so
+    // it doesn't clobber the filters built above.
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+      const searchOr = {
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex },
+          { pgId: searchRegex },
+          { companyName: searchRegex },
+          { vehicleNumber: searchRegex },
+        ],
+      };
+      userQuery = { $and: [searchOr, userQuery] };
+    }
+
+    // Payment filter - pre-resolve the set of matching user ids from UserDue
+    // before running the main paginated User query.
+    if (paymentFilter === "unpaid") {
+      const unpaidDues = await UserDue.find(
+        { isActive: true, remainingDue: { $gt: 0 } },
+        "userId"
+      ).lean();
+      const usersWithDues = Array.from(
+        new Set(unpaidDues.map((d: any) => d.userId.toString()))
+      ).map((id) => new mongoose.Types.ObjectId(id));
+      userQuery._id = { $in: usersWithDues };
+    } else if (paymentFilter === "no-dues") {
+      const anyDues = await UserDue.find({ isActive: true }, "userId").lean();
+      const usersWithDues = Array.from(
+        new Set(anyDues.map((d: any) => d.userId.toString()))
+      ).map((id) => new mongoose.Types.ObjectId(id));
+      userQuery._id = { $nin: usersWithDues };
+    }
 
     // Get current month/year or use provided
     const currentDate = new Date();
     const targetMonth = month ? parseInt(month) : currentDate.getMonth() + 1;
     const targetYear = year ? parseInt(year) : currentDate.getFullYear();
 
-    // Get ALL dues for all users (not just current month) to calculate total outstanding
-    const userIds = users.map((user: any) => user._id);
-    const allDues = await UserDue.find({
-      userId: { $in: userIds },
-      isActive: true,
-    }).lean();
+    // ------------------------------------------------------------------
+    // Run the paginated query + total count + the full matching id list
+    // (the id list is lightweight - projected to _id only - and is used
+    // purely to compute summary stats across ALL matching users below).
+    // ------------------------------------------------------------------
+    const [totalCount, pagedUsers, allMatchingUsers] = await Promise.all([
+      User.countDocuments(userQuery),
+      User.find(userQuery)
+        .populate("roomId", "roomNumber type price")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(isExport ? 0 : limit)
+        .lean(),
+      User.find(userQuery, "_id").lean(),
+    ]);
 
-    // Get current month dues specifically
-    const currentMonthDues = await UserDue.find({
-      userId: { $in: userIds },
-      year: targetYear,
-      monthNumber: targetMonth,
-      isActive: true,
-    }).lean();
+    const pageUserIds = pagedUsers.map((u: any) => u._id);
+    const allMatchingUserIds = allMatchingUsers.map((u: any) => u._id);
 
-    // Get all due settlements for all users
-    const dueSettlements = await DueSettlement.find({
-      userId: { $in: userIds },
-      isActive: true,
-    }).lean();
+    // ------------------------------------------------------------------
+    // Fetch dues/payments/settlements data ONLY for the current page's
+    // users - this is what makes the per-user enrichment below cheap
+    // regardless of how many users match the overall filter.
+    // ------------------------------------------------------------------
+    const [allDues, currentMonthDues, dueSettlements, allUserPayments] =
+      await Promise.all([
+        UserDue.find({
+          userId: { $in: pageUserIds },
+          isActive: true,
+        }).lean(),
+        UserDue.find({
+          userId: { $in: pageUserIds },
+          year: targetYear,
+          monthNumber: targetMonth,
+          isActive: true,
+        }).lean(),
+        DueSettlement.find({
+          userId: { $in: pageUserIds },
+          isActive: true,
+        }).lean(),
+        Payment.find({
+          userId: { $in: pageUserIds },
+          paymentStatus: "Paid",
+          isDepositPayment: false,
+          isActive: true,
+        }).lean(),
+      ]);
 
     // Create maps for quick lookup
     const allDuesMap = new Map();
@@ -124,14 +229,6 @@ export async function GET(request: NextRequest) {
       settlementsMap.get(userId).push(settlement);
     });
 
-    // Calculate total payment data for each user (for display purposes only)
-    const allUserPayments = await Payment.find({
-      userId: { $in: userIds },
-      paymentStatus: "Paid",
-      isDepositPayment: false,
-      isActive: true,
-    }).lean();
-
     // Create payment map for all users (for total paid display)
     const allPaymentsMap = new Map();
     allUserPayments.forEach((payment: any) => {
@@ -140,8 +237,9 @@ export async function GET(request: NextRequest) {
       allPaymentsMap.set(userId, existing + payment.amount);
     });
 
-    // Enhanced user data using corrected UserDue records
-    const enhancedUsers = users.map((user: any) => {
+    // Enhanced user data using corrected UserDue records - only for the
+    // current page.
+    const enhancedUsers = pagedUsers.map((user: any) => {
       const userId = user._id.toString();
       const userDues = allDuesMap.get(userId) || [];
       const currentMonthDue = currentMonthDuesMap.get(userId);
@@ -329,41 +427,95 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Calculate summary statistics using corrected data with settlements
-    const summary = enhancedUsers.reduce(
-      (acc: any, user: any) => {
-        if (user.dueStatus === "Paid" || user.dueAmount === 0) {
-          acc.paidCount++;
-        } else if (user.dueAmount > 0) {
-          acc.unpaidCount++;
-          acc.totalUnpaidAmount += user.dueAmount; // Use Final Actual Due amount
-          acc.currentMonthDue += user.currentMonthDue;
-          acc.previousUnpaidDue += user.previousUnpaidDue;
-        }
+    // ------------------------------------------------------------------
+    // Summary stats - must reflect ALL matching users, not just the
+    // current page, so these are computed via lightweight aggregations
+    // over allMatchingUserIds rather than by reducing enhancedUsers.
+    // ------------------------------------------------------------------
+    const [overallAgg, currentMonthAgg, settlementAgg] = await Promise.all([
+      // Net outstanding balance per user (summed across their active due
+      // records first, so a user with multiple months' worth of UserDue
+      // rows is only counted once for unpaidCount).
+      UserDue.aggregate([
+        { $match: { userId: { $in: allMatchingUserIds }, isActive: true } },
+        { $group: { _id: "$userId", remainingDue: { $sum: "$remainingDue" } } },
+        {
+          $group: {
+            _id: null,
+            totalUnpaidAmount: { $sum: "$remainingDue" },
+            unpaidCount: {
+              $sum: { $cond: [{ $gt: ["$remainingDue", 0] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+      // Current-month due figures, straight off the stored UserDue fields
+      // for the target month - no per-user recomputation needed.
+      UserDue.aggregate([
+        {
+          $match: {
+            userId: { $in: allMatchingUserIds },
+            year: targetYear,
+            monthNumber: targetMonth,
+            isActive: true,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            currentMonthDue: { $sum: "$currentMonthDue" },
+            previousUnpaidDue: { $sum: "$previousUnpaidDue" },
+          },
+        },
+      ]),
+      // Settlement totals across matching users.
+      DueSettlement.aggregate([
+        { $match: { userId: { $in: allMatchingUserIds }, isActive: true } },
+        { $group: { _id: "$userId", settlementTotal: { $sum: "$amount" } } },
+        {
+          $group: {
+            _id: null,
+            usersWithSettlements: { $sum: 1 },
+            totalSettlementAmount: { $sum: "$settlementTotal" },
+          },
+        },
+      ]),
+    ]);
 
-        // Add settlement summary
-        if (user.hasSettlementsApplied) {
-          acc.usersWithSettlements++;
-          acc.totalSettlementAmount += user.totalSettlementAmount;
-        }
+    const summaryData = overallAgg[0] || {
+      totalUnpaidAmount: 0,
+      unpaidCount: 0,
+    };
+    const currentMonthSummary = currentMonthAgg[0] || {
+      currentMonthDue: 0,
+      previousUnpaidDue: 0,
+    };
+    const settlementSummary = settlementAgg[0] || {
+      usersWithSettlements: 0,
+      totalSettlementAmount: 0,
+    };
 
-        return acc;
-      },
-      {
-        paidCount: 0,
-        unpaidCount: 0,
-        totalUnpaidAmount: 0,
-        currentMonthDue: 0,
-        previousUnpaidDue: 0,
-        usersWithSettlements: 0,
-        totalSettlementAmount: 0,
-      }
-    );
+    const summary = {
+      totalUsers: totalCount,
+      paidCount: Math.max(0, totalCount - summaryData.unpaidCount),
+      unpaidCount: summaryData.unpaidCount,
+      totalUnpaidAmount: summaryData.totalUnpaidAmount,
+      currentMonthDue: currentMonthSummary.currentMonthDue,
+      previousUnpaidDue: currentMonthSummary.previousUnpaidDue,
+      usersWithSettlements: settlementSummary.usersWithSettlements,
+      totalSettlementAmount: settlementSummary.totalSettlementAmount,
+    };
 
     return NextResponse.json({
       success: true,
       users: enhancedUsers,
       summary,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit) || 1,
+      },
       targetMonth,
       targetYear,
       targetMonthName: new Date(targetYear, targetMonth - 1).toLocaleString(
@@ -372,11 +524,10 @@ export async function GET(request: NextRequest) {
       ),
       usesCorrectAllocations: true, // Flag indicating updated calculation method
       usesSettlements: true, // Flag indicating settlements are applied
-      calculationMethod: "RentTillNow - (TotalPaid + Settlements)", // Explanation of calculation
+      calculationMethod: "server-paginated", // Explanation of calculation
       cached: false,
       cacheHit: false,
     });
-
   } catch (error) {
     console.error("Error fetching users with dues:", error);
     return NextResponse.json(

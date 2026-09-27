@@ -34,9 +34,15 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get("period");
     const reason = searchParams.get("reason");
     const search = searchParams.get("search");
+    const userId = searchParams.get("userId"); // filter by a specific user's stay history
 
     // Construct filter query
     const query: any = {};
+
+    // Filter to a single user's history (used by the Stay History section)
+    if (userId) {
+      query.userId = userId;
+    }
 
     // Filter by archive date period
     if (period) {
@@ -80,6 +86,7 @@ export async function GET(request: NextRequest) {
     const archives = await UserArchive.find(query)
       .sort({ archiveDate: -1 }) // Sort by most recent first
       .select("-password") // Exclude password
+      .populate("roomId", "roomNumber building floor") // include room details for stay history
       .lean();
 
     return NextResponse.json({

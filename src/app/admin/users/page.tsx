@@ -10,17 +10,6 @@ import { FaFileExport, FaFileInvoiceDollar } from "react-icons/fa";
 import SettlementModal from "@/components/SettlementModal";
 import { downloadCSV } from "@/app/utils/csvExport";
 
-// Define PaymentData interface based on Payment model
-interface PaymentData {
-  _id: string;
-  userId: { id: string; _id: string } | null; // Allow null and ensure _id is also potentially there
-  amount: number;
-  months: string[]; // Corrected from month to months
-  paymentDate: string; // or Date
-  paymentStatus: "Paid";
-  isDepositPayment?: boolean;
-}
-
 interface User {
   _id: string;
   name: string;
@@ -61,7 +50,27 @@ interface User {
   vehicleNumber?: string;
 }
 
-// (Sorting config removed)
+interface SummaryData {
+  totalUsers: number;
+  unpaidCount: number;
+  totalUnpaidAmount: number;
+  paidCount?: number;
+}
+
+interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface FilterOptions {
+  states: string[];
+  companies: string[];
+  cities: string[];
+}
+
+const USERS_PER_PAGE = 10;
 
 export default function UsersPage() {
   const router = useRouter();
@@ -87,12 +96,12 @@ export default function UsersPage() {
     }
   };
 
+  // Only the current page of users lives in memory now - server does the filtering/paging
   const [users, setUsers] = useState<User[]>([]);
-  // Removed unused allPayments state
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
   const [filterPayment, setFilterPayment] = useState("all");
   const [filterRoom, setFilterRoom] = useState("all");
@@ -103,11 +112,26 @@ export default function UsersPage() {
   const [filterVehicle, setFilterVehicle] = useState("all");
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(getInitialPage());
-  const [usersPerPage] = useState(10);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // Removed unused sort config state
-  const [showUnpaidDuesOnly] = useState(false);
+  const [summary, setSummary] = useState<SummaryData>({
+    totalUsers: 0,
+    unpaidCount: 0,
+    totalUnpaidAmount: 0,
+  });
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+    page: 1,
+    limit: USERS_PER_PAGE,
+    total: 0,
+    totalPages: 1,
+  });
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    states: [],
+    companies: [],
+    cities: [],
+  });
+
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
@@ -121,18 +145,14 @@ export default function UsersPage() {
     pgId: string;
     dueAmount: number;
   } | null>(null);
-  const prevFiltersRef = useRef({
-    searchTerm: "",
-    filterStatus: "active",
-    filterPayment: "all",
-    filterRoom: "all",
-    filterState: "all",
-    filterCompany: "all",
-    filterCity: "all",
-    filterNotice: "all",
-    filterVehicle: "all",
-    showUnpaidDuesOnly: false,
-  });
+
+  // Tracks whether we've completed at least one fetch, so the full-page
+  // spinner only shows on the very first load (not on every filter change).
+  const hasLoadedOnceRef = useRef(false);
+  // Skips the "reset to page 1" behavior on the very first run of the
+  // filter-driven effect, so a deep-linked ?page=N is honored on mount.
+  const isFirstFilterRunRef = useRef(true);
+  const initialPageRef = useRef(getInitialPage());
 
   // Function to update URL with current page
   const updateURLWithPage = useCallback(
@@ -152,169 +172,38 @@ export default function UsersPage() {
     [router]
   );
 
-  // Function to handle page changes
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      setCurrentPage(newPage);
-      updateURLWithPage(newPage);
-    },
-    [updateURLWithPage]
-  );
-
-  // Handle URL parameter changes (browser back/forward)
+  // Debounce the search box so we don't hit the API on every keystroke
   useEffect(() => {
-    const pageParam = searchParams.get("page");
-    const pageFromURL = pageParam ? parseInt(pageParam, 10) : 1;
-    if (pageFromURL !== currentPage && pageFromURL >= 1) {
-      setCurrentPage(pageFromURL);
-    }
-  }, [searchParams, currentPage]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  // Fetch users and payments data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch users with their due information
-        const usersResponse = await axios.get("/api/users/with-dues?status=all");
-        const usersData = usersResponse.data.users || [];
+  // Build the query params shared by both the paginated fetch and the export
+  const buildFilterParams = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("status", filterStatus || "all");
+    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
 
-        // Map the response to include due amount from UserDue model
-        const processedUsers = usersData.map((user: any) => {
-          return {
-            ...user,
-            currentMonthRentStatus:
-              user.currentMonthRentStatus || user.dueStatus || "N/A",
-            dueAmount: user.dueAmount || user.remainingDue || 0, // Use the due amount directly from API
-          };
-        });
+    if (filterPayment === "unpaid") params.set("paymentFilter", "unpaid");
+    else if (filterPayment === "paid") params.set("paymentFilter", "no-dues");
 
-        setUsers(processedUsers);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load user or payment data");
-        setLoading(false);
-      }
-    };
+    if (filterRoom !== "all") params.set("roomId", filterRoom);
+    if (filterState !== "all") params.set("state", filterState);
+    if (filterCompany !== "all") params.set("company", filterCompany);
+    if (filterCity !== "all") params.set("city", filterCity);
 
-    fetchData();
-  }, []);
+    if (filterNotice === "on") params.set("noticePeriod", "true");
+    else if (filterNotice === "off") params.set("noticePeriod", "false");
 
-  // Filter and sort users
-  useEffect(() => {
-    let result = [...users];
+    if (filterVehicle === "registered") params.set("vehicle", "true");
+    else if (filterVehicle === "none") params.set("vehicle", "false");
 
-    // Existing filtering logic
-    if (searchTerm) {
-      result = result.filter(
-        (user) =>
-          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.phone &&
-            user.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user.pgId &&
-            user.pgId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user.companyName &&
-            user.companyName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user.vehicleNumber &&
-            user.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    if (filterStatus !== "all") {
-      if (filterStatus === "active") {
-        result = result.filter((user) => user.isActive === true);
-      } else if (filterStatus === "inactive") {
-        result = result.filter(
-          (user) => user.isActive === false && !user.isDeleted
-        );
-      } else if (filterStatus === "deleted") {
-        result = result.filter((user) => user.isDeleted === true);
-      }
-    }
-
-    // Payment filter (wire up dropdown)
-    if (filterPayment === "unpaid") {
-      result = result.filter((user) => (user.dueAmount || 0) > 0);
-    } else if (filterPayment === "paid") {
-      result = result.filter((user) => (user.dueAmount || 0) === 0);
-    }
-
-    if (filterRoom === "assigned") {
-      result = result.filter((user) => typeof user.roomId === "object" && user.roomId);
-    } else if (filterRoom === "unassigned") {
-      result = result.filter((user) => !user.roomId || typeof user.roomId !== "object");
-    }
-
-    if (filterState !== "all") {
-      result = result.filter(
-        (user) => user.state === filterState
-      );
-    }
-
-    if (filterCompany !== "all") {
-      result = result.filter((user) => user.companyName === filterCompany);
-    }
-
-    if (filterCity !== "all") {
-      result = result.filter((user) => user.city === filterCity);
-    }
-
-    if (filterNotice !== "all") {
-      result = result.filter((user) =>
-        filterNotice === "on" ? user.isOnNoticePeriod === true : user.isOnNoticePeriod !== true
-      );
-    }
-
-    if (filterVehicle !== "all") {
-      result = result.filter((user) =>
-        filterVehicle === "registered"
-          ? Boolean(user.vehicleNumber?.trim())
-          : !user.vehicleNumber?.trim()
-      );
-    }
-
-    // Enhanced unpaid dues filtering
-    if (showUnpaidDuesOnly) {
-      result = result.filter(
-        (user) => user.currentMonthRentStatus === "Unpaid"
-      );
-    }
-
-    // Sort by due amount if showing unpaid dues
-    if (showUnpaidDuesOnly) {
-      result.sort((a, b) => (b.dueAmount || 0) - (a.dueAmount || 0));
-    }
-
-    setFilteredUsers(result);
-
-    // Check if any filters have changed to reset page to 1
-    const currentFilters = {
-      searchTerm,
-      filterStatus,
-      filterPayment,
-      filterRoom,
-      filterState,
-      filterCompany,
-      filterCity,
-      filterNotice,
-      filterVehicle,
-      showUnpaidDuesOnly,
-    };
-    const prevFilters = prevFiltersRef.current;
-
-    if (JSON.stringify(currentFilters) !== JSON.stringify(prevFilters)) {
-      prevFiltersRef.current = currentFilters;
-      if (currentPage !== 1) {
-        handlePageChange(1);
-      }
-    }
+    return params;
   }, [
-    users,
-    searchTerm,
     filterStatus,
-    showUnpaidDuesOnly,
+    debouncedSearch,
     filterPayment,
     filterRoom,
     filterState,
@@ -322,9 +211,127 @@ export default function UsersPage() {
     filterCity,
     filterNotice,
     filterVehicle,
-    handlePageChange,
-    currentPage,
   ]);
+
+  // Single fetch function driving the table - server does the filtering,
+  // sorting and pagination now.
+  const fetchUsers = useCallback(
+    async (pageToFetch: number = 1) => {
+      setLoading(true);
+      try {
+        const params = buildFilterParams();
+        params.set("page", String(pageToFetch));
+        params.set("limit", String(USERS_PER_PAGE));
+
+        const response = await axios.get(
+          `/api/users/with-dues?${params.toString()}`
+        );
+
+        if (response.data.success) {
+          const usersData = response.data.users || [];
+          const processedUsers = usersData.map((user: any) => ({
+            ...user,
+            currentMonthRentStatus:
+              user.currentMonthRentStatus || user.dueStatus || "N/A",
+            dueAmount: user.dueAmount || user.remainingDue || 0,
+          }));
+
+          setUsers(processedUsers);
+          setSummary({
+            totalUsers:
+              response.data.summary?.totalUsers ??
+              response.data.pagination?.total ??
+              0,
+            unpaidCount: response.data.summary?.unpaidCount ?? 0,
+            totalUnpaidAmount: response.data.summary?.totalUnpaidAmount ?? 0,
+            paidCount: response.data.summary?.paidCount,
+          });
+          setPaginationMeta(
+            response.data.pagination || {
+              page: pageToFetch,
+              limit: USERS_PER_PAGE,
+              total: usersData.length,
+              totalPages: 1,
+            }
+          );
+          setCurrentPage(pageToFetch);
+          setError("");
+        } else {
+          setError(response.data.message || "Failed to load users");
+        }
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError("Failed to load user data");
+        toast.error("Failed to load users");
+      } finally {
+        setLoading(false);
+        hasLoadedOnceRef.current = true;
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [buildFilterParams]
+  );
+
+  // Fetch dropdown options for state/company/city once on mount
+  useEffect(() => {
+    axios
+      .get("/api/users/filter-options")
+      .then((r) => {
+        if (r.data.success) {
+          setFilterOptions({
+            states: r.data.states || [],
+            companies: r.data.companies || [],
+            cities: r.data.cities || [],
+          });
+        }
+      })
+      .catch(() => {
+        // Non-critical - dropdowns just stay empty
+      });
+  }, []);
+
+  // Refetch (resetting to page 1) whenever a filter changes. The very first
+  // run instead loads whatever page was in the URL on initial load.
+  useEffect(() => {
+    if (isFirstFilterRunRef.current) {
+      isFirstFilterRunRef.current = false;
+      fetchUsers(initialPageRef.current);
+      return;
+    }
+    updateURLWithPage(1);
+    fetchUsers(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    debouncedSearch,
+    filterStatus,
+    filterPayment,
+    filterRoom,
+    filterState,
+    filterCompany,
+    filterCity,
+    filterNotice,
+    filterVehicle,
+  ]);
+
+  // Handle URL parameter changes (browser back/forward)
+  useEffect(() => {
+    const pageParam = searchParams.get("page");
+    const pageFromURL = pageParam ? parseInt(pageParam, 10) : 1;
+    if (pageFromURL !== currentPage && pageFromURL >= 1) {
+      fetchUsers(pageFromURL);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Function to handle page changes
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setCurrentPage(newPage);
+      updateURLWithPage(newPage);
+      fetchUsers(newPage);
+    },
+    [updateURLWithPage, fetchUsers]
+  );
 
   // Function to get pagination range for better visibility with many pages
   const getPaginationRange = (
@@ -370,11 +377,13 @@ export default function UsersPage() {
     return pages;
   };
 
-  // Pagination logic
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  // Pagination display numbers (server already returned just this page's rows)
+  const firstItemIndex =
+    paginationMeta.total > 0 ? (currentPage - 1) * paginationMeta.limit + 1 : 0;
+  const lastItemIndex = Math.min(
+    currentPage * paginationMeta.limit,
+    paginationMeta.total
+  );
 
   // Function to handle row click
   const handleRowClick = (userId: string) => {
@@ -444,94 +453,102 @@ export default function UsersPage() {
     }
   };
 
-  // Function to handle successful settlement
+  // Function to handle successful settlement - just reload the current page
   const handleSettlementSuccess = async () => {
-    // Refresh users data to reflect the settlement
-    try {
-      const usersResponse = await axios.get("/api/users/with-dues?status=all");
-      const usersData = usersResponse.data.users || [];
-
-      const processedUsers = usersData.map((user: any) => {
-        return {
-          ...user,
-          currentMonthRentStatus:
-            user.currentMonthRentStatus || user.dueStatus || "N/A",
-          dueAmount: user.dueAmount || user.remainingDue || 0,
-        };
-      });
-
-      setUsers(processedUsers);
-    } catch (err) {
-      console.error("Error refreshing user data after settlement:", err);
-      toast.error("Settlement successful but failed to refresh data");
-    }
+    await fetchUsers(currentPage);
   };
 
-  // Function to export users data to CSV
-  const exportUsersToCSV = () => {
-    // Create CSV header with all relevant columns
-    const headers = [
-      "Name",
-      "Phone",
-      "Email",
-      "PG ID",
-      "Room Number",
-      "Room Type",
-      "Room Price",
-      "Status",
-      "Current Rent Status",
-      "Due Amount",
-      "Rent Till Now",
-      "Total Paid",
-      "Move In Date",
-      "Approval Date",
-      "Created At",
-      "Permanent Address",
-      "City",
-      "State",
-      "Guardian Mobile Number",
-      "Company Name",
-      "Company Address",
-      "Deposit Fees",
-      "Is On Notice Period",
-      "Key Issued",
-      "Agree To Terms",
-    ];
+  // Function to export users data to CSV - fetches ALL matching users (not
+  // just the current page) from the server, then builds the CSV client-side.
+  const handleExportUsers = async () => {
+    setIsExporting(true);
+    try {
+      const params = buildFilterParams();
+      params.set("export", "true");
 
-    // Create CSV rows with all relevant data from the currently filtered set
-    const csvRows = filteredUsers.map((user) => [
-      user.name || "",
-      user.phone || "",
-      user.email || "",
-      user.pgId || "",
-      typeof user.roomId === "object" ? user.roomId?.roomNumber || "" : "",
-      typeof user.roomId === "object" ? user.roomId?.type || "" : "",
-      typeof user.roomId === "object" ? `₹${user.roomId?.price || 0}` : "₹0",
-      user.isActive ? "Active" : "Inactive",
-      user.currentMonthRentStatus || "N/A",
-      user.dueAmount ? `₹${user.dueAmount.toFixed(2)}` : "₹0.00",
-      user.rentTillNow ? `₹${user.rentTillNow.toFixed(2)}` : "₹0.00",
-      user.totalPaidAllTime ? `₹${user.totalPaidAllTime.toFixed(2)}` : "₹0.00",
-      user.moveInDate ? new Date(user.moveInDate).toLocaleDateString() : "",
-      user.approvalDate ? new Date(user.approvalDate).toLocaleDateString() : "",
-      user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "",
-      user.permanentAddress || "",
-      user.city || "",
-      user.state || "",
-      user.guardianMobileNumber || "",
-      user.companyName || "",
-      user.companyAddress || "",
-      user.depositFees ? `₹${user.depositFees}` : "₹0",
-      user.isOnNoticePeriod ? "Yes" : "No",
-      user.keyIssued ? "Yes" : "No",
-      user.agreeToTerms ? "Yes" : "No",
-    ]);
+      const response = await axios.get(
+        `/api/users/with-dues?${params.toString()}`
+      );
 
-    downloadCSV(
-      `users_export_${new Date().toISOString().split("T")[0]}.csv`,
-      headers,
-      csvRows
-    );
+      if (!response.data.success) {
+        toast.error(response.data.message || "Export failed");
+        return;
+      }
+
+      const exportUsers: User[] = response.data.users || [];
+
+      if (exportUsers.length === 0) {
+        toast.info("No users match the current filters");
+        return;
+      }
+
+      const headers = [
+        "Name",
+        "Phone",
+        "Email",
+        "PG ID",
+        "Room Number",
+        "Room Type",
+        "Room Price",
+        "Status",
+        "Current Rent Status",
+        "Due Amount",
+        "Rent Till Now",
+        "Total Paid",
+        "Move In Date",
+        "Approval Date",
+        "Created At",
+        "Permanent Address",
+        "City",
+        "State",
+        "Guardian Mobile Number",
+        "Company Name",
+        "Company Address",
+        "Deposit Fees",
+        "Is On Notice Period",
+        "Key Issued",
+        "Agree To Terms",
+      ];
+
+      const csvRows = exportUsers.map((user) => [
+        user.name || "",
+        user.phone || "",
+        user.email || "",
+        user.pgId || "",
+        typeof user.roomId === "object" ? user.roomId?.roomNumber || "" : "",
+        typeof user.roomId === "object" ? user.roomId?.type || "" : "",
+        typeof user.roomId === "object" ? `₹${user.roomId?.price || 0}` : "₹0",
+        user.isActive ? "Active" : "Inactive",
+        user.currentMonthRentStatus || "N/A",
+        user.dueAmount ? `₹${user.dueAmount.toFixed(2)}` : "₹0.00",
+        user.rentTillNow ? `₹${user.rentTillNow.toFixed(2)}` : "₹0.00",
+        user.totalPaidAllTime ? `₹${user.totalPaidAllTime.toFixed(2)}` : "₹0.00",
+        user.moveInDate ? new Date(user.moveInDate).toLocaleDateString() : "",
+        user.approvalDate ? new Date(user.approvalDate).toLocaleDateString() : "",
+        user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "",
+        user.permanentAddress || "",
+        user.city || "",
+        user.state || "",
+        user.guardianMobileNumber || "",
+        user.companyName || "",
+        user.companyAddress || "",
+        user.depositFees ? `₹${user.depositFees}` : "₹0",
+        user.isOnNoticePeriod ? "Yes" : "No",
+        user.keyIssued ? "Yes" : "No",
+        user.agreeToTerms ? "Yes" : "No",
+      ]);
+
+      downloadCSV(
+        `users_export_${new Date().toISOString().split("T")[0]}.csv`,
+        headers,
+        csvRows
+      );
+    } catch (err) {
+      console.error("Error exporting users:", err);
+      toast.error("Failed to export users");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Function to handle bulk recalculation
@@ -545,17 +562,8 @@ export default function UsersPage() {
           `Recalculation completed. Updated ${response.data.stats.updated} of ${response.data.stats.totalProcessed} due records.`
         );
 
-        // Refresh the data
-        const usersResponse = await axios.get("/api/users/with-dues?status=all");
-        if (usersResponse.data.success) {
-          const processedUsers = usersResponse.data.users.map((user: any) => ({
-            ...user,
-            currentMonthRentStatus:
-              user.currentMonthRentStatus || user.dueStatus || "N/A",
-            dueAmount: user.dueAmount || user.remainingDue || 0,
-          }));
-          setUsers(processedUsers);
-        }
+        // Refresh just the current page
+        await fetchUsers(currentPage);
       } else {
         toast.error(response.data.message || "Failed to recalculate dues");
       }
@@ -568,14 +576,10 @@ export default function UsersPage() {
     }
   };
 
-  // Add this before the return statement
-  const totalUnpaidDues = users.reduce(
-    (sum, user) => sum + (user.dueAmount || 0),
-    0
-  );
-  const unpaidUsersCount = users.filter(
-    (user) => user.currentMonthRentStatus === "Unpaid"
-  ).length;
+  // Stat tiles now come from the server-computed summary (across all pages),
+  // not from whatever happens to be loaded in memory.
+  const totalUnpaidDues = summary.totalUnpaidAmount;
+  const unpaidUsersCount = summary.unpaidCount;
   const activeFilterCount = [
     filterStatus !== "active",
     filterPayment !== "all",
@@ -599,17 +603,9 @@ export default function UsersPage() {
     setFilterVehicle("all");
   };
 
-  const stateOptions = Array.from(
-    new Set(users.map((user) => user.state?.trim()).filter(Boolean))
-  ).sort();
-  const companyOptions = Array.from(
-    new Set(users.map((user) => user.companyName?.trim()).filter(Boolean))
-  ).sort();
-  const cityOptions = Array.from(
-    new Set(users.map((user) => user.city?.trim()).filter(Boolean))
-  ).sort();
-
-  if (loading) {
+  // Only show the full-page spinner on the very first load; subsequent
+  // filter/page changes show an inline overlay over the table instead.
+  if (loading && !hasLoadedOnceRef.current) {
     return (
       <div className="flex justify-center items-center h-96">
         <div className="relative">
@@ -665,11 +661,21 @@ export default function UsersPage() {
                 )}
               </button>
               <button
-                onClick={exportUsersToCSV}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
+                onClick={handleExportUsers}
+                disabled={isExporting}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FaFileExport className="mr-2" />
-                Export Users
+                {isExporting ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <FaFileExport className="mr-2" />
+                    Export Users
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -808,21 +814,21 @@ export default function UsersPage() {
                 State
                 <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterState} onChange={(e) => setFilterState(e.target.value)}>
                   <option value="all">All states</option>
-                  {stateOptions.map((state) => <option key={state} value={state}>{state}</option>)}
+                  {filterOptions.states.map((state) => <option key={state} value={state}>{state}</option>)}
                 </select>
               </label>
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Company
                 <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterCompany} onChange={(e) => setFilterCompany(e.target.value)}>
                   <option value="all">All companies</option>
-                  {companyOptions.map((company) => <option key={company} value={company}>{company}</option>)}
+                  {filterOptions.companies.map((company) => <option key={company} value={company}>{company}</option>)}
                 </select>
               </label>
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 City
                 <select className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-white/70 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-900/60 dark:text-white" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
                   <option value="all">All cities</option>
-                  {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+                  {filterOptions.cities.map((city) => <option key={city} value={city}>{city}</option>)}
                 </select>
               </label>
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -882,7 +888,12 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl overflow-hidden">
+        <div className="relative backdrop-blur-lg bg-white/30 dark:bg-gray-800/30 rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-xl overflow-hidden">
+          {loading && hasLoadedOnceRef.current && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 backdrop-blur-[1px]">
+              <div className="h-10 w-10 rounded-full border-t-4 border-b-4 border-purple-500 animate-spin"></div>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200/50 dark:divide-gray-700/50">
               <thead className="bg-gray-50 dark:bg-gray-700">
@@ -911,7 +922,7 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-md divide-y divide-gray-200/50 dark:divide-gray-700/50">
-                {currentUsers.map((user) => (
+                {users.map((user) => (
                   <tr
                     key={user._id}
                     className="hover:bg-white/40 dark:hover:bg-gray-700/40 transition-colors duration-200 cursor-pointer"
@@ -1066,7 +1077,7 @@ export default function UsersPage() {
                     </td>
                   </tr>
                 ))}
-                {currentUsers.length === 0 && (
+                {users.length === 0 && (
                   <tr>
                     <td
                       colSpan={7} // Updated colSpan for: User, Room, Status, Rent Till Now, Total Paid, Due Amount, Actions
@@ -1081,7 +1092,7 @@ export default function UsersPage() {
           </div>
 
           {/* Pagination */}
-          {filteredUsers.length > 0 && (
+          {paginationMeta.total > 0 && (
             <div className="bg-white/50 dark:bg-gray-900/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 dark:border-gray-700/50 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
@@ -1093,9 +1104,9 @@ export default function UsersPage() {
                 </button>
                 <button
                   onClick={() =>
-                    handlePageChange(Math.min(totalPages, currentPage + 1))
+                    handlePageChange(Math.min(paginationMeta.totalPages, currentPage + 1))
                   }
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === paginationMeta.totalPages}
                   className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white/70 dark:bg-gray-800/70 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
@@ -1106,18 +1117,18 @@ export default function UsersPage() {
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     Showing{" "}
                     <span className="font-medium">
-                      {filteredUsers.length > 0 ? indexOfFirstUser + 1 : 0}
+                      {firstItemIndex}
                     </span>{" "}
                     to{" "}
                     <span className="font-medium">
-                      {Math.min(indexOfLastUser, filteredUsers.length)}
+                      {lastItemIndex}
                     </span>{" "}
                     of{" "}
-                    <span className="font-medium">{filteredUsers.length}</span>{" "}
+                    <span className="font-medium">{paginationMeta.total}</span>{" "}
                     results
-                    {totalPages > 1 && (
+                    {paginationMeta.totalPages > 1 && (
                       <span className="ml-2 text-gray-500 dark:text-gray-400">
-                        (Page {currentPage} of {totalPages})
+                        (Page {currentPage} of {paginationMeta.totalPages})
                       </span>
                     )}
                   </p>
@@ -1148,7 +1159,7 @@ export default function UsersPage() {
                         />
                       </svg>
                     </button>
-                    {getPaginationRange(currentPage, totalPages).map(
+                    {getPaginationRange(currentPage, paginationMeta.totalPages).map(
                       (page, index) => (
                         <React.Fragment key={index}>
                           {page === "..." ? (
@@ -1171,9 +1182,9 @@ export default function UsersPage() {
                     )}
                     <button
                       onClick={() =>
-                        handlePageChange(Math.min(totalPages, currentPage + 1))
+                        handlePageChange(Math.min(paginationMeta.totalPages, currentPage + 1))
                       }
-                      disabled={currentPage === totalPages}
+                      disabled={currentPage === paginationMeta.totalPages}
                       className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span className="sr-only">Next</span>
