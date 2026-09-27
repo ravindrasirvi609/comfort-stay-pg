@@ -322,15 +322,6 @@ export async function GET(request: NextRequest) {
                   ]
                 }
               },
-              pendingPaymentsCount: {
-                $sum: {
-                  $cond: [
-                    { $in: ["$paymentStatus", ["Due", "Overdue"]] },
-                    1,
-                    0
-                  ]
-                }
-              },
               thisMonthPaidAmount: {
                 $sum: {
                   $cond: [
@@ -353,7 +344,7 @@ export async function GET(request: NextRequest) {
         if (statsResult.length > 0) {
           stats = {
             totalPaidAmount: statsResult[0].totalPaidAmount,
-            pendingPaymentsCount: statsResult[0].pendingPaymentsCount,
+            pendingPaymentsCount: 0,
             thisMonthPaidAmount: statsResult[0].thisMonthPaidAmount,
           };
         }
@@ -369,15 +360,6 @@ export async function GET(request: NextRequest) {
                   $cond: [
                     { $eq: ["$paymentStatus", "Paid"] },
                     "$amount",
-                    0
-                  ]
-                }
-              },
-              pendingPaymentsCount: {
-                $sum: {
-                  $cond: [
-                    { $in: ["$paymentStatus", ["Due", "Overdue"]] },
-                    1,
                     0
                   ]
                 }
@@ -403,7 +385,7 @@ export async function GET(request: NextRequest) {
         if (statsResult.length > 0) {
           stats = {
             totalPaidAmount: statsResult[0].totalPaidAmount,
-            pendingPaymentsCount: statsResult[0].pendingPaymentsCount,
+            pendingPaymentsCount: 0,
             thisMonthPaidAmount: statsResult[0].thisMonthPaidAmount,
           };
         }
@@ -531,9 +513,6 @@ export async function POST(request: NextRequest) {
       amount,
       months,
       paymentDate,
-      dueDate,
-      status,
-      paymentStatus,
       remarks,
       paymentMethod,
       transactionId,
@@ -549,13 +528,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log for debugging
-    console.log("Received payment data:", {
-      userId,
-      amount,
-      months,
-      paymentStatus,
-      status,
-    });
+    console.log("Received payment data:", { userId, amount, months });
 
     // Check if user exists
     const userExists = await User.findById(userId);
@@ -598,8 +571,6 @@ export async function POST(request: NextRequest) {
 
     // Generate sequential receipt number (C00001, C00002, etc.)
     const receiptNumber = await generateReceiptNumber();
-    const resolvedPaymentStatus = paymentStatus || status || "Paid";
-    const resolvedDueDate = dueDate ? new Date(dueDate) : undefined;
 
     // Create new payment record
     // Note: paymentDate is always set to current timestamp when payment is created via admin
@@ -609,8 +580,7 @@ export async function POST(request: NextRequest) {
       amount,
       months: Array.isArray(months) ? months : [months], // Ensure months is an array
       paymentDate: new Date(), // Always use current timestamp when payment is created
-      dueDate: resolvedDueDate,
-      paymentStatus: resolvedPaymentStatus, // Default to Paid when status is not explicitly sent
+      paymentStatus: "Paid",
       receiptNumber,
       paymentMethod,
       transactionId,

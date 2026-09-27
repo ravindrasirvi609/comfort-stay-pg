@@ -27,7 +27,7 @@ interface PaymentData {
   userId: { id: string; _id?: string } | null;
   amount: number;
   months: string[];
-  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  paymentStatus: "Paid";
   isDepositPayment?: boolean;
 }
 

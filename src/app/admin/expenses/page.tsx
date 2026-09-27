@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { formatDate } from "@/utils/formatDate";
 import CustomSelect from "@/components/CustomSelect";
 import { FaSpinner } from "react-icons/fa";
+import { useToast } from "@/hooks/useToast";
 
 // Expense type based on IExpense interface and API response
 interface Expense {
@@ -34,6 +35,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function AdminExpensesPage() {
+  const { toast } = useToast();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -81,11 +83,12 @@ export default function AdminExpensesPage() {
             exp._id === expenseId ? { ...exp, status: newStatus } : exp
           )
         );
+        toast.success(`Expense ${newStatus.toLowerCase()} successfully`);
       } else {
-        alert(data.message || "Failed to update expense");
+        toast.error(data.message || "Failed to update expense");
       }
     } catch {
-      alert("Failed to update expense");
+      toast.error("Failed to update expense");
     } finally {
       setActionLoading("");
     }

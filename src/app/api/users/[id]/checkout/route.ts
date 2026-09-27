@@ -100,17 +100,21 @@ export async function POST(
 
     await archiveRecord.save();
 
-    // Create a notification for the admin
-    await Notification.create({
-      userId: isAdmin(user) ? params.id : "admin_id_123456789", // If admin is checking out a user, notify that user
-      title: "Checkout Completed",
-      message: `${userToCheckout.name} has been checked out. ${adminComments ? `Admin comments: ${adminComments}` : ""}`,
-      type: "Checkout",
-      isRead: false,
-      isActive: true,
-      relatedId: archiveRecord._id,
-      relatedModel: "UserArchive",
+    // Notify all admins that a checkout has occurred
+    const adminUsers = await User.find({ role: "admin" });
+    const notificationPromises = adminUsers.map((admin) => {
+      return Notification.create({
+        userId: admin._id,
+        title: "Checkout Completed",
+        message: `${userToCheckout.name} has been checked out. ${adminComments ? `Admin comments: ${adminComments}` : ""}`,
+        type: "Checkout",
+        isRead: false,
+        isActive: true,
+        relatedId: archiveRecord._id,
+        relatedModel: "UserArchive",
+      });
     });
+    await Promise.all(notificationPromises);
 
     // Update user record to reflect checkout
     userToCheckout.isActive = false;

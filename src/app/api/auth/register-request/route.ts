@@ -93,17 +93,21 @@ export async function POST(request: NextRequest) {
       savedUser._id
     );
 
-    // Create notification for admin
-    await Notification.create({
-      userId: "admin_id_123456789", // Admin ID
-      title: "New User Registration",
-      message: `${fullName} has submitted a new registration request from ${city}, ${state}. Email: ${emailAddress}`,
-      type: "System",
-      isRead: false,
-      isActive: true,
-      relatedId: savedUser._id,
-      relatedModel: "User",
+    // Create notification for all admins
+    const adminUsers = await User.find({ role: "admin" });
+    const notificationPromises = adminUsers.map((admin) => {
+      return Notification.create({
+        userId: admin._id,
+        title: "New User Registration",
+        message: `${fullName} has submitted a new registration request from ${city}, ${state}. Email: ${emailAddress}`,
+        type: "System",
+        isRead: false,
+        isActive: true,
+        relatedId: savedUser._id,
+        relatedModel: "User",
+      });
     });
+    await Promise.all(notificationPromises);
 
     return NextResponse.json({
       success: true,

@@ -24,8 +24,7 @@ interface Payment {
   amount: number;
   months: string[];
   paymentDate: string;
-  dueDate: string;
-  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  paymentStatus: "Paid";
   receiptNumber?: string;
   paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Card" | "Other";
   transactionId?: string;
@@ -50,10 +49,7 @@ export default function EditPaymentPage() {
   const [amount, setAmount] = useState<number>(0);
   const [months, setMonths] = useState<string[]>([]);
   const [paymentDate, setPaymentDate] = useState<string>("");
-  const [dueDate, setDueDate] = useState<string>("");
-  const [status, setStatus] = useState<
-    "Paid" | "Due" | "Overdue" | "Partial" | "Pending"
-  >("Paid");
+  const [status] = useState<"Paid">("Paid");
   const [paymentMethod, setPaymentMethod] = useState<
     "Cash" | "UPI" | "Bank Transfer" | "Card" | "Other"
   >("Cash");
@@ -101,12 +97,7 @@ export default function EditPaymentPage() {
               ? format(new Date(paymentData.paymentDate), "yyyy-MM-dd")
               : ""
           );
-          setDueDate(
-            paymentData.dueDate
-              ? format(new Date(paymentData.dueDate), "yyyy-MM-dd")
-              : ""
-          );
-          setStatus(paymentData.paymentStatus);
+          // status is always "Paid"
           setPaymentMethod(paymentData.paymentMethod);
           setTransactionId(paymentData.transactionId || "");
           setRemarks(paymentData.remarks || "");
@@ -143,7 +134,7 @@ export default function EditPaymentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!amount || months.length === 0 || !dueDate) {
+    if (!amount || months.length === 0) {
       setError("Please fill in all required fields");
       return;
     }
@@ -156,8 +147,7 @@ export default function EditPaymentPage() {
         amount: Number(amount),
         months,
         paymentDate,
-        dueDate,
-        paymentStatus: status,
+        paymentStatus: "Paid",
         paymentMethod,
         transactionId: transactionId || undefined,
         remarks: remarks || undefined,
@@ -286,19 +276,13 @@ export default function EditPaymentPage() {
             >
               Payment Status *
             </label>
-            <select
+            <input
+              type="text"
               id="status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
-              required
-              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-            >
-              <option value="Paid">Paid</option>
-              <option value="Due">Due</option>
-              <option value="Overdue">Overdue</option>
-              <option value="Partial">Partial</option>
-              <option value="Pending">Pending</option>
-            </select>
+              disabled
+              className="bg-gray-100 dark:bg-gray-800 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-500"
+            />
           </div>
 
           {/* Payment Date */}
@@ -314,24 +298,6 @@ export default function EditPaymentPage() {
               id="paymentDate"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
-              required
-              className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
-            />
-          </div>
-
-          {/* Due Date */}
-          <div>
-            <label
-              htmlFor="dueDate"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Due Date *
-            </label>
-            <input
-              type="date"
-              id="dueDate"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
               required
               className="bg-white/50 dark:bg-gray-900/50 focus:ring-pink-500 focus:border-pink-500 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
             />

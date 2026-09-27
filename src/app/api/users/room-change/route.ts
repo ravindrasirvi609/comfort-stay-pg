@@ -141,17 +141,21 @@ export async function POST(request: NextRequest) {
 
       await roomChangeRecord.save({ session });
 
-      // Create notification for admin
-      await Notification.create({
-        userId: "admin_id_123456789", // Admin ID
-        title: "Room Change Completed",
-        message: `${userToUpdate.name || "A resident"} has been moved from Room ${currentRoom.roomNumber} to Room ${newRoom.roomNumber}`,
-        type: "RoomChange",
-        isRead: false,
-        isActive: true,
-        relatedId: roomChangeRecord._id,
-        relatedModel: "RoomChangeRequest",
+      // Create notification for all admins
+      const adminUsers = await User.find({ role: "admin" });
+      const notificationPromises = adminUsers.map((admin) => {
+        return Notification.create({
+          userId: admin._id,
+          title: "Room Change Completed",
+          message: `${userToUpdate.name || "A resident"} has been moved from Room ${currentRoom.roomNumber} to Room ${newRoom.roomNumber}`,
+          type: "RoomChange",
+          isRead: false,
+          isActive: true,
+          relatedId: roomChangeRecord._id,
+          relatedModel: "RoomChangeRequest",
+        });
       });
+      await Promise.all(notificationPromises);
 
       // Create notification for the user
       await Notification.create({

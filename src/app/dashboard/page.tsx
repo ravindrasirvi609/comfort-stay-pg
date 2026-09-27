@@ -73,7 +73,6 @@ interface Payment {
   paymentStatus: string;
   paymentDate: string;
   receiptNumber: string;
-  dueDate?: string;
   paymentMethod?: string;
   transactionId?: string;
 }
@@ -218,25 +217,7 @@ export default function DashboardPage() {
     [payments]
   );
 
-  const nextDuePayment = useMemo(
-    () =>
-      [...payments]
-        .filter((p) =>
-          ["due", "overdue", "partial"].includes(
-            (p.paymentStatus || "").toLowerCase()
-          )
-        )
-        .sort((a, b) => {
-          const ad = a.dueDate
-            ? new Date(a.dueDate).getTime()
-            : Number.MAX_SAFE_INTEGER;
-          const bd = b.dueDate
-            ? new Date(b.dueDate).getTime()
-            : Number.MAX_SAFE_INTEGER;
-          return ad - bd;
-        })[0],
-    [payments]
-  );
+  // nextDuePayment removed — payments are only ever "Paid" records
 
   const moveIn = user?.moveInDate ? new Date(user.moveInDate) : null;
   const monthsStayed = moveIn
@@ -664,11 +645,9 @@ export default function DashboardPage() {
             <FaRupeeSign className="mr-2 text-green-600" /> Rent Status
           </div>
           <div
-            className={`mt-2 text-xl font-bold ${currentMonthPayment?.paymentStatus === "Paid" ? "text-green-700 dark:text-green-400" : currentMonthPayment ? (currentMonthPayment.paymentStatus === "Partial" ? "text-amber-700 dark:text-amber-400" : "text-red-700 dark:text-red-400") : "text-red-700 dark:text-red-400"}`}
+            className={`mt-2 text-xl font-bold ${currentMonthPayment ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
           >
-            {currentMonthPayment
-              ? currentMonthPayment.paymentStatus
-              : "Pending"}
+            {currentMonthPayment ? "Paid" : "Not Paid"}
           </div>
           <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
             {currentMonthPayment
@@ -681,18 +660,12 @@ export default function DashboardPage() {
             <FaCalendarAlt className="mr-2 text-indigo-600" /> Next Due
           </div>
           <div className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
-            {nextDuePayment?.dueDate
-              ? new Date(nextDuePayment.dueDate).toLocaleDateString("en-IN")
-              : currentMonthPayment
-                ? "—"
-                : "Due now"}
+            1st of every month
           </div>
           <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
-            {nextDuePayment?.amount
-              ? `₹${nextDuePayment.amount.toLocaleString("en-IN")}`
-              : roomDetails?.price
-                ? `₹${roomDetails.price.toLocaleString("en-IN")}`
-                : ""}
+            {roomDetails?.price
+              ? `₹${roomDetails.price.toLocaleString("en-IN")}`
+              : ""}
           </p>
         </div>
         <div className="rounded-xl p-4 border bg-white/60 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-card">
@@ -781,15 +754,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Next Due
                 </p>
-                <p className="text-lg font-semibold">
-                  {nextDuePayment?.dueDate
-                    ? new Date(nextDuePayment.dueDate).toLocaleDateString(
-                        "en-IN"
-                      )
-                    : currentMonthPayment
-                      ? "—"
-                      : "Due now"}
-                </p>
+                <p className="text-lg font-semibold">1st of every month</p>
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -835,9 +800,7 @@ export default function DashboardPage() {
                           ₹{payment.amount.toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${payment.paymentStatus === "Paid" ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : payment.paymentStatus === "Partial" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300" : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"}`}
-                          >
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
                             {payment.paymentStatus}
                           </span>
                         </td>

@@ -8,6 +8,7 @@ import Image from "next/image";
 import { FiUsers, FiBell, FiX, FiFilter, FiChevronDown } from "react-icons/fi";
 import { FaFileExport, FaFileInvoiceDollar } from "react-icons/fa";
 import SettlementModal from "@/components/SettlementModal";
+import { downloadCSV } from "@/app/utils/csvExport";
 
 // Define PaymentData interface based on Payment model
 interface PaymentData {
@@ -16,7 +17,7 @@ interface PaymentData {
   amount: number;
   months: string[]; // Corrected from month to months
   paymentDate: string; // or Date
-  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  paymentStatus: "Paid";
   isDepositPayment?: boolean;
 }
 
@@ -497,8 +498,8 @@ export default function UsersPage() {
       "Agree To Terms",
     ];
 
-    // Create CSV rows with all relevant data
-    const csvRows = users.map((user) => [
+    // Create CSV rows with all relevant data from the currently filtered set
+    const csvRows = filteredUsers.map((user) => [
       user.name || "",
       user.phone || "",
       user.email || "",
@@ -526,24 +527,11 @@ export default function UsersPage() {
       user.agreeToTerms ? "Yes" : "No",
     ]);
 
-    // Combine headers and rows
-    const csvContent = [
-      headers.join(","),
-      ...csvRows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n");
-
-    // Create and trigger download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `users_export_${new Date().toISOString().split("T")[0]}.csv`
+    downloadCSV(
+      `users_export_${new Date().toISOString().split("T")[0]}.csv`,
+      headers,
+      csvRows
     );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   // Function to handle bulk recalculation

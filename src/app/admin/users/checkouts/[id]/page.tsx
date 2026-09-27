@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter, useParams } from "next/navigation";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
 import {
   ArrowLeft,
   UserCheck,
@@ -69,6 +69,7 @@ export default function UserArchiveDetail() {
   const userId = params.id as string;
 
   const router = useRouter();
+  const { toast } = useToast();
   const [archive, setArchive] = useState<UserArchive | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

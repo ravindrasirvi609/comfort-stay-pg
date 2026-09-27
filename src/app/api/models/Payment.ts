@@ -22,15 +22,11 @@ const PaymentSchema = new Schema(
       type: Date,
       default: Date.now,
     },
-    dueDate: {
-      type: Date,
-    },
-
     // Status and receipt
     paymentStatus: {
       type: String,
-      enum: ["Paid", "Due", "Overdue", "Partial", "Pending"],
-      default: "Pending",
+      enum: ["Paid"],
+      default: "Paid",
     },
     receiptNumber: {
       type: String,

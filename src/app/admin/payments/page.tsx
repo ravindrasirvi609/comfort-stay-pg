@@ -181,46 +181,14 @@ export default function PaymentsPage() {
     setCurrentPage(1); // Reset to first page when filters are cleared
   };
 
-  // Get status badge style
+  // Get status badge style — all payments are "Paid"
   const getStatusBadge = (payment: Payment) => {
-    const status = payment.paymentStatus || payment.status || "Unknown";
-
-    switch (status) {
-      case "Paid":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-            <FaCheckCircle className="mr-1" />
-            Paid
-          </span>
-        );
-      case "Due":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
-            <FaHourglassHalf className="mr-1" />
-            Due
-          </span>
-        );
-      case "Overdue":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-            <FaTimesCircle className="mr-1" />
-            Overdue
-          </span>
-        );
-      case "Partial":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-            <FaHourglassHalf className="mr-1" />
-            Partial
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300">
-            {status}
-          </span>
-        );
-    }
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+        <FaCheckCircle className="mr-1" />
+        Paid
+      </span>
+    );
   };
 
   // Format date
@@ -368,9 +336,6 @@ export default function PaymentsPage() {
               >
                 <option value="">All Statuses</option>
                 <option value="Paid">Paid</option>
-                <option value="Due">Due</option>
-                <option value="Overdue">Overdue</option>
-                <option value="Partial">Partial</option>
               </select>
             </div>
 

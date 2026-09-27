@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
 import {
   ArrowLeft,
   Download,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 
 import Loader from "@/components/Loader";
+import { useToast } from "@/hooks/useToast";
 
 interface ExitFeedback {
   overallExperience: number;
@@ -71,6 +71,7 @@ interface AnalyticsData {
 
 export default function CheckoutsPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [archives, setArchives] = useState<UserArchive[]>([]);
   const [filteredArchives, setFilteredArchives] = useState<UserArchive[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +79,7 @@ export default function CheckoutsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
   const [reasonFilter, setReasonFilter] = useState("all");
+  const [yearFilter, setYearFilter] = useState("all");
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
@@ -93,22 +95,21 @@ export default function CheckoutsPage() {
       if (response.data.success) {
         setArchives(response.data.archives);
         setFilteredArchives(response.data.archives);
-        calculateAnalytics(response.data.archives);
       } else {
         setError("Failed to load data");
       }
     } catch (err) {
       console.error("Error fetching archives:", err);
       setError("Failed to load data. Please try again later.");
+      toast.error("Failed to load checkout data. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateAnalytics = (data: UserArchive[]) => {
+  const calculateAnalytics = (data: UserArchive[]): AnalyticsData | null => {
     if (!data.length) {
-      setAnalytics(null);
-      return;
+      return null;
     }
 
     // Count of records with survey completed
@@ -165,7 +166,7 @@ export default function CheckoutsPage() {
       ).length;
     }
 
-    setAnalytics({
+    return {
       totalCheckouts: data.length,
       avgStayDuration: data.length ? totalDuration / data.length : 0,
       surveyCompletionRate: data.length
@@ -176,7 +177,7 @@ export default function CheckoutsPage() {
       recommendationRate: usersWithSurvey.length
         ? (recommendCount / usersWithSurvey.length) * 100
         : 0,
-    });
+    };
   };
 
   useEffect(() => {
@@ -226,8 +227,26 @@ export default function CheckoutsPage() {
       results = results.filter((user) => user.archiveReason === reasonFilter);
     }
 
+    // Apply year filter
+    if (yearFilter !== "all") {
+      results = results.filter(
+        (user) =>
+          new Date(user.archiveDate).getFullYear().toString() === yearFilter
+      );
+    }
+
     setFilteredArchives(results);
-  }, [searchTerm, timeFilter, reasonFilter, archives]);
+    setAnalytics(calculateAnalytics(results));
+  }, [searchTerm, timeFilter, reasonFilter, yearFilter, archives]);
+
+  // Distinct years present in the loaded archives, most recent first
+  const availableYears = Array.from(
+    new Set(
+      archives.map((user) =>
+        new Date(user.archiveDate).getFullYear().toString()
+      )
+    )
+  ).sort((a, b) => Number(b) - Number(a));
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -241,6 +260,10 @@ export default function CheckoutsPage() {
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     setReasonFilter(e.target.value);
+  };
+
+  const handleYearFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setYearFilter(e.target.value);
   };
 
   const exportToCSV = () => {
@@ -261,7 +284,7 @@ export default function CheckoutsPage() {
       "Exit Reason",
       "Comments",
       "Remarks",
-      "Key Returned",
+      "Key Status",
       "Deposit Return Amount",
       "Deposit Return Date",
     ];
@@ -284,7 +307,7 @@ export default function CheckoutsPage() {
           `"${user.exitFeedback?.exitReason || ""}"`,
           `"${user.exitFeedback?.otherComments || ""}"`,
           `"${user.remarks || ""}"`,
-          user.keyIssued ? "Not Returned" : "Returned",
+          user.keyIssued === true ? "Key Issued (Not Returned)" : "No Key Issued",
           user.depositReturn?.amount
             ? `₹${user.depositReturn.amount}`
             : "Pending",
@@ -308,6 +331,8 @@ export default function CheckoutsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    toast.success(`Exported ${filteredArchives.length} records to CSV`);
   };
 
   const viewUserArchiveDetails = (id: string) => {
@@ -412,6 +437,25 @@ export default function CheckoutsPage() {
                     <option value="Rule Violation">Rule Violation</option>
                     <option value="Payment Issues">Payment Issues</option>
                     <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Year filter */}
+              <div className="min-w-[200px]">
+                <div className="flex items-center space-x-2 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700">
+                  <Calendar size={18} className="text-gray-400" />
+                  <select
+                    value={yearFilter}
+                    onChange={handleYearFilterChange}
+                    className="flex-1 bg-transparent text-gray-900 dark:text-white focus:outline-none"
+                  >
+                    <option value="all">All Years</option>
+                    {availableYears.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -586,7 +630,7 @@ export default function CheckoutsPage() {
                           Remarks
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Key Returned
+                          Key Status
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Deposit Return
@@ -645,15 +689,15 @@ export default function CheckoutsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900 dark:text-white">
-                              {user.keyIssued ? (
+                              {user.keyIssued === true ? (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                                   <span className="w-2 h-2 mr-1.5 bg-red-600 dark:bg-red-400 rounded-full"></span>
-                                  Not Returned
+                                  Key Issued (Not Returned)
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                                   <span className="w-2 h-2 mr-1.5 bg-green-600 dark:bg-green-400 rounded-full"></span>
-                                  Returned
+                                  No Key Issued
                                 </span>
                               )}
                             </div>

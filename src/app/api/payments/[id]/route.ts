@@ -89,8 +89,6 @@ export async function PUT(
       amount,
       months,
       paymentDate,
-      dueDate,
-      paymentStatus,
       paymentMethod,
       transactionId,
       remarks,
@@ -143,9 +141,6 @@ export async function PUT(
     if (amount !== undefined) paymentToUpdate.amount = amount;
     if (months !== undefined) paymentToUpdate.months = months;
     if (paymentDate !== undefined) paymentToUpdate.paymentDate = paymentDate; // Allow manual correction of payment date in edit mode
-    if (dueDate !== undefined) paymentToUpdate.dueDate = dueDate;
-    if (paymentStatus !== undefined)
-      paymentToUpdate.paymentStatus = paymentStatus;
     if (paymentMethod !== undefined)
       paymentToUpdate.paymentMethod = paymentMethod;
     if (transactionId !== undefined)

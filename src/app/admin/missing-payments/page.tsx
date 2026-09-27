@@ -19,6 +19,7 @@ import {
 import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 import Link from "next/link";
 import { useInView } from "react-intersection-observer";
+import { downloadCSV } from "@/app/utils/csvExport";
 
 interface Room {
   _id: string;
@@ -197,48 +198,42 @@ export default function MissingPaymentsPage() {
       const response = await axios.post("/api/admin/missing-payments", {
         month: selectedMonth,
         year: selectedYear,
+        search: searchQuery || undefined,
+        building: selectedBuilding || undefined,
+        status: selectedStatus || undefined,
       });
 
       if (response.data.success) {
-        // Create CSV content
         const data = response.data.data;
-        const csvRows = [
-          [
-            "Name",
-            "Email",
-            "Phone",
-            "Building",
-            "Room",
-            "Bed",
-            "Rent Amount",
-            "Month",
-          ],
+        const headers = [
+          "PG ID",
+          "Name",
+          "Email",
+          "Phone",
+          "Building",
+          "Room",
+          "Bed",
+          "Rent Amount",
+          "Month",
         ];
 
-        data.missingPaymentUsers.forEach((user: any) => {
-          csvRows.push([
-            user.pgId || "N/A",
-            user.name,
-            user.email,
-            user.phone,
-            user.roomId?.building || "N/A",
-            user.roomId?.roomNumber || "N/A",
-            user.bedNumber || "N/A",
-            user.roomId?.rentAmount || "0",
-            data.monthYear,
-          ]);
-        });
+        const rows = data.missingPaymentUsers.map((user: any) => [
+          user.pgId || "N/A",
+          user.name,
+          user.email,
+          user.phone,
+          user.roomId?.building || "N/A",
+          user.roomId?.roomNumber || "N/A",
+          user.bedNumber || "N/A",
+          user.roomId?.rentAmount || "0",
+          data.monthYear,
+        ]);
 
-        const csvContent = csvRows.map((row) => row.join(",")).join("\n");
-        const blob = new Blob([csvContent], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `missing-payments-${selectedMonth}-${selectedYear}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        downloadCSV(
+          `missing-payments-${selectedMonth}-${selectedYear}.csv`,
+          headers,
+          rows
+        );
       }
     } catch (error: any) {
       console.error("Error exporting data:", error);

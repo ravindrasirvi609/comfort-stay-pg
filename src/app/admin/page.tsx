@@ -362,39 +362,8 @@ export default function AdminDashboard() {
       );
       setPendingComplaints(openComplaints.slice(0, 5));
 
-      let usersWithDuesData: UserWithDues[] = [];
-
-      // Fetch users with unpaid dues in a single API call
-      const duesResponse = await axios.get("/api/payments/dues");
-      if (duesResponse.data.success) {
-        const userIdsWithDues = duesResponse.data.usersWithDues || [];
-
-        // Get user details for each user with dues
-        const usersWithDuesDetails = users.filter((user: User) =>
-          userIdsWithDues.includes(user._id)
-        );
-
-        // Calculate total amount for each user with dues using the payments already fetched
-        usersWithDuesData = usersWithDuesDetails.map((user: User) => {
-          const userDuePayments = payments.filter(
-            (p: Payment) =>
-              p.userId._id === user._id &&
-              (p.paymentStatus === "Due" || p.paymentStatus === "Overdue")
-          );
-
-          const totalDueAmount = userDuePayments.reduce(
-            (sum: number, payment: Payment) => sum + payment.amount,
-            0
-          );
-
-          return {
-            ...user,
-            amount: totalDueAmount,
-          };
-        });
-
-        setUsersWithDues(usersWithDuesData.slice(0, 5));
-      }
+      // Users with dues are now identified via the Missing Payments page
+      setUsersWithDues([]);
 
       // Calculate dashboard stats
       const totalUsers = users.length; // Active and confirmed users count
@@ -450,7 +419,7 @@ export default function AdminDashboard() {
         availableRooms: availableRoomsCount,
         pendingComplaints: pendingComplaintsCount,
         rentCollected: currentRentCollected,
-        usersWithDues: usersWithDuesData.length,
+        usersWithDues: 0,
         occupancyRate,
         previousMonthRent: previousRentCollected,
       });
@@ -878,15 +847,7 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${payment.paymentStatus === "Paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                  : payment.paymentStatus === "Due"
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                                }`}
-                            >
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                               {payment.paymentStatus}
                             </span>
                           </td>
@@ -1910,15 +1871,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${payment.paymentStatus === "Paid"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                              : payment.paymentStatus === "Due"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                            }`}
-                        >
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                           {payment.paymentStatus}
                         </span>
                       </td>

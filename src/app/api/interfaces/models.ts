@@ -120,7 +120,7 @@ export interface IPayment {
   amount: number;
   months: string[];
   paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Other";
-  paymentStatus: "Paid" | "Pending" | "Failed";
+  paymentStatus: "Paid";
   transactionId?: string;
   paymentDate: Date;
   isDeleted?: boolean;
@@ -159,8 +159,7 @@ export interface Payment {
   amount: number;
   months: string[];
   paymentDate: Date;
-  dueDate?: Date;
-  paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+  paymentStatus: "Paid";
   receiptNumber?: string;
   paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Card" | "Other";
   transactionId?: string;

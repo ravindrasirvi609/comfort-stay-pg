@@ -80,14 +80,18 @@ export async function DELETE(
     console.log("GDPR Deletion Record:", deletionRecord);
 
     // Also record the deletion in the admin activity log (implement this as needed)
-    await Notification.create({
-      userId: "admin_id_123456789", // Admin ID
-      title: "GDPR User Deletion",
-      message: `User ${userToDelete.name} (${userToDelete.email}) was permanently deleted by ${user.name}. Reason: ${reason}`,
-      type: "System",
-      isRead: false,
-      isActive: true,
+    const adminUsers = await User.find({ role: "admin" });
+    const notificationPromises = adminUsers.map((admin) => {
+      return Notification.create({
+        userId: admin._id,
+        title: "GDPR User Deletion",
+        message: `User ${userToDelete.name} (${userToDelete.email}) was permanently deleted by ${user.name}. Reason: ${reason}`,
+        type: "System",
+        isRead: false,
+        isActive: true,
+      });
     });
+    await Promise.all(notificationPromises);
 
     // Permanently delete all user-related data
 

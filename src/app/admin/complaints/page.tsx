@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios, { AxiosError } from "axios";
 import { FaSpinner } from "react-icons/fa";
 
@@ -11,6 +11,13 @@ interface User {
   pgId: string;
 }
 
+interface Staff {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 interface Complaint {
   _id: string;
   userId: User;
@@ -18,29 +25,82 @@ interface Complaint {
   description: string;
   status: "Open" | "In Progress" | "Resolved" | "Closed";
   priority: "Low" | "Medium" | "High";
+  assignedTo?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export default function ComplaintsPage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<Pagination>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  });
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(
     null
   );
   const [showModal, setShowModal] = useState(false);
+  const isFirstSearchRender = useRef(true);
 
   useEffect(() => {
-    fetchComplaints();
+    fetchStaff();
+    fetchComplaints(1, "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchComplaints = async () => {
+  // Debounce search input, reset to page 1 and refetch when it settles
+  useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchComplaints(1, searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  const fetchStaff = async () => {
+    try {
+      const response = await axios.get("/api/admin/staff");
+      if (response.data.success) {
+        setStaff(response.data.staff || []);
+      }
+    } catch (err) {
+      console.error("Error fetching staff:", err);
+    }
+  };
+
+  const fetchComplaints = async (targetPage: number, term: string) => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/complaints");
+      const params = new URLSearchParams();
+      params.set("page", String(targetPage));
+      params.set("limit", "10");
+      if (term.trim()) params.set("search", term.trim());
+
+      const response = await axios.get(`/api/complaints?${params.toString()}`);
       setComplaints(response.data.complaints || []);
+      if (response.data.pagination) {
+        setPagination(response.data.pagination);
+      }
       setLoading(false);
     } catch (err) {
       console.error("Error fetching complaints:", err);
@@ -49,9 +109,54 @@ export default function ComplaintsPage() {
     }
   };
 
+  const goToPage = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages || newPage === page) {
+      return;
+    }
+    setPage(newPage);
+    fetchComplaints(newPage, searchInput);
+  };
+
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    setPage(1);
+    fetchComplaints(1, searchInput);
+  };
+
   const filteredComplaints = complaints.filter((complaint) =>
     statusFilter === "all" ? true : complaint.status === statusFilter
   );
+
+  const getStaffName = (assignedTo?: string) => {
+    if (!assignedTo) return "Unassigned";
+    const match = staff.find((s) => s._id === assignedTo);
+    return match ? match.name : assignedTo;
+  };
+
+  const getSlaBadge = (complaint: Complaint) => {
+    if (complaint.status !== "Open" && complaint.status !== "In Progress") {
+      return null;
+    }
+    const days = Math.floor(
+      (Date.now() - new Date(complaint.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+    if (days > 7) {
+      return (
+        <span className="px-2 py-1 text-xs rounded-full font-semibold bg-red-600 text-white">
+          Overdue
+        </span>
+      );
+    }
+    if (days > 3) {
+      return (
+        <span className="px-2 py-1 text-xs rounded-full font-semibold bg-amber-500 text-white">
+          Aging
+        </span>
+      );
+    }
+    return null;
+  };
 
   const updateComplaintStatus = async (
     id: string,
@@ -97,9 +202,49 @@ export default function ComplaintsPage() {
     }
   };
 
+  const updateAssignedTo = async (id: string, assignedTo: string) => {
+    if (!assignedTo) return;
+    try {
+      const response = await axios.put(`/api/complaints/${id}`, {
+        assignedTo,
+      });
+      if (response.data.success) {
+        setComplaints(
+          complaints.map((complaint) =>
+            complaint._id === id ? { ...complaint, assignedTo } : complaint
+          )
+        );
+        if (selectedComplaint && selectedComplaint._id === id) {
+          setSelectedComplaint({ ...selectedComplaint, assignedTo });
+        }
+      } else {
+        setError(response.data.message || "Failed to update assignment");
+      }
+    } catch (err: unknown) {
+      console.error("Error updating assignment:", err);
+      if (axios.isAxiosError(err)) {
+        const axiosError = err as AxiosError<{ message?: string }>;
+        if (axiosError.response) {
+          setError(
+            axiosError.response.data?.message ||
+              `Error: ${axiosError.response.status} - ${axiosError.response.statusText}`
+          );
+        } else if (axiosError.request) {
+          setError("No response received from server. Please try again.");
+        } else {
+          setError(
+            axiosError.message || "An error occurred while updating assignment"
+          );
+        }
+      } else {
+        setError("An unexpected error occurred");
+      }
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat("en-IN", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -155,11 +300,38 @@ export default function ComplaintsPage() {
           </div>
         )}
 
+        {/* Search */}
+        <div className="backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-2xl p-4 mb-6 border border-white/20 dark:border-gray-700/30 shadow-lg">
+          <div className="relative">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by complaint title, resident name or PG ID..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/60 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 border border-white/20 dark:border-gray-600/40 focus:outline-none focus:ring-2 focus:ring-pink-400"
+            />
+          </div>
+        </div>
+
         {/* Status filter */}
         <div className="backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-2xl p-4 mb-6 border border-white/20 dark:border-gray-700/30 shadow-lg">
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setStatusFilter("all")}
+              onClick={() => handleStatusFilterChange("all")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 statusFilter === "all"
                   ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
@@ -169,7 +341,7 @@ export default function ComplaintsPage() {
               All
             </button>
             <button
-              onClick={() => setStatusFilter("Open")}
+              onClick={() => handleStatusFilterChange("Open")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 statusFilter === "Open"
                   ? "bg-gradient-to-r from-red-500 to-pink-600 text-white"
@@ -179,7 +351,7 @@ export default function ComplaintsPage() {
               Open
             </button>
             <button
-              onClick={() => setStatusFilter("In Progress")}
+              onClick={() => handleStatusFilterChange("In Progress")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 statusFilter === "In Progress"
                   ? "bg-gradient-to-r from-yellow-500 to-orange-600 text-white"
@@ -189,7 +361,7 @@ export default function ComplaintsPage() {
               In Progress
             </button>
             <button
-              onClick={() => setStatusFilter("Resolved")}
+              onClick={() => handleStatusFilterChange("Resolved")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 statusFilter === "Resolved"
                   ? "bg-gradient-to-r from-green-500 to-teal-600 text-white"
@@ -199,7 +371,7 @@ export default function ComplaintsPage() {
               Resolved
             </button>
             <button
-              onClick={() => setStatusFilter("Closed")}
+              onClick={() => handleStatusFilterChange("Closed")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 statusFilter === "Closed"
                   ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
@@ -240,24 +412,33 @@ export default function ComplaintsPage() {
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {formatDate(complaint.createdAt)}
                       </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        Assigned to:{" "}
+                        <span className="font-medium">
+                          {getStaffName(complaint.assignedTo)}
+                        </span>
+                      </p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-2">
+                      {getSlaBadge(complaint)}
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                          complaint.status === "Open"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                            : complaint.status === "In Progress"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
+                              : complaint.status === "Resolved"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                                : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
+                        }`}
+                      >
+                        {complaint.status}
+                      </span>
+                    </div>
                     <span
                       className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                        complaint.status === "Open"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
-                          : complaint.status === "In Progress"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
-                            : complaint.status === "Resolved"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-                              : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
-                      }`}
-                    >
-                      {complaint.status}
-                    </span>
-                    <span
-                      className={`mt-2 px-2 py-1 text-xs rounded-full font-semibold ${
                         complaint.priority === "High"
                           ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
                           : complaint.priority === "Medium"
@@ -293,6 +474,29 @@ export default function ComplaintsPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 backdrop-blur-sm bg-white/40 dark:bg-gray-800/30 rounded-2xl p-4 border border-white/20 dark:border-gray-700/30 shadow-lg">
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page <= 1}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-white/60 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page >= pagination.totalPages}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-white/60 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Complaint Detail Modal */}
@@ -356,18 +560,21 @@ export default function ComplaintsPage() {
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Status:
                   </span>
-                  <span
-                    className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
-                      selectedComplaint.status === "Open"
-                        ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
-                        : selectedComplaint.status === "In Progress"
-                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
-                          : selectedComplaint.status === "Resolved"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
-                    }`}
-                  >
-                    {selectedComplaint.status}
+                  <span className="flex items-center gap-2">
+                    {getSlaBadge(selectedComplaint)}
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+                        selectedComplaint.status === "Open"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                          : selectedComplaint.status === "In Progress"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
+                            : selectedComplaint.status === "Resolved"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                              : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
+                      }`}
+                    >
+                      {selectedComplaint.status}
+                    </span>
                   </span>
                 </div>
                 <div className="flex justify-between mb-1">
@@ -411,6 +618,28 @@ export default function ComplaintsPage() {
                 <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line">
                   {selectedComplaint.description}
                 </p>
+              </div>
+
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                  Assign To
+                </h4>
+                <select
+                  value={selectedComplaint.assignedTo || ""}
+                  onChange={(e) =>
+                    updateAssignedTo(selectedComplaint._id, e.target.value)
+                  }
+                  className="w-full px-3 py-2 rounded-lg bg-white/60 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 border border-white/20 dark:border-gray-600/40 focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm"
+                >
+                  <option value="" disabled>
+                    {getStaffName(selectedComplaint.assignedTo)}
+                  </option>
+                  {staff.map((member) => (
+                    <option key={member._id} value={member._id}>
+                      {member.name} ({member.role})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="mt-6">

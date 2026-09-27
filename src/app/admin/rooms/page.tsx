@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Link from "next/link";
 
@@ -35,7 +35,13 @@ export default function RoomsPage() {
   const [filterBuilding, setFilterBuilding] = useState("all");
   const [filterFloor, setFilterFloor] = useState("all");
   const [buildings, setBuildings] = useState<string[]>(["A", "B"]);
-  const [floors, setFloors] = useState<number[]>([1, 2, 3, 4, 5, 6]);
+
+  // Floors derived from the loaded rooms data, so any floor present in the
+  // data (including floor 7+) is shown instead of being silently hidden.
+  const availableFloors = useMemo(
+    () => Array.from(new Set(rooms.map((r) => r.floor))).sort((a, b) => a - b),
+    [rooms]
+  );
 
   // Fetch rooms data
   useEffect(() => {
@@ -334,7 +340,7 @@ export default function RoomsPage() {
               onChange={(e) => setFilterFloor(e.target.value)}
             >
               <option value="all">All Floors</option>
-              {floors.map((floor) => (
+              {availableFloors.map((floor) => (
                 <option key={floor} value={floor}>
                   {getFloorDisplayName(floor)}
                 </option>
@@ -436,7 +442,7 @@ export default function RoomsPage() {
                 ) : (
                   // All floors in this building
                   <div className="space-y-6">
-                    {floors.map((floor) => {
+                    {availableFloors.map((floor) => {
                       const roomsInFloor = getRoomsByBuildingAndFloor(
                         building,
                         floor

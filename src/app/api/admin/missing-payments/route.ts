@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     const body = await request.json();
-    const { month, year } = body;
+    const { month, year, search, building, status } = body;
 
     if (!month || !year) {
       return NextResponse.json(
@@ -275,12 +275,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all active users with rooms
-    const allUsers = await User.find({
+    // Build user query - mirrors the GET handler so the export matches what's
+    // currently on screen (status, search and building filters all apply).
+    const userQuery: any = {
       registrationStatus: "Approved",
-      isActive: true,
+      isActive: (status || "active") === "active",
       roomId: { $ne: null },
-    })
+    };
+
+    if (search) {
+      userQuery.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { pgId: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Get all users with rooms matching the active filters
+    const allUsers = await User.find(userQuery)
       .populate("roomId", "roomNumber building floor price")
       .select("name email phone pgId roomId bedNumber moveInDate")
       .lean();
@@ -296,8 +309,16 @@ export async function POST(request: NextRequest) {
         : null,
     }));
 
+    // Filter by building if specified
+    let filteredByBuilding = allUsersWithRentAmount;
+    if (building) {
+      filteredByBuilding = allUsersWithRentAmount.filter(
+        (user: any) => user.roomId?.building === building
+      );
+    }
+
     // Move-in guard: same logic as GET — exclude users not yet resident in that month
-    const eligibleUsers = allUsersWithRentAmount.filter((user: any) => {
+    const eligibleUsers = filteredByBuilding.filter((user: any) => {
       if (!user.moveInDate) return true;
       return new Date(user.moveInDate) <= targetMonthEnd;
     });

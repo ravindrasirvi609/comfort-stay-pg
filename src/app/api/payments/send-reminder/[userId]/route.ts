@@ -150,18 +150,6 @@ export async function POST(
         `,
       });
 
-      // Create a new payment record for the reminder
-      await Payment.create({
-        userId,
-        amount: dueAmount,
-        months: [currentMonthYear],
-        paymentStatus: "Due",
-        isActive: true,
-        isDepositPayment: false,
-        remarks: "Payment reminder sent",
-        lastReminderSent: new Date(),
-      });
-
       return NextResponse.json({
         success: true,
         message: "Payment reminder sent successfully",

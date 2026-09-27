@@ -85,7 +85,7 @@ interface UserData {
     amount: number;
     months: string[];
     paymentDate: string;
-    paymentStatus: "Paid" | "Due" | "Overdue" | "Partial" | "Pending";
+    paymentStatus: "Paid";
     receiptNumber?: string;
     paymentMethod: "Cash" | "UPI" | "Bank Transfer" | "Card" | "Other";
     transactionId?: string;
@@ -1226,14 +1226,7 @@ export default function UserDetailPage() {
                         {formatDate(payment.paymentDate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.paymentStatus === "Paid"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : payment.paymentStatus === "Partial"
-                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                            }`}
-                        >
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                           {payment.paymentStatus}
                         </span>
                       </td>

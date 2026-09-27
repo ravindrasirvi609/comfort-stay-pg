@@ -1060,7 +1060,6 @@ export default function PendingRegistrationDetailsPage() {
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white text-sm"
                       >
                         <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
                       </select>
                     </div>
                   </div>

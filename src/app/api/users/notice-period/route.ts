@@ -74,22 +74,35 @@ export async function POST(request: NextRequest) {
       }
 
       // Create notification for relevant party when notice period is withdrawn
-      await Notification.create({
-        userId: isManagingDifferentUser
-          ? currentUser._id
-          : "admin_id_123456789",
-        title: isManagingDifferentUser
-          ? "Notice Period Withdrawn by Admin"
-          : "Notice Period Withdrawn",
-        message: isManagingDifferentUser
-          ? `An admin has withdrawn your notice period${currentUser.lastStayingDate ? ` that was scheduled for ${new Date(currentUser.lastStayingDate).toLocaleDateString()}` : ""}.`
-          : `${currentUser.name || "A resident"} has withdrawn their notice period.`,
-        type: "NoticePeriod",
-        isRead: false,
-        isActive: true,
-        relatedId: currentUser._id,
-        relatedModel: "User",
-      });
+      if (isManagingDifferentUser) {
+        // Admin withdrew notice on behalf of the resident - notify the resident
+        await Notification.create({
+          userId: currentUser._id,
+          title: "Notice Period Withdrawn by Admin",
+          message: `An admin has withdrawn your notice period${currentUser.lastStayingDate ? ` that was scheduled for ${new Date(currentUser.lastStayingDate).toLocaleDateString()}` : ""}.`,
+          type: "NoticePeriod",
+          isRead: false,
+          isActive: true,
+          relatedId: currentUser._id,
+          relatedModel: "User",
+        });
+      } else {
+        // Resident withdrew their own notice - notify all admins
+        const adminUsers = await User.find({ role: "admin" });
+        const notificationPromises = adminUsers.map((admin) => {
+          return Notification.create({
+            userId: admin._id,
+            title: "Notice Period Withdrawn",
+            message: `${currentUser.name || "A resident"} has withdrawn their notice period.`,
+            type: "NoticePeriod",
+            isRead: false,
+            isActive: true,
+            relatedId: currentUser._id,
+            relatedModel: "User",
+          });
+        });
+        await Promise.all(notificationPromises);
+      }
 
       return NextResponse.json({
         success: true,
@@ -180,16 +193,35 @@ export async function POST(request: NextRequest) {
       : `${currentUser.name || "A resident"} has ${wasOnNoticePeriod ? "updated their" : "submitted a"} notice period with last staying date: ${selectedDate.toLocaleDateString()}`;
 
     // Create notification for relevant party when user submits or updates notice period
-    await Notification.create({
-      userId: isManagingDifferentUser ? currentUser._id : "admin_id_123456789",
-      title: notificationTitle,
-      message: notificationMessage,
-      type: "NoticePeriod",
-      isRead: false,
-      isActive: true,
-      relatedId: currentUser._id,
-      relatedModel: "User",
-    });
+    if (isManagingDifferentUser) {
+      // Admin submitted/updated notice on behalf of the resident - notify the resident
+      await Notification.create({
+        userId: currentUser._id,
+        title: notificationTitle,
+        message: notificationMessage,
+        type: "NoticePeriod",
+        isRead: false,
+        isActive: true,
+        relatedId: currentUser._id,
+        relatedModel: "User",
+      });
+    } else {
+      // Resident submitted/updated their own notice - notify all admins
+      const adminUsers = await User.find({ role: "admin" });
+      const notificationPromises = adminUsers.map((admin) => {
+        return Notification.create({
+          userId: admin._id,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: "NoticePeriod",
+          isRead: false,
+          isActive: true,
+          relatedId: currentUser._id,
+          relatedModel: "User",
+        });
+      });
+      await Promise.all(notificationPromises);
+    }
 
     return NextResponse.json({
       success: true,

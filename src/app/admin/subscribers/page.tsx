@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { FaSpinner } from "react-icons/fa";
+import { downloadCSV } from "@/app/utils/csvExport";
 
 interface Subscriber {
   _id: string;
@@ -31,6 +32,7 @@ interface PaginationInfo {
 export default function Subscribers() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
     page: 1,
@@ -87,36 +89,39 @@ export default function Subscribers() {
     }
   };
 
-  const exportSubscriberList = () => {
-    // Create CSV content
-    const headers = ["Email", "Subscription Date"];
-    const csvContent =
-      headers.join(",") +
-      "\n" +
-      subscribers
-        .map(
-          (sub) =>
-            `"${sub.email}","${new Date(sub.subscriptionDate).toLocaleDateString()}"`
-        )
-        .join("\n");
+  const exportSubscriberList = async () => {
+    setExporting(true);
+    try {
+      // The on-screen list is paginated (e.g. 50/page), but the export should
+      // cover the FULL subscriber list the count above advertises — fetch it
+      // specifically for this action rather than using the current page.
+      const response = await axios.get(
+        `/api/subscribers?page=1&limit=10000`
+      );
 
-    // Create download link
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+      if (!response.data.success) {
+        toast.error("Failed to load subscribers for export");
+        return;
+      }
 
-    // Set link properties
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `subscribers_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    link.style.visibility = "hidden";
+      const allSubscribers: Subscriber[] = response.data.subscribers;
+      const headers = ["Email", "Subscription Date"];
+      const rows = allSubscribers.map((sub) => [
+        sub.email,
+        new Date(sub.subscriptionDate).toLocaleDateString(),
+      ]);
 
-    // Append to document, click, and remove
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      downloadCSV(
+        `subscribers_${new Date().toISOString().split("T")[0]}.csv`,
+        headers,
+        rows
+      );
+    } catch (error) {
+      console.error("Error exporting subscribers:", error);
+      toast.error("Failed to export subscribers. Please try again.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -135,11 +140,20 @@ export default function Subscribers() {
 
         <button
           onClick={exportSubscriberList}
-          disabled={loading || subscribers.length === 0}
+          disabled={loading || exporting || subscribers.length === 0}
           className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Download size={16} className="mr-2" />
-          Export CSV
+          {exporting ? (
+            <>
+              <FaSpinner className="mr-2 animate-spin" size={16} />
+              Exporting…
+            </>
+          ) : (
+            <>
+              <Download size={16} className="mr-2" />
+              Export CSV
+            </>
+          )}
         </button>
       </div>
 

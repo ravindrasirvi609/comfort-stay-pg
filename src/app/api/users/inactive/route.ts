@@ -321,7 +321,6 @@ export async function PUT(request: NextRequest) {
           amount: depositAmount,
           months: [format(new Date(checkInDate || Date.now()), "MMMM yyyy")],
           paymentDate: checkInDate || new Date(),
-          dueDate: checkInDate || new Date(), // Same date for deposit
           paymentStatus: "Paid",
           receiptNumber: depositReceiptNumber,
           paymentMethod,
@@ -349,11 +348,6 @@ export async function PUT(request: NextRequest) {
           amount: rentAmount,
           months: selectedMonths,
           paymentDate: checkInDate || new Date(),
-          dueDate: new Date(
-            new Date(checkInDate || Date.now()).setDate(
-              new Date(checkInDate || Date.now()).getDate() + 30
-            )
-          ), // Due date is 30 days after check-in
           paymentStatus: "Paid",
           receiptNumber: rentReceiptNumber,
           paymentMethod,
