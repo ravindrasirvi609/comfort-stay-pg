@@ -9,7 +9,6 @@ import {
   calculateTotalDueWithCredit,
   getMonthDetails,
   generateDueDate,
-  getMonthsBetweenDates,
   getUserAvailableCredit,
 } from "@/app/utils/proratedRentCalculation";
 

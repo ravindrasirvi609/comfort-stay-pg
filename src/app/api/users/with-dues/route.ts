@@ -177,19 +177,6 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Step 2: Get total dues from database (UserDue records)
-      const totalOutstandingFromDues = userDues.reduce(
-        (sum: number, due: any) => sum + (due.remainingDue || 0),
-        0
-      );
-
-      // Calculate total due amount (before payments)
-      const totalDueAmount = userDues.reduce(
-        (sum: number, due: any) =>
-          sum + (due.proratedRent || due.currentMonthDue || 0),
-        0
-      );
-
       // Calculate total paid across all dues
       const totalPaidFromDues = userDues.reduce(
         (sum: number, due: any) => sum + (due.totalPaid || 0),
@@ -390,30 +377,6 @@ export async function GET(request: NextRequest) {
       cacheHit: false,
     });
 
-    // Cache the result for future requests (5 minutes TTL)
-    const responseData = {
-      success: true,
-      users: enhancedUsers,
-      summary,
-      targetMonth,
-      targetYear,
-      targetMonthName: new Date(targetYear, targetMonth - 1).toLocaleString(
-        "default",
-        { month: "long" }
-      ),
-      usesCorrectAllocations: true, // Flag indicating updated calculation method
-      usesSettlements: true, // Flag indicating settlements are applied
-      calculationMethod: "RentTillNow - (TotalPaid + Settlements)", // Explanation of calculation
-    };
-
-    duesToCache.set(cacheKey, responseData, 5 * 60 * 1000); // 5 minutes cache
-    console.log(`[CACHE SET] users-with-dues: ${cacheKey}`);
-
-    return NextResponse.json({
-      ...responseData,
-      cached: false,
-      cacheHit: false,
-    });
   } catch (error) {
     console.error("Error fetching users with dues:", error);
     return NextResponse.json(

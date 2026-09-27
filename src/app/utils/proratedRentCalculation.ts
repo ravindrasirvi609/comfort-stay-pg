@@ -228,29 +228,6 @@ export function daysBetween(startDate: Date, endDate: Date): number {
 }
 
 /**
- * Get all months between check-in date and current date
- */
-export function getMonthsBetweenDates(
-  startDate: Date,
-  endDate: Date
-): Array<{
-  month: string;
-  year: number;
-  monthNumber: number;
-}> {
-  const months = [];
-  const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-  const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-
-  while (current <= end) {
-    months.push(getMonthDetails(current));
-    current.setMonth(current.getMonth() + 1);
-  }
-
-  return months;
-}
-
-/**
  * Credit Management Utilities (Phase 1)
  */
 

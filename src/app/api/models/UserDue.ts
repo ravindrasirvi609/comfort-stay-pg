@@ -171,42 +171,6 @@ UserDueSchema.virtual("user", {
   justOne: true,
 });
 
-// Static method to calculate prorated rent
-UserDueSchema.statics.calculateProratedRent = function (
-  fullMonthRent: number,
-  checkInDate: Date,
-  targetMonth: number,
-  targetYear: number
-) {
-  const checkInMonth = checkInDate.getMonth() + 1; // getMonth() returns 0-11
-  const checkInYear = checkInDate.getFullYear();
-
-  // If check-in is not in the target month, return full rent
-  if (checkInMonth !== targetMonth || checkInYear !== targetYear) {
-    const totalDaysInMonth = new Date(targetYear, targetMonth, 0).getDate();
-    return {
-      proratedRent: fullMonthRent,
-      daysCovered: totalDaysInMonth,
-      totalDaysInMonth,
-      isProrated: false,
-    };
-  }
-
-  const checkInDay = checkInDate.getDate();
-  const totalDaysInMonth = new Date(targetYear, targetMonth, 0).getDate();
-  const daysCovered = totalDaysInMonth - checkInDay + 1; // +1 to include check-in day
-
-  const dailyRate = fullMonthRent / totalDaysInMonth;
-  const proratedRent = Math.ceil(dailyRate * daysCovered); // Round up to nearest rupee
-
-  return {
-    proratedRent,
-    daysCovered,
-    totalDaysInMonth,
-    isProrated: true,
-  };
-};
-
 // Instance method to update payment status
 UserDueSchema.methods.updatePaymentStatus = function () {
   this.remainingDue = this.totalDue - this.totalPaid;

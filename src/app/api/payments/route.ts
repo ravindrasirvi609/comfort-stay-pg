@@ -14,10 +14,7 @@ function escapeRegex(str: string): string {
 }
 
 // Helper function to recalculate user dues after payment (ENHANCED VERSION)
-async function recalculateUserDuesAfterPayment(
-  userId: string,
-  monthsArray: string[]
-) {
+async function recalculateUserDuesAfterPayment(userId: string) {
   // Step 1: Get ALL active dues for the user, sorted chronologically
   const allUserDues = await UserDue.find({
     userId,
@@ -642,7 +639,7 @@ export async function POST(request: NextRequest) {
     } else {
       // For regular payments, update user dues
       try {
-        await recalculateUserDuesAfterPayment(userId, selectedMonths);
+        await recalculateUserDuesAfterPayment(userId);
       } catch (dueError) {
         console.error("Error updating dues after payment:", dueError);
         // Don't fail the payment creation, but log the error

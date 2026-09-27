@@ -115,62 +115,6 @@ DueSettlementSchema.methods.toJSON = function () {
   return settlement;
 };
 
-// Static methods
-DueSettlementSchema.statics.findActiveSettlements = function (
-  userId?: string,
-  month?: string
-) {
-  const query: any = { isActive: true };
-
-  if (userId) {
-    query.userId = userId;
-  }
-
-  if (month) {
-    query.month = month;
-  }
-
-  return this.find(query)
-    .populate("userId", "name email pgId")
-    .populate("settledBy", "name email")
-    .sort({ settledAt: -1 });
-};
-
-DueSettlementSchema.statics.getTotalSettledForUserMonth = function (
-  userId: string,
-  month: string
-) {
-  return this.aggregate([
-    {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        month: month,
-        isActive: true,
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalSettled: { $sum: "$amount" },
-        settlementCount: { $sum: 1 },
-      },
-    },
-  ]);
-};
-
-DueSettlementSchema.statics.getSettlementHistory = function (
-  userId: string,
-  limit: number = 10
-) {
-  return this.find({
-    userId: new mongoose.Types.ObjectId(userId),
-    isActive: true,
-  })
-    .populate("settledBy", "name email")
-    .sort({ settledAt: -1 })
-    .limit(limit);
-};
-
 // Pre-save middleware
 DueSettlementSchema.pre("save", function (next) {
   // Ensure month format is consistent
