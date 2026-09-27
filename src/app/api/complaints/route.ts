@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Ensure User model is registered
     await User.findOne({});
 
-    const { title, description } = await request.json();
+    const { title, description, category, priority } = await request.json();
 
     // Validate required fields
     if (!title || !description) {
@@ -84,6 +84,8 @@ export async function POST(request: NextRequest) {
       userId: user._id,
       title,
       description,
+      category,
+      priority,
       status: "Open",
     });
 

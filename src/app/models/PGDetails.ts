@@ -100,6 +100,21 @@ const PGDetailsSchema = new mongoose.Schema(
         default: true,
       },
     },
+    noticePolicy: {
+      minNoticeDays: { type: Number, default: 15 },
+      refundAmount: { type: Number, default: 1500 },
+    },
+    emergencyContacts: [
+      {
+        label: { type: String, default: "" },
+        phone: { type: String, default: "" },
+      },
+    ],
+    wifiDetails: {
+      name: { type: String, default: "" },
+      password: { type: String, default: "" },
+      note: { type: String, default: "" },
+    },
   },
   {
     timestamps: true,

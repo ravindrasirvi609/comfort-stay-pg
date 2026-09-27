@@ -7,7 +7,20 @@ import axios from "axios";
 interface FormData {
   title: string;
   description: string;
+  category: string;
+  priority: string;
 }
+
+const CATEGORY_OPTIONS = [
+  "Maintenance",
+  "Housekeeping",
+  "Food",
+  "Security",
+  "Billing",
+  "Other",
+];
+
+const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
 
 export default function NewComplaintPage() {
   const router = useRouter();
@@ -17,11 +30,15 @@ export default function NewComplaintPage() {
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
+    category: "Maintenance",
+    priority: "Medium",
   });
 
   // Handle form input change
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -38,7 +55,7 @@ export default function NewComplaintPage() {
       const response = await axios.post("/api/complaints", formData);
 
       if (response.data.success) {
-        router.push("/dashboard");
+        router.push("/dashboard/complaints");
       } else {
         setError(response.data.message || "Failed to submit complaint");
       }
@@ -95,6 +112,52 @@ export default function NewComplaintPage() {
             placeholder="Brief title of your complaint"
             required
           />
+        </div>
+
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="category"
+          >
+            Category
+          </label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          >
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="priority"
+          >
+            Priority
+          </label>
+          <select
+            id="priority"
+            name="priority"
+            value={formData.priority}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          >
+            {PRIORITY_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mb-6">

@@ -11,7 +11,7 @@ import {
   RiNotification4Line,
   RiDatabase2Line,
 } from "react-icons/ri";
-import { FaSpinner } from "react-icons/fa";
+import { FaSpinner, FaClipboardList, FaPhoneAlt } from "react-icons/fa";
 import CacheManager from "@/components/CacheManager";
 
 interface PGDetails {
@@ -44,6 +44,9 @@ interface PGDetails {
     paymentReminders: boolean;
     maintenanceAlerts: boolean;
   };
+  noticePolicy?: { minNoticeDays: number; refundAmount: number };
+  emergencyContacts?: Array<{ label: string; phone: string }>;
+  wifiDetails?: { name: string; password: string; note: string };
 }
 
 export default function SettingsPage() {
@@ -84,6 +87,9 @@ export default function SettingsPage() {
       paymentReminders: true,
       maintenanceAlerts: true,
     },
+    noticePolicy: { minNoticeDays: 15, refundAmount: 1500 },
+    emergencyContacts: [],
+    wifiDetails: { name: "", password: "", note: "" },
   });
 
   useEffect(() => {
@@ -349,6 +355,32 @@ export default function SettingsPage() {
                 >
                   <RiNotification4Line className="mr-2 h-5 w-5" />
                   Notifications
+                </button>
+              </li>
+              <li className="mr-2">
+                <button
+                  onClick={() => setActiveTab("policy")}
+                  className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${
+                    activeTab === "policy"
+                      ? "text-pink-600 border-pink-600 dark:text-pink-500 dark:border-pink-500"
+                      : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <FaClipboardList className="mr-2 h-5 w-5" />
+                  Notice Policy
+                </button>
+              </li>
+              <li className="mr-2">
+                <button
+                  onClick={() => setActiveTab("emergency")}
+                  className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${
+                    activeTab === "emergency"
+                      ? "text-pink-600 border-pink-600 dark:text-pink-500 dark:border-pink-500"
+                      : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <FaPhoneAlt className="mr-2 h-5 w-5" />
+                  Emergency & WiFi
                 </button>
               </li>
               <li>
@@ -704,6 +736,155 @@ export default function SettingsPage() {
                       </div>
                     )
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Notice Policy Section */}
+            {activeTab === "policy" && (
+              <div className="p-6">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Notice Period Policy</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  Configure the minimum notice period residents must give before moving out, and the refund amount they receive if they comply.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Minimum Notice Days
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={pgDetails.noticePolicy?.minNoticeDays ?? 15}
+                      onChange={(e) =>
+                        setPgDetails((prev: any) => ({
+                          ...prev,
+                          noticePolicy: { ...prev.noticePolicy, minNoticeDays: parseInt(e.target.value) || 15 },
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Currently: {pgDetails.noticePolicy?.minNoticeDays ?? 15} days</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Refund Amount (₹) if notice met
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={pgDetails.noticePolicy?.refundAmount ?? 1500}
+                      onChange={(e) =>
+                        setPgDetails((prev: any) => ({
+                          ...prev,
+                          noticePolicy: { ...prev.noticePolicy, refundAmount: parseInt(e.target.value) || 0 },
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Emergency & WiFi Section */}
+            {activeTab === "emergency" && (
+              <div className="p-6 space-y-8">
+                {/* Emergency Contacts */}
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Emergency Contacts</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">These appear on the resident dashboard. Add warden, ambulance, security, etc.</p>
+                  <div className="space-y-3">
+                    {(pgDetails.emergencyContacts ?? []).map((contact: { label: string; phone: string }, idx: number) => (
+                      <div key={idx} className="flex gap-3 items-center">
+                        <input
+                          type="text"
+                          placeholder="Label (e.g. Warden)"
+                          value={contact.label}
+                          onChange={(e) => {
+                            const updated = [...(pgDetails.emergencyContacts ?? [])];
+                            updated[idx] = { ...updated[idx], label: e.target.value };
+                            setPgDetails((prev: any) => ({ ...prev, emergencyContacts: updated }));
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white text-sm"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Phone number"
+                          value={contact.phone}
+                          onChange={(e) => {
+                            const updated = [...(pgDetails.emergencyContacts ?? [])];
+                            updated[idx] = { ...updated[idx], phone: e.target.value };
+                            setPgDetails((prev: any) => ({ ...prev, emergencyContacts: updated }));
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (pgDetails.emergencyContacts ?? []).filter((_: any, i: number) => i !== idx);
+                            setPgDetails((prev: any) => ({ ...prev, emergencyContacts: updated }));
+                          }}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                          title="Remove contact"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPgDetails((prev: any) => ({
+                        ...prev,
+                        emergencyContacts: [...(prev.emergencyContacts ?? []), { label: "", phone: "" }],
+                      }))
+                    }
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm text-pink-600 border border-pink-300 rounded-md hover:bg-pink-50 dark:border-pink-700 dark:hover:bg-pink-900/20"
+                  >
+                    + Add Contact
+                  </button>
+                </div>
+
+                {/* WiFi Details */}
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-1">WiFi Details</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">The note is shown to residents. Password is stored securely and not visible to residents.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Network Name</label>
+                      <input
+                        type="text"
+                        value={pgDetails.wifiDetails?.name ?? ""}
+                        onChange={(e) => setPgDetails((prev: any) => ({ ...prev, wifiDetails: { ...prev.wifiDetails, name: e.target.value } }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white"
+                        placeholder="e.g. ComfortStay_5G"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password (admin only)</label>
+                      <input
+                        type="password"
+                        value={pgDetails.wifiDetails?.password ?? ""}
+                        onChange={(e) => setPgDetails((prev: any) => ({ ...prev, wifiDetails: { ...prev.wifiDetails, password: e.target.value } }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white"
+                        placeholder="WiFi password (not shown to residents)"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Note for Residents</label>
+                      <input
+                        type="text"
+                        value={pgDetails.wifiDetails?.note ?? ""}
+                        onChange={(e) => setPgDetails((prev: any) => ({ ...prev, wifiDetails: { ...prev.wifiDetails, note: e.target.value } }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:text-white"
+                        placeholder="e.g. Ask reception for WiFi password"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">This text is visible to residents on their dashboard.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin, isManager } from "@/app/lib/auth";
 import Complaint from "@/app/api/models/Complaint";
 import User from "@/app/api/models/User";
+import Notification from "@/app/api/models/Notification";
 
 // Get a single complaint
 export async function GET(
@@ -139,6 +140,26 @@ export async function PUT(
 
     // Save the updated complaint
     await complaintToUpdate.save();
+
+    // Notify the complaint owner when status changes
+    const { status } = updateData;
+    if (status && (isAdmin(user) || isManager(user))) {
+      try {
+        await Notification.create({
+          userId: complaintToUpdate.userId,
+          title: "Complaint Update",
+          message: `Your complaint "${complaintToUpdate.title}" has been updated to: ${status}.`,
+          type: "Complaint",
+          isRead: false,
+          isActive: true,
+          relatedId: complaintToUpdate._id,
+          relatedModel: "Complaint",
+        });
+      } catch (notifErr) {
+        console.error("Failed to create complaint notification:", notifErr);
+        // Don't fail the main update
+      }
+    }
 
     return NextResponse.json({
       success: true,

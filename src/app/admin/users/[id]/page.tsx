@@ -132,6 +132,13 @@ export default function UserDetailPage() {
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [isNoticeSubmitting, setIsNoticeSubmitting] = useState(false);
   const [isWithdrawProcessing, setIsWithdrawProcessing] = useState(false);
+  const [dueSummary, setDueSummary] = useState<{
+    currentMonthDue: number;
+    previousUnpaidDue: number;
+    remainingDue: number;
+    dueStatus: string;
+    month: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -149,6 +156,23 @@ export default function UserDetailPage() {
         setError("Failed to load user details");
       } finally {
         setLoading(false);
+      }
+
+      // Fetch most recent due record for balance summary
+      try {
+        const duesRes = await axios.get(`/api/user-dues?userId=${id}&limit=1&page=1`);
+        if (duesRes.data.success && duesRes.data.dues?.length > 0) {
+          const latest = duesRes.data.dues[0];
+          setDueSummary({
+            currentMonthDue: latest.currentMonthDue ?? 0,
+            previousUnpaidDue: latest.previousUnpaidDue ?? 0,
+            remainingDue: latest.remainingDue ?? 0,
+            dueStatus: latest.dueStatus ?? "Unknown",
+            month: latest.month ? `${latest.month} ${latest.year}` : "Current",
+          });
+        }
+      } catch {
+        // Balance summary is non-critical — silently ignore failures
       }
     };
 
@@ -444,6 +468,12 @@ export default function UserDetailPage() {
                 <Shield size={14} className="mr-1" />
                 {user.role || "User"}
               </span>
+              {user.pgId && (
+                <span className="inline-flex items-center gap-1 ml-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-mono font-medium border border-gray-200 dark:border-gray-600">
+                  <span className="text-gray-400 text-xs">PG ID</span>
+                  {user.pgId}
+                </span>
+              )}
             </div>
           </div>
 
@@ -649,6 +679,51 @@ export default function UserDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Balance Summary */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Balance Summary
+          </h3>
+          {dueSummary ? (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Month</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{dueSummary.month}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Current Month Due</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">₹{dueSummary.currentMonthDue.toLocaleString("en-IN")}</span>
+              </div>
+              {dueSummary.previousUnpaidDue > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Previous Unpaid</span>
+                  <span className="text-sm font-medium text-amber-600 dark:text-amber-400">₹{dueSummary.previousUnpaidDue.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Net Remaining</span>
+                <span className={`text-sm font-bold ${dueSummary.remainingDue > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
+                  {dueSummary.remainingDue > 0 ? `₹${dueSummary.remainingDue.toLocaleString("en-IN")}` : "Paid ✓"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  dueSummary.dueStatus === "Paid" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                  dueSummary.dueStatus === "Partial" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                  "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                }`}>
+                  {dueSummary.dueStatus}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 pt-1">Based on stored due records</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 dark:text-gray-500">No due records found for this user.</p>
+          )}
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">

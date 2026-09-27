@@ -127,6 +127,11 @@ export default function DashboardPage() {
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   const [isExitSurveyOpen, setIsExitSurveyOpen] = useState(false);
   const [isCompleteCheckout, setIsCompleteCheckout] = useState(false);
+  const [pgDetails, setPgDetails] = useState<{
+    noticePolicy: { minNoticeDays: number; refundAmount: number };
+    emergencyContacts: Array<{ label: string; phone: string }>;
+    wifiDetails: { name: string; note: string };
+  } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -167,6 +172,18 @@ export default function DashboardPage() {
       } catch {
         setError("Failed to load dashboard");
         setLoading(false);
+      }
+
+      // Fetch PG-wide details (notice policy, emergency contacts, wifi) separately —
+      // a failure here should not crash the rest of the dashboard.
+      try {
+        const pgDetailsRes = await axios.get("/api/pg-details/public");
+        const pgDetailsData = pgDetailsRes.data;
+        if (pgDetailsData.success) {
+          setPgDetails(pgDetailsData.pgDetails);
+        }
+      } catch {
+        // leave pgDetails null and fall back to defaults in the UI
       }
     };
     load();
@@ -246,19 +263,11 @@ export default function DashboardPage() {
       return;
     }
 
-    // Calculate days between today and last staying date
-    const today = new Date();
-    const lastDate = new Date(lastStayingDate);
-    const daysDifference = Math.ceil(
-      (lastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
     try {
       setIsSubmitting(true);
 
       const response = await axios.post("/api/users/notice-period", {
         lastStayingDate: lastStayingDate,
-        isEligibleForRefund: daysDifference > 15,
       });
 
       if (response.data.success) {
@@ -267,9 +276,11 @@ export default function DashboardPage() {
           isOnNoticePeriod: true,
           lastStayingDate: lastStayingDate,
         });
+        const refundMsg = response.data.isEligibleForRefund
+          ? `You are eligible for a ₹${response.data.refundAmount} refund from your booking amount.`
+          : "No refund will be provided as the notice period is less than the required minimum.";
         setNoticePeriodSuccess(
-          response.data.message ||
-            `Your notice period has been submitted successfully. ${daysDifference > 15 ? "You are eligible for a ₹1500 refund from your booking amount." : "No refund will be provided as notice period is less than 15 days."}`
+          `${response.data.message || "Notice period submitted."} ${refundMsg}`
         );
         // Close dialog after 2 seconds
         setTimeout(() => {
@@ -997,6 +1008,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
+                {complaints.length > 4 && (
+                  <Link
+                    href="/dashboard/complaints"
+                    className="block text-center text-sm text-pink-600 dark:text-pink-400 hover:underline pt-1"
+                  >
+                    View all {complaints.length} complaints →
+                  </Link>
+                )}
               </div>
             ) : (
               <p className="text-gray-500 dark:text-gray-400">
@@ -1028,20 +1047,50 @@ export default function DashboardPage() {
                 📘 House Rules & Regulations
               </Link>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
-                <p className="font-medium mb-2">Emergency Contacts</p>
-                <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
-                  <li>Warden: 9922538989 </li>
-                  <li>Ambulance: 108</li>
-                  <li>
-                    Nearest Hospital: Phone: 1800-210-4949 (Ruby Hall Clinic)
-                  </li>
-                </ul>
+                {/* Emergency Contacts */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    Emergency Contacts
+                  </h3>
+                  {pgDetails?.emergencyContacts &&
+                  pgDetails.emergencyContacts.length > 0 ? (
+                    <ul className="space-y-2">
+                      {pgDetails.emergencyContacts.map((contact, idx) => (
+                        <li
+                          key={idx}
+                          className="flex justify-between items-center"
+                        >
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {contact.label}
+                          </span>
+                          <a
+                            href={`tel:${contact.phone}`}
+                            className="text-sm font-medium text-pink-600 dark:text-pink-400 hover:underline"
+                          >
+                            {contact.phone}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Contact reception for emergency numbers.
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30">
-                <p className="font-medium mb-2">WiFi</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Check latest WiFi details in notices.
-                </p>
+                {/* WiFi */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    WiFi
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {pgDetails?.wifiDetails?.note ||
+                      pgDetails?.wifiDetails?.name ||
+                      "Contact reception for WiFi details."}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -1102,14 +1151,18 @@ export default function DashboardPage() {
                       </h3>
                       <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
                         <ul className="list-disc list-inside space-y-1">
-                          <li>Minimum notice period required: 15 days</li>
                           <li>
-                            If notice period is more than 15 days: ₹1500 refund
-                            from booking amount
+                            Minimum notice period required:{" "}
+                            {pgDetails?.noticePolicy?.minNoticeDays ?? 15} days
                           </li>
                           <li>
-                            If notice period is less than 15 days: No refund
-                            will be provided
+                            Refund if notice met: ₹
+                            {pgDetails?.noticePolicy?.refundAmount ?? 1500}
+                          </li>
+                          <li>
+                            If notice period is less than{" "}
+                            {pgDetails?.noticePolicy?.minNoticeDays ?? 15}{" "}
+                            days: No refund will be provided
                           </li>
                         </ul>
                       </div>
@@ -1142,12 +1195,20 @@ export default function DashboardPage() {
                       id="lastStayingDate"
                       value={lastStayingDate}
                       onChange={(e) => setLastStayingDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
+                      min={(() => {
+                        const d = new Date();
+                        d.setDate(
+                          d.getDate() +
+                            (pgDetails?.noticePolicy?.minNoticeDays ?? 15)
+                        );
+                        return d.toISOString().split("T")[0];
+                      })()}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white"
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Minimum 15 days from today
+                      Minimum {pgDetails?.noticePolicy?.minNoticeDays ?? 15}{" "}
+                      days from today
                     </p>
                   </div>
 

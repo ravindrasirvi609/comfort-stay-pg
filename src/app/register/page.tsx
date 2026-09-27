@@ -89,25 +89,53 @@ export default function RegisterPage() {
   // Load form data from local storage on mount
   useEffect(() => {
     setMounted(true);
-    const savedData = localStorage.getItem("registrationFormData");
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        setFormData((prev) => ({
-          ...prev,
-          ...parsedData,
-          agreeToTerms: false, // Don't persist terms agreement for security/legal reasons
-        }));
-      } catch (error) {
-        console.error("Error parsing saved form data:", error);
+    try {
+      const savedData = localStorage.getItem("registrationFormData");
+      const savedTs = localStorage.getItem("registrationTimestamp");
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+      // Clear if data is older than 24 hours
+      if (savedTs && Date.now() - parseInt(savedTs) > TWENTY_FOUR_HOURS) {
+        localStorage.removeItem("registrationFormData");
+        localStorage.removeItem("registrationTimestamp");
+      } else if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          // Restore all saved fields except document URLs (which were not persisted)
+          setFormData((prev) => ({
+            ...prev,
+            ...parsedData,
+            agreeToTerms: false, // Don't persist terms agreement for security/legal reasons
+          }));
+        } catch (error) {
+          console.error("Error parsing saved form data:", error);
+          localStorage.removeItem("registrationFormData");
+          localStorage.removeItem("registrationTimestamp");
+        }
       }
+    } catch {
+      // localStorage might be blocked (private browsing) — silently ignore
     }
+
+    const clearRegistrationData = () => {
+      try {
+        localStorage.removeItem("registrationFormData");
+        localStorage.removeItem("registrationTimestamp");
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener("beforeunload", clearRegistrationData);
+    return () => window.removeEventListener("beforeunload", clearRegistrationData);
   }, []);
 
-  // Save form data to local storage on change
+  // Save form data (excluding uploaded document URLs — those are sensitive)
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem("registrationFormData", JSON.stringify(formData));
+      const { validIdPhoto, profileImage, ...persistableData } = formData;
+      localStorage.setItem("registrationFormData", JSON.stringify(persistableData));
+      localStorage.setItem("registrationTimestamp", Date.now().toString());
     }
   }, [formData, mounted]);
 
@@ -276,6 +304,7 @@ export default function RegisterPage() {
         });
         // Clear local storage
         localStorage.removeItem("registrationFormData");
+        localStorage.removeItem("registrationTimestamp");
       } else {
         setError(response.data.message || "Registration request failed");
       }

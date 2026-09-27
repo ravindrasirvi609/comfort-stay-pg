@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/app/lib/db";
 import { isAuthenticated, isAdmin } from "@/app/lib/auth";
 import User from "@/app/api/models/User";
 import Notification from "@/app/api/models/Notification";
+import PGDetails from "@/app/models/PGDetails";
 
 export async function POST(request: NextRequest) {
   try {
@@ -110,19 +111,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate minimum date - 20 days for new notice, 10 days for extending existing notice
-    const today = new Date();
-    const minimumDate = new Date(today);
+    // Load notice policy from PGDetails
+    const pgDetails = await PGDetails.findOne();
+    const minNoticeDays = pgDetails?.noticePolicy?.minNoticeDays ?? 15;
+    const refundAmount = pgDetails?.noticePolicy?.refundAmount ?? 1500;
 
-    if (currentUser.isOnNoticePeriod) {
-      // If already on notice period, only need 10 days minimum notice
-      minimumDate.setDate(today.getDate() + 5);
-    } else {
-      // First time notice period needs 20 days minimum notice
-      minimumDate.setDate(today.getDate() + 1); // Changed from 30 days to 1 day (next day)
-    }
-
+    // Date-only arithmetic — strip time so hour of day doesn't affect eligibility
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
     const selectedDate = new Date(lastStayingDate);
+    selectedDate.setHours(0, 0, 0, 0);
 
     if (Number.isNaN(selectedDate.getTime())) {
       return NextResponse.json(
@@ -131,16 +129,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (selectedDate < minimumDate) {
-      const daysRequired = currentUser.isOnNoticePeriod ? 10 : 1; // Changed from 30 to 1
+    const daysDiff = Math.round(
+      (selectedDate.getTime() - todayDate.getTime()) / 86_400_000
+    );
+
+    if (daysDiff < minNoticeDays) {
       return NextResponse.json(
         {
           success: false,
-          message: `Last staying date must be at least ${daysRequired} day from today`,
+          message: `Minimum ${minNoticeDays} days notice required. Your selection gives only ${daysDiff} days.`,
         },
         { status: 400 }
       );
     }
+
+    // Server decides refund eligibility — never accept isEligibleForRefund from client
+    const isEligibleForRefund = daysDiff >= minNoticeDays;
 
     // Update the user's notice period details
     const updatedUser = await User.findByIdAndUpdate(
@@ -198,6 +202,9 @@ export async function POST(request: NextRequest) {
         isOnNoticePeriod: updatedUser.isOnNoticePeriod,
         lastStayingDate: updatedUser.lastStayingDate,
       },
+      isEligibleForRefund,
+      refundAmount,
+      minNoticeDays,
     });
   } catch (error) {
     console.error("Notice period submission error:", error);

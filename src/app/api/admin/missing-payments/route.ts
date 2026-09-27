@@ -80,6 +80,30 @@ export async function GET(request: NextRequest) {
     // Format month-year for payment search (e.g., "January 2024")
     const monthYear = `${month} ${year}`;
 
+    // Derive the first and last day of the target month (needed for guards below)
+    const targetMonthIndex = new Date(`${month} 1, ${year}`).getMonth(); // 0-based
+    const targetYear = parseInt(year, 10);
+    const targetMonthStart = new Date(targetYear, targetMonthIndex, 1);
+    const targetMonthEnd = new Date(targetYear, targetMonthIndex + 1, 0); // last day
+
+    // Guard: refuse future months — the month hasn't started, so every resident
+    // looks like a defaulter even though nothing is due yet.
+    const today = new Date();
+    const currentMonthStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1
+    );
+    if (targetMonthStart > currentMonthStart) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Cannot check missing payments for a future month (${monthYear}). Please select the current or a past month.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Build user query - only active users with rooms assigned
     const userQuery: any = {
       registrationStatus: "Approved",
@@ -100,7 +124,7 @@ export async function GET(request: NextRequest) {
     // Get all approved users with room assignments
     const allUsers = await User.find(userQuery)
       .populate("roomId", "roomNumber building floor type price")
-      .select("_id name email phone pgId roomId bedNumber joinDate")
+      .select("_id name email phone pgId roomId bedNumber moveInDate")
       .lean();
 
     // Map price to rentAmount for consistency with frontend
@@ -121,6 +145,14 @@ export async function GET(request: NextRequest) {
         (user: any) => user.roomId?.building === building
       );
     }
+
+    // Move-in guard: exclude users who had not yet moved in by the end of the
+    // target month. A resident who joined in September 2026 should never appear
+    // as a defaulter for January 2026.
+    filteredUsers = filteredUsers.filter((user: any) => {
+      if (!user.moveInDate) return true; // no date recorded — include conservatively
+      return new Date(user.moveInDate) <= targetMonthEnd;
+    });
 
     // Get all payment records for the specified month
     const paymentsInMonth = await Payment.find({
@@ -222,6 +254,27 @@ export async function POST(request: NextRequest) {
 
     const monthYear = `${month} ${year}`;
 
+    // Future-month guard (mirrors GET handler)
+    const targetMonthIndex = new Date(`${month} 1, ${year}`).getMonth();
+    const targetYear = parseInt(year, 10);
+    const targetMonthStart = new Date(targetYear, targetMonthIndex, 1);
+    const targetMonthEnd = new Date(targetYear, targetMonthIndex + 1, 0);
+    const today = new Date();
+    const currentMonthStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1
+    );
+    if (targetMonthStart > currentMonthStart) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Cannot export missing payments for a future month (${monthYear}).`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Get all active users with rooms
     const allUsers = await User.find({
       registrationStatus: "Approved",
@@ -229,7 +282,7 @@ export async function POST(request: NextRequest) {
       roomId: { $ne: null },
     })
       .populate("roomId", "roomNumber building floor price")
-      .select("name email phone pgId roomId bedNumber")
+      .select("name email phone pgId roomId bedNumber moveInDate")
       .lean();
 
     // Map price to rentAmount for consistency
@@ -242,6 +295,12 @@ export async function POST(request: NextRequest) {
           }
         : null,
     }));
+
+    // Move-in guard: same logic as GET — exclude users not yet resident in that month
+    const eligibleUsers = allUsersWithRentAmount.filter((user: any) => {
+      if (!user.moveInDate) return true;
+      return new Date(user.moveInDate) <= targetMonthEnd;
+    });
 
     // Get payments for the month
     const paymentsInMonth = await Payment.find({
@@ -256,7 +315,7 @@ export async function POST(request: NextRequest) {
       paymentsInMonth.map((payment: any) => payment.userId._id.toString())
     );
 
-    const usersWithoutPayments = allUsersWithRentAmount.filter(
+    const usersWithoutPayments = eligibleUsers.filter(
       (user: any) => !paidUserIds.has(user._id.toString())
     ).sort(sortByBlockAndRoom);
 
@@ -264,7 +323,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         monthYear,
-        totalUsers: allUsersWithRentAmount.length,
+        totalUsers: eligibleUsers.length,
         usersWithPayments: paymentsInMonth.length,
         usersWithoutPayments: usersWithoutPayments.length,
         missingPaymentUsers: usersWithoutPayments,
