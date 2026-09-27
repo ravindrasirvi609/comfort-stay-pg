@@ -37,25 +37,54 @@ let _roomsCache: RoomsCacheEntry | null = null;
 let _scrollPositionCache = 0;
 const ROOMS_CACHE_TTL_MS = 60_000; // 1 minute
 
+/** Returns true when the module-level cache is fresh enough to use. */
+function hasFreshCache(): boolean {
+  return !!(
+    _roomsCache && Date.now() - _roomsCache.timestamp < ROOMS_CACHE_TTL_MS
+  );
+}
+
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Lazy initialisers: if we already have a fresh cache (e.g. navigating back
+  // from a room detail page) we hydrate state synchronously so the FIRST render
+  // already shows full content.  This is critical: if `loading` starts as
+  // `true` the page shows a full-screen spinner whose height is tiny, and our
+  // scroll-restore fires on that tiny-height frame — nothing to scroll to.
+  const [rooms, setRooms] = useState<Room[]>(() =>
+    hasFreshCache() ? _roomsCache!.rooms : []
+  );
+  const [filteredRooms, setFilteredRooms] = useState<Room[]>(() =>
+    hasFreshCache() ? _roomsCache!.rooms : []
+  );
+  const [loading, setLoading] = useState<boolean>(() => !hasFreshCache());
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [filterBuilding, setFilterBuilding] = useState("all");
   const [filterFloor, setFilterFloor] = useState("all");
-  const [buildings, setBuildings] = useState<string[]>(["A", "B"]);
+  const [buildings, setBuildings] = useState<string[]>(() => {
+    if (hasFreshCache()) {
+      const uniqueBuildings = Array.from(
+        new Set(_roomsCache!.rooms.map((r) => r.building))
+      ) as string[];
+      return uniqueBuildings.length > 0 ? uniqueBuildings : ["A", "B"];
+    }
+    return ["A", "B"];
+  });
 
   // Restore scroll position on mount (e.g. when navigating back from a room
   // detail page) and save it on unmount (before navigating away).
   useEffect(() => {
-    if (_roomsCache && _scrollPositionCache > 0) {
-      // Use requestAnimationFrame so the DOM has been painted before scrolling
+    if (hasFreshCache() && _scrollPositionCache > 0) {
+      // Double-rAF: first frame lets React commit the DOM; second frame lets
+      // the browser finish layout (backdrop-blur, gradients etc.) before we
+      // scroll.  A single rAF fires before layout is complete and the scroll
+      // position ends up ignored or reset by the browser.
       requestAnimationFrame(() => {
-        window.scrollTo({ top: _scrollPositionCache, behavior: "instant" });
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: _scrollPositionCache, behavior: "instant" });
+        });
       });
     }
 
